@@ -1,0 +1,73 @@
+/* Global container */
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #c6c9cc8f;
+}
+
+.dark-mode {
+  background-color: #343a40;
+  color: white;
+}
+
+/* Topbar */
+.topbar {
+  background-color: #f7f4f4;
+}
+
+.dark-mode .topbar {
+  background-color: #1e1e2f;
+  color: white;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  min-height: calc(100vh - 60px);
+  background: linear-gradient(150deg, #662929 0%, #1cd9eb 100%, #111010 50%);
+  transition: all 0.3s;
+  border-right: 1px solid #dee2e6;
+}
+
+.sidebar-dark {
+  background-color: #2c2f3a;
+  color: white;
+}
+
+.sidebar .nav-link {
+  color: white;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.sidebar .nav-link:hover {
+  background-color: rgba(20, 48, 56, 0.1);
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar.collapsed .nav-link {
+  justify-content: center;
+}
+
+/* Main content */
+.main-content {
+  flex-grow: 1;
+  background-color: inherit;
+  transition: all 0.3s;
+}
+
+/* Home box */
+.home-box {
+  background-color: white;
+}
+
+.dark-mode .home-box {
+  background-color: #2f3542;
+  color: white;
+}
+
+
