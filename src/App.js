@@ -1,83 +1,160 @@
 // src/App.js
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './App.css';
-import './admin.css';
+import { Routes, Route } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./App.css";
+import "./admin.css";
+import "./theme";
 
-// Auth and Private Route
-import { AuthProvider } from './components/PrivateComponents/AuthContext';
-import PrivateRoute from './components/PrivateComponents/PrivateRoute';
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { ColorModeContext, useMode } from "./theme";
+import { AuthProvider } from "./components/PrivateComponents/AuthContext";
+import Topbar from "./components/globals/Topbar";
+import Homepage from "./components/globals/Homepage";
+import Login from "./components/globals/Login";
+import AdminRegister from "./components/globals/RegisterAdmin";
+import PrivateRoute from "./components/PrivateComponents/PrivateRoute";
 
-// Pages
-import HomePage from './components/Homepage';
-import Login from './components/Login';
-import RegisterAdmin from './components/RegisterAdmin';
-import AdminDashboard from './components/AdminDashboard';
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminHome from "./components/admin/AdminHome";
+import ViewFarmers from "./components/admin/myfarmers/ViewFarmers";
+import CreateFarmer from "./components/admin/myfarmers/CreateFarmer";
+import ViewPorters from "./components/admin/myporters/ViewPorters";
+import CreatePorter from "./components/admin/myporters/CreatePorter";
+import UpdatePorterForm from "./components/admin/myporters/UpdatePorter";
+import UpdateFarmer from "./components/admin/myfarmers/UpdateFarmer";
+import Records from "./components/admin/Records";
+import DownloadMonthlyReport from "./components/scenes/DownloadReport";
+import AdminMilkSummary from "./components/admin/AdminMilkSummary";
+import Calendar from "./components/globals/calendar";
+import PorterProfileForm from "./components/porters/MyProfile";
+import AddMilk from "./components/porters/AddMilk";
+import PorterLayout from "./components/porters/porterLayout";
+import PorterMilkSummary from "./components/porters/PorterMilkSummary";
+import MonthlyPorterSummary from "./components/porters/MonthlyPorterSummary";
+import PorterHome from "./components/porters/PorterHome";
+import FarmerLayout from "./components/farmer/farmerLayout";
+import NotAuthorized from "./components/globals/NotAuthorized";
+import DailyMilkSummary from "./components/farmer/DailyMilkSummary";
+import FarmerHome from "./components/farmer/FarmerHome";
+import BreedManagement from "./components/farmer/BreedManagment";
+import CowManagement from "./components/farmer/CowManagement";
+import AddCalf from "./components/farmer/AddCalf";
+import CowFamilyTree from "./components/farmer/CowFamilyTree";
+import CowRegistrationForm from "./components/farmer/CowRegistrationForm";
+import AddCalfForm from "./components/farmer/AddCalfForm";
+import MilkRecording from "./components/farmer/MilkRecording";
+import DairySummaries from "./components/farmer/DairySummaries";
+import InseminationCard from "./components/farmer/InseminationCard";
+import EnhancedFarmDashboard from "./components/farmer/FarmDashboard";
 
-// Porter Dashboard & Actions
-import MyPortersDash from './components/DashboardTabs/MyPortersDash';
-import CreatePorter from './components/DashboardTabs/myporters/CreatePorter';
-import ViewPorters from './components/DashboardTabs/myporters/ViewPorters';
-import UpdatePorterForm from './components/DashboardTabs/myporters/UpdatePorter';
-import DeletePorter from './components/DashboardTabs/myporters/DeletePorter';
+// import farmerLayout from './components/farmer/farmerLayout'
+// import Calendar from "./components/globals/Calendar";
+// import AdminMilkSummary.jsx from "./components/admin/AdminMilkSummary";
 
-// Farmer Dashboard & Actions
-import MyFarmersDash from './components/DashboardTabs/MyFarmerDash';
-import CreateFarmer from './components/DashboardTabs/myfarmers/CreateFarmer';
-import DeleteFarmer from './components/DashboardTabs/myfarmers/DeleteFarmers';
-import ViewFarmers from './components/DashboardTabs/myfarmers/ViewFarmers';
-import UpdateFarmer from './components/DashboardTabs/myfarmers/UpdateFarmer';
-// import UpdateFarmer from './components/DashboardTabs/myFarmers/UpdateFarmer';
 
 function App() {
+  const [theme, colorMode] = useMode();
+
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<RegisterAdmin />} />
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider>
+          {/* Global Topbar */}
+          <Topbar />
 
-          {/* Admin Protected Routes */}
-          <Route
-            path="/admindashboard"
-            element={
-              <PrivateRoute role="admin">
-                <AdminDashboard />
-              </PrivateRoute>
-            }
-          >
-            <Route path="view-farmers" element={<ViewFarmers />} />
-            <Route path="view-porters" element={<ViewPorters />} />
-          </Route>
-          {/* ==============================
-                Porter Management Routes
-            ============================== */}
-          <Route path="myporterDash" element={<MyPortersDash />} />
-          <Route path="create-porter" element={<CreatePorter />} />
-          <Route path="update-porter/:id" element={<UpdatePorterForm />} />
-          <Route path="delete-porter/:id" element={<DeletePorter />} />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Homepage />} />
+            <Route path="/login" element={<Login />} />
+            
 
-          {/* ==============================
-                Farmer Management Routes
-            ============================== */}
-          <Route path="/myfarmerDash" element={<MyFarmersDash />} />
-          <Route path="/create-farmer" element={<CreateFarmer />} />
-          <Route path="/view-farmers" element={<ViewFarmers />} />
-          <Route path="/update-farmer/:id" element={<UpdateFarmer />} />
-          <Route path="/delete-farmer/:id" element={<DeleteFarmer />} />
+            {/* Admin Routes */}
+            <Route
+              path="/admindashboard"
+              element={
+                <PrivateRoute role="admin">
+                  <AdminLayout />
+                </PrivateRoute>
+              }
+            >
+              {/* Default dashboard landing page */}
+              <Route index element={<AdminHome />} />
 
-          {/* </Route> */}
+              {/* Other admin pages */}
+              <Route path="register" element={<AdminRegister />} />
+              <Route path="view-farmers" element={<ViewFarmers />} />
+              <Route path="create-farmer" element={<CreateFarmer />} />
+              <Route path="view-porters" element={<ViewPorters />} />
+              <Route path="create-porter" element={<CreatePorter />} />
+              <Route path="update-porter" element={<UpdatePorterForm />} />
+              <Route path="update-farmer" element={<UpdateFarmer />} />
+              <Route path="records" element={<Records />} />
+              <Route path="download" element={<DownloadMonthlyReport />} />
+              <Route path="summary" element={<AdminMilkSummary />} />
+              <Route path="calendar" element={<Calendar />} />
+            </Route>
 
-          {/* 404 Page */}
-          <Route
-            path="*"
-            element={<h3 className="text-center mt-5">404 - Page Not Found</h3>}
-          />
-        </Routes>
-      </AuthProvider>
-    </Router>
+            {/* porter Routes */}
+            <Route
+              path="/porterdashboard"
+              element={
+                <PrivateRoute role="porter">
+                  <PorterLayout />
+                </PrivateRoute>
+              }
+            >
+              {/* Default dashboard landing page */}
+              <Route index element={<PorterHome />} />
+
+              {/* Other admin pages */}
+              <Route path="myprofile" element={<PorterProfileForm />} />
+              <Route path="addmilk" element={<AddMilk />} />
+              <Route path="records" element={<PorterMilkSummary />} />
+              <Route path="monthly" element={<MonthlyPorterSummary />} />
+              <Route path="calendar" element={<Calendar />} />
+            </Route>
+
+
+            {/* Farmer Routes */}
+            <Route
+              path="/farmerdashboard"
+              element={
+                <PrivateRoute role="farmer">
+                  <FarmerLayout />
+                </PrivateRoute>
+              }
+            >
+              {/* Default dashboard landing page */}
+              <Route index element={< FarmerHome/>} />
+              {/* Other porter pages */}
+              
+              <Route path="calendar" element={<Calendar />} />
+              <Route path="daily" element={<DailyMilkSummary />} />
+              <Route path="breeds" element={<BreedManagement />} />
+              <Route path="cows" element={<CowManagement />} />
+              <Route path="calf" element={<AddCalf />} />
+              <Route path="familytree" element={<CowFamilyTree />} />
+              <Route path="register-cow" element={<CowRegistrationForm />} />
+              <Route path="register-calf" element={<AddCalfForm />} />
+              <Route path="milkrecording" element={<MilkRecording />} />
+              <Route path="dairysummaries" element={<DairySummaries />} />
+              <Route path="inseminationcard" element={<InseminationCard />} />
+              <Route path="farmerdash" element={<EnhancedFarmDashboard />} />
+            </Route>
+
+            {/* 404 Page */}
+            <Route
+              path="*"
+              element={
+                <h3 className="text-center mt-5">404 - Page Not Found</h3>
+              }
+            />
+
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
+    </ColorModeContext.Provider>
   );
 }
 
