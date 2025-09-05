@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -36,7 +36,8 @@ const CowFamilyTree = () => {
   const [error, setError] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
-  const fetchFamilyTree = async () => {
+
+  const fetchFamilyTree = useCallback(async () => {
     if (!token) {
       setError('Authentication token not found. Please log in.');
       setLoading(false);
@@ -62,11 +63,11 @@ const CowFamilyTree = () => {
     } finally {
       setLoading(false)
     }
-  };
+  }, [cowId, token, navigate]);
 
   useEffect(() => {
     fetchFamilyTree()
-  }, [cowId, token, navigate]);
+  }, [fetchFamilyTree]);
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false })
