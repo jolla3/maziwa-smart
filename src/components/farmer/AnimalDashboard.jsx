@@ -139,6 +139,32 @@ const AnimalDashboard = () => {
   const colors = tokens(theme.palette.mode);
   const { token } = useContext(AuthContext);
 
+  const CACHE_KEY = 'animalDashboardCache';
+  const getSpeciesAccent = (species) => {
+    const key = (species || '').toLowerCase();
+    switch (key) {
+      case 'cow':
+        return colors.blueAccent[500];
+      case 'bull':
+        return colors.redAccent[500];
+      case 'goat':
+        return colors.greenAccent[500];
+      case 'sheep':
+        return colors.primary[300];
+      case 'pig':
+        return colors.primary[400];
+      default:
+        return colors.grey[500];
+    }
+  };
+  const speciesLabel = {
+    cow: 'Cows',
+    bull: 'Bulls',
+    goat: 'Goats',
+    sheep: 'Sheep',
+    pig: 'Pigs',
+  };
+
   // ========================
   // STATE MANAGEMENT
   // ========================
@@ -199,10 +225,13 @@ const AnimalDashboard = () => {
       return;
     }
 
+    const hasCache = !!localStorage.getItem(CACHE_KEY);
     if (showRefreshing) {
       setRefreshing(true);
-    } else {
+    } else if (!hasCache && animals.length === 0) {
       setLoading(true);
+    } else {
+      setRefreshing(true);
     }
     
     setError(null);
@@ -221,6 +250,9 @@ const AnimalDashboard = () => {
       
       if (response.data?.animals) {
         setAnimals(response.data.animals);
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(response.data.animals));
+        } catch {}
         checkForAnomalies(response.data.animals);
         if (showRefreshing) {
           setSuccess('Animal data refreshed successfully!');
@@ -232,11 +264,20 @@ const AnimalDashboard = () => {
         ? 'Request timed out. Please check your connection and try again.'
         : err.response?.data?.message || 'Failed to fetch animals. Please try again later.';
       setError(errorMessage);
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            setAnimals(parsed);
+          }
+        }
+      } catch {}
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [token, selectedSpecies, filterBy, sortBy]);
+  }, [token, selectedSpecies, filterBy, sortBy, animals.length]);
 
   // Add new animal
   const addAnimal = async () => {
@@ -269,7 +310,11 @@ const AnimalDashboard = () => {
       );
 
       if (response.data?.animal) {
-        setAnimals(prev => [...prev, response.data.animal]);
+        setAnimals(prev => {
+          const updated = [...prev, response.data.animal];
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(updated)); } catch {}
+          return updated;
+        });
         setSuccess(`${formData.species} added successfully!`);
         handleCloseAddDialog();
       }
@@ -307,9 +352,11 @@ const AnimalDashboard = () => {
       );
 
       if (response.data?.animal) {
-        setAnimals(prev => prev.map(a => 
-          a._id === selectedAnimal._id ? response.data.animal : a
-        ));
+        setAnimals(prev => {
+          const updated = prev.map(a => a._id === selectedAnimal._id ? response.data.animal : a);
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(updated)); } catch {}
+          return updated;
+        });
         setSuccess('Animal updated successfully!');
         handleCloseUpdateDialog();
       }
@@ -328,7 +375,11 @@ const AnimalDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setAnimals(prev => prev.filter(a => a._id !== id));
+      setAnimals(prev => {
+        const updated = prev.filter(a => a._id !== id);
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(updated)); } catch {}
+        return updated;
+      });
       setSuccess('Animal deleted successfully!');
     } catch (err) {
       console.error('Failed to delete animal:', err);
@@ -341,6 +392,16 @@ const AnimalDashboard = () => {
   // ========================
 
   useEffect(() => {
+    // Preload cached animals for offline UX while fetching
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          setAnimals(parsed);
+        }
+      }
+    } catch {}
     fetchAnimals();
   }, [fetchAnimals]);
 
@@ -595,85 +656,95 @@ const AnimalDashboard = () => {
     const lifetimeYield = animal.litres_records?.reduce((total, record) => total + record.litres, 0) || 0;
     const age = calculateAge(animal.birth_date);
     const healthStatus = getHealthStatusColor(animal.stage);
+    const accent = getSpeciesAccent(animal.species);
 
     return (
       <Grid item xs={12} sm={6} md={4} key={animal._id}>
         <Card sx={{ 
           background: colors.primary[500],
-          borderRadius: '12px',
-          border: `1px solid ${colors.primary[300]}`,
+          borderRadius: '16px',
+          border: `1px solid ${accent}40`,
           transition: 'all 0.3s ease',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: `0 8px 25px ${colors.primary[700]}`,
-            border: `1px solid ${colors.greenAccent[500]}`,
+            boxShadow: `0 8px 25px ${accent}40`,
+            border: `1px solid ${accent}`,
           }
         }}>
           <CardContent sx={{ p: 3, flexGrow: 1 }}>
-            {/* Header with avatar and status */}
-            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Avatar 
-                  src={animal.photo_url} 
-                  sx={{ 
-                    bgcolor: colors.greenAccent[600], 
-                    color: colors.grey[100],
-                    width: 48,
-                    height: 48
-                  }}
-                >
-                  {getSpeciesIcon(animal.species)}
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight="bold" color={colors.greenAccent[400]}>
-                    {animal.name}
-                  </Typography>
-                  <Typography variant="body2" color={colors.grey[300]}>
-                    Code: {animal.code || 'N/A'}
-                  </Typography>
-                </Box>
-              </Box>
-              <Chip 
-                label={animal.stage?.toUpperCase() || 'N/A'} 
-                color={healthStatus}
+            {/* Top header bar: species and age */}
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 2,
+              p: 1,
+              borderRadius: '10px',
+              background: `${accent}20`,
+              border: `1px solid ${accent}40`
+            }}>
+              <Chip
+                label={(animal.species || 'Unknown').toUpperCase()}
                 size="small"
-                variant="outlined"
+                sx={{ bgcolor: accent, color: colors.grey[900], fontWeight: 700 }}
               />
+              <Box display="flex" alignItems="center" gap={1}>
+                <CakeIcon sx={{ color: accent }} />
+                <Typography variant="caption" color={colors.grey[200]}>{age}</Typography>
+              </Box>
             </Box>
 
-            {/* Photo preview */}
-            {animal.photo_url && (
-              <CardMedia
-                component="img"
-                height="140"
-                image={animal.photo_url}
-                alt={animal.name}
-                sx={{ borderRadius: '8px', mb: 2, objectFit: 'cover' }}
-              />
-            )}
+            {/* Centered photo */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              {animal.photo_url ? (
+                <CardMedia
+                  component="img"
+                  image={animal.photo_url}
+                  alt={animal.name}
+                  sx={{ width: '100%', height: 180, maxHeight: 220, objectFit: 'cover', borderRadius: '12px' }}
+                />
+              ) : (
+                <Avatar sx={{ width: 96, height: 96, bgcolor: `${accent}30`, color: colors.grey[100] }}>
+                  {getSpeciesIcon(animal.species)}
+                </Avatar>
+              )}
+            </Box>
 
-            {/* Quick stats */}
-            <Grid container spacing={1} mb={2}>
-              <Grid item xs={12}>
-                <Box display="flex" alignItems="center" gap={1}>
-                  {animal.gender === 'male' ? <MaleIcon color="info" /> : <FemaleIcon color="secondary" />}
-                  <Typography variant="body2" color={colors.grey[300]}>
-                    {animal.breed || 'Unknown breed'} • {animal.species}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <CakeIcon color="warning" />
-                  <Typography variant="body2" color={colors.grey[300]}>
-                    {age}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
+            {/* Title */}
+            <Box textAlign="center" mb={2}>
+              <Typography variant="h6" fontWeight="bold" color={colors.grey[100]}>{animal.name}</Typography>
+              <Typography variant="body2" color={colors.grey[300]}>Code: {animal.code || 'N/A'}</Typography>
+            </Box>
+
+            {/* Bottom stats */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Box display="flex" alignItems="center" gap={1}>
+                {animal.gender === 'male' ? <MaleIcon sx={{ color: accent }} /> : <FemaleIcon sx={{ color: accent }} />}
+                <Typography variant="body2" color={colors.grey[300]}>
+                  {animal.breed || 'Unknown breed'}
+                </Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                {animal.species === 'cow' ? (
+                  <>
+                    <LocalDrinkIcon sx={{ color: accent }} />
+                    <Typography variant="body2" color={colors.grey[300]}>
+                      {formatNumber(lifetimeYield)} L
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    <FamilyRestroomIcon sx={{ color: accent }} />
+                    <Typography variant="body2" color={colors.grey[300]}>
+                      {animal.offspring_ids?.length || 0}
+                    </Typography>
+                  </>
+                )}
+              </Box>
+            </Box>
 
             {/* Bull details when species is bull */}
             {animal.species === 'bull' && (animal.bull_code || animal.bull_name || animal.origin_farm || animal.country) && (
@@ -784,10 +855,10 @@ const AnimalDashboard = () => {
               </Box>
             </Collapse>
 
-            {/* Milk yield for cows */}
+            {/* Milk yield detail for cows */}
             {animal.species === 'cow' && (
-              <Box display="flex" alignItems="center" gap={1} mt={2}>
-                <LocalDrinkIcon color="success" />
+              <Box display="flex" alignItems="center" gap={1} mt={1}>
+                <LocalDrinkIcon sx={{ color: accent }} />
                 <Typography variant="body2" color={colors.grey[300]}>
                   Lifetime Yield: {formatNumber(lifetimeYield)} litres
                 </Typography>
@@ -1374,48 +1445,66 @@ const AnimalDashboard = () => {
         </Box>
       </Fade>
 
-      {/* Animal cards grid */}
+      {/* Animal cards grouped by species */}
       {loading ? (
-        <Box>
-          {renderSkeletonCards()}
-        </Box>
-      ) : processedAnimals.length > 0 ? (
-        <Grid container spacing={2}>
-          {processedAnimals.map(renderAnimalCard)}
-        </Grid>
+        <Box>{renderSkeletonCards()}</Box>
       ) : (
-        <Box 
-          display="flex" 
-          flexDirection="column" 
-          alignItems="center" 
-          justifyContent="center" 
-          minHeight="400px"
-          sx={{
-            background: colors.primary[400],
-            borderRadius: '12px',
-            p: 4,
-          }}
-        >
-          <PetsIcon sx={{ fontSize: 80, color: colors.grey[500], mb: 2, opacity: 0.5 }} />
-          <Typography variant="h5" color={colors.grey[400]} fontStyle="italic" mb={2}>
-            No animals found
-          </Typography>
-          <Typography variant="body2" color={colors.grey[500]} mb={3}>
-            Try adjusting your filters or add a new animal to get started
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddDialog}
-            sx={{
-              backgroundColor: colors.greenAccent[600],
-              color: colors.grey[100],
-              '&:hover': { backgroundColor: colors.greenAccent[700] },
-            }}
-          >
-            Add Your First Animal
-          </Button>
-        </Box>
+        (() => {
+          const order = ['cow', 'bull', 'goat', 'sheep', 'pig'];
+          const sections = order.map((sp) => ({
+            key: sp,
+            label: speciesLabel[sp],
+            items: processedAnimals.filter(a => (a.species || '').toLowerCase() === sp),
+            accent: getSpeciesAccent(sp),
+          })).filter(section => section.items.length > 0);
+
+          if (sections.length === 0) {
+            return (
+              <Box 
+                display="flex" 
+                flexDirection="column" 
+                alignItems="center" 
+                justifyContent="center" 
+                minHeight="400px"
+                sx={{ background: colors.primary[400], borderRadius: '12px', p: 4 }}
+              >
+                <PetsIcon sx={{ fontSize: 80, color: colors.grey[500], mb: 2, opacity: 0.5 }} />
+                <Typography variant="h5" color={colors.grey[400]} fontStyle="italic" mb={2}>
+                  No animals found
+                </Typography>
+                <Typography variant="body2" color={colors.grey[500]} mb={3}>
+                  Try adjusting your filters or add a new animal to get started
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenAddDialog}
+                  sx={{ backgroundColor: colors.greenAccent[600], color: colors.grey[100], '&:hover': { backgroundColor: colors.greenAccent[700] } }}
+                >
+                  Add Your First Animal
+                </Button>
+              </Box>
+            );
+          }
+
+          return (
+            <Box>
+              {sections.map(({ key, label, items, accent }) => (
+                <Box key={key} mb={4}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                    <Typography variant="h5" sx={{ color: colors.grey[100], fontWeight: 700 }}>
+                      {label}
+                    </Typography>
+                    <Chip label={`${items.length}`} sx={{ bgcolor: `${accent}30`, color: colors.grey[100], border: `1px solid ${accent}60` }} />
+                  </Box>
+                  <Grid container spacing={2}>
+                    {items.map(renderAnimalCard)}
+                  </Grid>
+                </Box>
+              ))}
+            </Box>
+          );
+        })()
       )}
 
       {/* Add/Update dialogs */}
