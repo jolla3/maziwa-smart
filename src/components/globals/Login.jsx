@@ -1,5 +1,7 @@
 // src/components/Login.jsx
 import React, { useState, useContext } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+
 import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -386,17 +388,47 @@ const Login = () => {
                 </Typography>
               </Box>
 
-              <Typography 
-                variant="caption" 
-                align="center" 
-                display="block"
-                sx={{ 
-                  color: 'text.disabled',
-                  fontSize: '0.75rem',
-                }}
-              >
-                By signing in, you agree to our Terms of Service and Privacy Policy
-              </Typography>
+
+
+<Typography
+  variant="caption"
+  align="center"
+  display="block"
+  sx={{
+    color: 'text.disabled',
+    fontSize: '0.75rem',
+    mt: 2,
+  }}
+>
+  By signing in, you agree to our{' '}
+  <Link
+    component={RouterLink}
+    to="/terms"
+    sx={{
+      color: 'primary.main',
+      textDecoration: 'none',
+      fontWeight: 500,
+      '&:hover': { textDecoration: 'underline' },
+    }}
+  >
+    Terms of Service
+  </Link>{' '}
+  and{' '}
+  <Link
+    component={RouterLink}
+    to="/privacy"
+    sx={{
+      color: 'primary.main',
+      textDecoration: 'none',
+      fontWeight: 500,
+      '&:hover': { textDecoration: 'underline' },
+    }}
+  >
+    Privacy Policy
+  </Link>
+  .
+</Typography>
+
             </Box>
           </Paper>
         </Container>

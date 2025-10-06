@@ -47,6 +47,9 @@ import DairySummaries from "./components/farmer/DairySummaries";
 import InseminationCard from "./components/farmer/InseminationCard";
 import EnhancedFarmDashboard from "./components/farmer/FarmDashboard";
 import GoogleCallbackHandler from "./components/globals/GoogleCallbackHandle";
+import PrivacyPolicy from "./components/PrivateComponents/PrivacyPolicy";
+import TermsOfService from "./components/PrivateComponents/TermsOfService";
+import ChatRoom from "./components/globals/ChatRoom";
 // import { GoogleLogin } from "@react-oauth/google";
 
 // import farmerLayout from './components/farmer/farmerLayout'
@@ -75,6 +78,10 @@ function App() {
 
             {/* <Route path="/google-login" element={<GoogleLogin />} /> */}
             <Route path="/google-callback" element={<GoogleCallbackHandler />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/chats" element={<ChatRoom />} />
+            
             
 
             {/* Admin Routes */}
