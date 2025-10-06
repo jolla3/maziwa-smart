@@ -33,7 +33,7 @@ import PorterMilkSummary from "./components/porters/PorterMilkSummary";
 import MonthlyPorterSummary from "./components/porters/MonthlyPorterSummary";
 import PorterHome from "./components/porters/PorterHome";
 import FarmerLayout from "./components/farmer/farmerLayout";
-import NotAuthorized from "./components/globals/NotAuthorized";
+// import NotAuthorized from "./components/globals/NotAuthorized";
 import DailyMilkSummary from "./components/farmer/DailyMilkSummary";
 import FarmerHome from "./components/farmer/FarmerHome";
 import BreedManagement from "./components/farmer/BreedManagment";
@@ -46,10 +46,14 @@ import MilkRecording from "./components/farmer/MilkRecording";
 import DairySummaries from "./components/farmer/DairySummaries";
 import InseminationCard from "./components/farmer/InseminationCard";
 import EnhancedFarmDashboard from "./components/farmer/FarmDashboard";
+import GoogleCallbackHandler from "./components/globals/GoogleCallbackHandle";
+// import { GoogleLogin } from "@react-oauth/google";
 
 // import farmerLayout from './components/farmer/farmerLayout'
 // import Calendar from "./components/globals/Calendar";
 // import AdminMilkSummary.jsx from "./components/admin/AdminMilkSummary";
+
+
 
 
 function App() {
@@ -67,6 +71,10 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<Homepage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="register" element={<AdminRegister />} />
+
+            {/* <Route path="/google-login" element={<GoogleLogin />} /> */}
+            <Route path="/google-callback" element={<GoogleCallbackHandler />} />
             
 
             {/* Admin Routes */}
@@ -82,7 +90,6 @@ function App() {
               <Route index element={<AdminHome />} />
 
               {/* Other admin pages */}
-              <Route path="register" element={<AdminRegister />} />
               <Route path="view-farmers" element={<ViewFarmers />} />
               <Route path="create-farmer" element={<CreateFarmer />} />
               <Route path="view-porters" element={<ViewPorters />} />
