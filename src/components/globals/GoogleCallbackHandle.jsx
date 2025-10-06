@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Box, CircularProgress, Typography, Alert, Paper, Container } from '@mui/material';
+import { 
+  Box, 
+  CircularProgress, 
+  Typography, 
+  Alert, 
+  Paper, 
+  Container 
+} from '@mui/material';
 
 /**
  * Google OAuth Callback Handler
- * This component handles the redirect from Google after authentication
- * Add this route: <Route path="/google-callback" element={<GoogleCallbackHandler />} />
+ * Handles redirect from Google after authentication.
+ * 
+ * Backend redirect types:
+ *  - /google-callback?token=...&role=...
+ *  - /google-callback?error=...
+ *  - /set-password?token=...  (handled separately)
+ * 
+ * Route: <Route path="/google-callback" element={<GoogleCallbackHandler />} />
  */
 const GoogleCallbackHandler = () => {
   const [status, setStatus] = useState('processing'); // processing, success, error
@@ -15,60 +28,58 @@ const GoogleCallbackHandler = () => {
 
   useEffect(() => {
     handleCallback();
+    // eslint-disable-next-line
   }, [location]);
 
   const handleCallback = () => {
     try {
-      // Parse URL parameters
       const params = new URLSearchParams(location.search);
       const token = params.get('token');
       const role = params.get('role');
       const name = params.get('name');
       const error = params.get('error');
 
-      // Handle error from backend
+      // ✅ 1️⃣ If backend returned an error
       if (error) {
         setStatus('error');
         setMessage(decodeURIComponent(error));
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        setTimeout(() => navigate('/login'), 3000);
         return;
       }
 
-      // Validate required parameters
+      // ✅ 2️⃣ If this redirect is actually for SET-PASSWORD flow (short-lived token only)
+      if (token && !role) {
+        // redirect user to the set-password page
+        setStatus('processing');
+        setMessage('Account created. Redirecting to set password...');
+        setTimeout(() => {
+          navigate(`/set-password?token=${token}`);
+        }, 1000);
+        return;
+      }
+
+      // ✅ 3️⃣ Normal Google login success
       if (!token || !role) {
         setStatus('error');
         setMessage('Invalid authentication response. Missing credentials.');
-        setTimeout(() => {
-          navigate('/login')
-        }, 3000);
+        setTimeout(() => navigate('/login'), 3000);
         return;
       }
 
-      // Store authentication data
+      // ✅ Store the credentials locally
       localStorage.setItem('token', token);
       localStorage.setItem('role', role);
-      if (name) {
-        localStorage.setItem('userName', decodeURIComponent(name));
-      }
+      if (name) localStorage.setItem('userName', decodeURIComponent(name));
 
-      // Success
+      // ✅ Update UI and redirect
       setStatus('success');
       setMessage('Login successful! Redirecting...');
-
-      // Redirect based on role
-      setTimeout(() => {
-        redirectByRole(role);
-      }, 1500);
-
+      setTimeout(() => redirectByRole(role), 1500);
     } catch (err) {
       console.error('Callback handling error:', err);
       setStatus('error');
       setMessage('An error occurred during authentication.');
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      setTimeout(() => navigate('/login'), 3000);
     }
   };
 
@@ -84,8 +95,7 @@ const GoogleCallbackHandler = () => {
       manager: '/managerdashboard',
     };
 
-    const route = roleRoutes[role] || '/dashboard';
-    navigate(route, { replace: true });
+    navigate(roleRoutes[role] || '/dashboard', { replace: true });
   };
 
   return (
@@ -116,7 +126,7 @@ const GoogleCallbackHandler = () => {
                 Authenticating...
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Please wait while we sign you in
+                {message}
               </Typography>
             </>
           )}
