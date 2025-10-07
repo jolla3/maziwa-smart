@@ -82,7 +82,7 @@ function App() {
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/chatroom" element={<ChatRoom />} />
-            <Route path="/recent" element={<ChatList />} />
+            <Route path="/recents" element={<ChatList />} />
             
             
 
