@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
   Send, Check, CheckCheck, Paperclip, Smile, ArrowLeft, 
-  User, MoreVertical, Phone, Video, Image as ImageIcon,
+  User, MoreVertical, Phone, Video,
   X, Download, Circle
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
@@ -30,6 +30,7 @@ export default function ChatRoom() {
   const [lastSeen, setLastSeen] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [counterpart, setCounterpart] = useState(receiver || {});
 
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -97,8 +98,13 @@ export default function ChatRoom() {
           const msgs = res.data.messages || [];
           setMessages(msgs);
           setCachedMessages(msgs);
-          setLastSeen(res.data.counterpart?.last_seen || null);
-          setIsOnline(res.data.counterpart?.is_online || false);
+          
+          // Set counterpart data properly
+          if (res.data.counterpart) {
+            setCounterpart(res.data.counterpart);
+            setIsOnline(res.data.counterpart.is_online || false);
+            setLastSeen(res.data.counterpart.last_seen || null);
+          }
         }
       } catch (err) {
         console.error("Chat fetch error:", err);
@@ -256,29 +262,42 @@ export default function ChatRoom() {
 
   // Format time
   const formatTime = (iso) => {
-    const d = new Date(iso);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
-    
-    if (isToday) {
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (!iso) return "";
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return "";
+      
+      const now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      
+      if (isToday) {
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+      return d.toLocaleDateString([], { month: "short", day: "numeric" }) + 
+             " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch (err) {
+      return "";
     }
-    return d.toLocaleDateString([], { month: "short", day: "numeric" }) + 
-           " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   const formatLastSeen = (date) => {
     if (!date) return "Offline";
-    const d = new Date(date);
-    const now = new Date();
-    const diffMs = now - d;
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return "Active now";
-    if (diffMins < 60) return `Active ${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `Active ${diffHours}h ago`;
-    return `Last seen ${d.toLocaleDateString()}`;
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return "Offline";
+      
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins < 1) return "Active now";
+      if (diffMins < 60) return `Active ${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `Active ${diffHours}h ago`;
+      return `Last seen ${d.toLocaleDateString()}`;
+    } catch (err) {
+      return "Offline";
+    }
   };
 
   return (
@@ -327,7 +346,7 @@ export default function ChatRoom() {
                   boxShadow: theme.shadow,
                 }}
               >
-                {receiver?.name?.[0]?.toUpperCase() || "?"}
+                {(counterpart?.displayName?.[0] || counterpart?.name?.[0] || receiver?.name?.[0] || "?").toUpperCase()}
               </div>
               {isOnline && (
                 <Circle
@@ -341,7 +360,7 @@ export default function ChatRoom() {
             </div>
             <div className="flex-grow-1" style={{ minWidth: 0 }}>
               <h6 className="mb-0 fw-bold" style={{ color: theme.text }}>
-                {receiver?.name || receiver?.displayName || "Chat"}
+                {counterpart?.displayName || counterpart?.name || receiver?.name || "Chat"}
               </h6>
               <small style={{ color: theme.textMuted, fontSize: "13px" }}>
                 {isTyping ? (
@@ -444,11 +463,19 @@ export default function ChatRoom() {
                           fontSize: "12px",
                         }}
                       >
-                        {new Date(m.createdAt).toLocaleDateString("en-US", {
-                          weekday: "long",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {(() => {
+                          try {
+                            const msgDate = new Date(m.createdAt);
+                            if (isNaN(msgDate.getTime())) return "";
+                            return msgDate.toLocaleDateString("en-US", {
+                              weekday: "long",
+                              month: "short",
+                              day: "numeric",
+                            });
+                          } catch {
+                            return "";
+                          }
+                        })()}
                       </span>
                     </div>
                   )}
@@ -751,9 +778,9 @@ export default function ChatRoom() {
                     fontSize: 32,
                   }}
                 >
-                  {receiver?.name?.[0]?.toUpperCase() || "?"}
+                  {(counterpart?.displayName?.[0] || counterpart?.name?.[0] || receiver?.name?.[0] || "?").toUpperCase()}
                 </div>
-                <h5 className="fw-bold mb-1">{receiver?.displayName || receiver?.name}</h5>
+                <h5 className="fw-bold mb-1">{counterpart?.displayName || counterpart?.name || receiver?.name || "User"}</h5>
                 <p className="text-muted small mb-0">
                   {isOnline ? (
                     <span className="text-success fw-medium">● Active now</span>
@@ -764,22 +791,22 @@ export default function ChatRoom() {
               </div>
 
               <div className="d-flex flex-column gap-3">
-                {receiver?.email && (
+                {counterpart?.email && (
                   <div>
                     <strong className="text-muted small">Email</strong>
-                    <p className="mb-0">{receiver.email}</p>
+                    <p className="mb-0">{counterpart.email}</p>
                   </div>
                 )}
-                {receiver?.phone && (
+                {counterpart?.phone && (
                   <div>
                     <strong className="text-muted small">Phone</strong>
-                    <p className="mb-0">{receiver.phone}</p>
+                    <p className="mb-0">{counterpart.phone}</p>
                   </div>
                 )}
-                {receiver?.location && (
+                {counterpart?.location && (
                   <div>
                     <strong className="text-muted small">Location</strong>
-                    <p className="mb-0">{receiver.location}</p>
+                    <p className="mb-0">{counterpart.location}</p>
                   </div>
                 )}
               </div>
