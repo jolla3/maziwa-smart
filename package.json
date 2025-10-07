@@ -37,6 +37,7 @@
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
     "emoji-mart": "^5.6.0",
+    "emoji-picker-react": "^4.14.0",
     "formik": "^2.4.6",
     "framer-motion": "^12.23.12",
     "html-webpack-plugin": "^5.6.3",
@@ -83,5 +84,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.14"
   }
 }

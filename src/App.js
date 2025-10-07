@@ -50,6 +50,7 @@ import GoogleCallbackHandler from "./components/globals/GoogleCallbackHandle";
 import PrivacyPolicy from "./components/PrivateComponents/PrivacyPolicy";
 import TermsOfService from "./components/PrivateComponents/TermsOfService";
 import ChatRoom from "./components/globals/ChatRoom";
+import ChatList from "./components/globals/ChatList";
 // import { GoogleLogin } from "@react-oauth/google";
 
 // import farmerLayout from './components/farmer/farmerLayout'
@@ -80,7 +81,8 @@ function App() {
             <Route path="/google-callback" element={<GoogleCallbackHandler />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/chats" element={<ChatRoom />} />
+            <Route path="/chatroom" element={<ChatRoom />} />
+            <Route path="/recent" element={<ChatList />} />
             
             
 
