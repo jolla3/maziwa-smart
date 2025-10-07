@@ -737,78 +737,211 @@ export default function ChatRoom() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="position-fixed top-0 start-0 w-100 h-100 bg-dark"
-              style={{ opacity: 0.5, zIndex: 1040 }}
+              className="position-fixed top-0 start-0 w-100 h-100"
+              style={{ 
+                background: "rgba(0, 0, 0, 0.75)",
+                backdropFilter: "blur(8px)",
+                zIndex: 1040 
+              }}
               onClick={() => setShowProfile(false)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 50 }}
-              className="position-fixed top-50 start-50 bg-white shadow-lg rounded-4 p-4"
+              className="position-fixed shadow-lg rounded-4 overflow-hidden"
               style={{
+                top: "50%",
+                left: "50%",
                 transform: "translate(-50%, -50%)",
                 zIndex: 1050,
-                maxWidth: 400,
-                width: "90%",
+                maxWidth: "min(500px, 90vw)",
+                width: "100%",
+                maxHeight: "90vh",
+                overflowY: "auto",
               }}
             >
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                  <User size={20} color={theme.accent} />
-                  Profile
-                </h5>
+              {/* Header with gradient */}
+              <div
+                style={{
+                  background: theme.bubbleMine,
+                  padding: "24px",
+                  position: "relative",
+                }}
+              >
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
-                  className="btn btn-light border-0 rounded-circle p-2"
+                  className="btn border-0 rounded-circle p-2 position-absolute"
+                  style={{
+                    top: 16,
+                    right: 16,
+                    background: "rgba(255, 255, 255, 0.2)",
+                    backdropFilter: "blur(10px)",
+                  }}
                   onClick={() => setShowProfile(false)}
                 >
-                  <X size={20} />
+                  <X size={20} color="white" />
                 </motion.button>
-              </div>
 
-              <div className="text-center mb-4">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto mb-3"
-                  style={{
-                    width: 80,
-                    height: 80,
-                    background: theme.bubbleMine,
-                    fontSize: 32,
-                  }}
-                >
-                  {(counterpart?.displayName?.[0] || counterpart?.name?.[0] || receiver?.name?.[0] || "?").toUpperCase()}
+                <div className="text-center pt-3">
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center fw-bold mx-auto mb-3"
+                    style={{
+                      width: 100,
+                      height: 100,
+                      background: "white",
+                      color: theme.accent,
+                      fontSize: 40,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+                    }}
+                  >
+                    {(counterpart?.displayName?.[0] || counterpart?.name?.[0] || receiver?.name?.[0] || "?").toUpperCase()}
+                  </div>
+                  <h4 className="fw-bold mb-2 text-white">
+                    {counterpart?.displayName || counterpart?.name || receiver?.name || "User"}
+                  </h4>
+                  <div
+                    className="d-inline-block px-3 py-1 rounded-pill"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.2)",
+                      backdropFilter: "blur(10px)",
+                    }}
+                  >
+                    <small className="text-white fw-medium">
+                      {isOnline ? (
+                        <>
+                          <Circle size={8} fill="#10b981" color="#10b981" className="me-1" />
+                          Active now
+                        </>
+                      ) : (
+                        formatLastSeen(lastSeen)
+                      )}
+                    </small>
+                  </div>
                 </div>
-                <h5 className="fw-bold mb-1">{counterpart?.displayName || counterpart?.name || receiver?.name || "User"}</h5>
-                <p className="text-muted small mb-0">
-                  {isOnline ? (
-                    <span className="text-success fw-medium">● Active now</span>
-                  ) : (
-                    formatLastSeen(lastSeen)
-                  )}
-                </p>
               </div>
 
-              <div className="d-flex flex-column gap-3">
-                {counterpart?.email && (
-                  <div>
-                    <strong className="text-muted small">Email</strong>
-                    <p className="mb-0">{counterpart.email}</p>
-                  </div>
-                )}
-                {counterpart?.phone && (
-                  <div>
-                    <strong className="text-muted small">Phone</strong>
-                    <p className="mb-0">{counterpart.phone}</p>
-                  </div>
-                )}
-                {counterpart?.location && (
-                  <div>
-                    <strong className="text-muted small">Location</strong>
-                    <p className="mb-0">{counterpart.location}</p>
-                  </div>
-                )}
+              {/* Info section with dark background */}
+              <div
+                style={{
+                  background: "#1e293b",
+                  padding: "24px",
+                }}
+              >
+                <h6 className="text-white-50 text-uppercase small fw-bold mb-3 d-flex align-items-center gap-2">
+                  <User size={16} />
+                  Contact Information
+                </h6>
+
+                <div className="d-flex flex-column gap-3">
+                  {counterpart?.email && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="p-3 rounded-3"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      <div className="d-flex align-items-start gap-3">
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                          style={{
+                            width: 40,
+                            height: 40,
+                            background: "rgba(99, 102, 241, 0.2)",
+                          }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                          </svg>
+                        </div>
+                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                          <small className="text-white-50 d-block mb-1">Email Address</small>
+                          <p className="mb-0 text-white fw-medium" style={{ wordBreak: "break-all" }}>
+                            {counterpart.email}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {counterpart?.phone && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="p-3 rounded-3"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      <div className="d-flex align-items-start gap-3">
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                          style={{
+                            width: 40,
+                            height: 40,
+                            background: "rgba(16, 185, 129, 0.2)",
+                          }}
+                        >
+                          <Phone size={18} color="#10b981" />
+                        </div>
+                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                          <small className="text-white-50 d-block mb-1">Phone Number</small>
+                          <p className="mb-0 text-white fw-medium" style={{ wordBreak: "break-all" }}>
+                            {counterpart.phone}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {counterpart?.location && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="p-3 rounded-3"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      <div className="d-flex align-items-start gap-3">
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                          style={{
+                            width: 40,
+                            height: 40,
+                            background: "rgba(245, 158, 11, 0.2)",
+                          }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                          </svg>
+                        </div>
+                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                          <small className="text-white-50 d-block mb-1">Location</small>
+                          <p className="mb-0 text-white fw-medium" style={{ wordBreak: "break-word" }}>
+                            {counterpart.location}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {!counterpart?.email && !counterpart?.phone && !counterpart?.location && (
+                    <div className="text-center py-4">
+                      <p className="text-white-50 mb-0">No additional information available</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </>
