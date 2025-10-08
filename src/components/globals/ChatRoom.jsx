@@ -295,25 +295,37 @@ const useCallHandler = (socketRef, receiverId, type = "voice") => {
   };
 
   // ✅ Real call redirect handlers
+const sanitizePhone = (phone) => {
+  if (!phone) return null;
+  const str = String(phone).replace(/\D/g, ""); // remove non-digits
+  if (str.length < 7) return null; // too short to be valid
+  return str;
+};
+
+// 🔹 Dynamically decide how to format WhatsApp number
+const formatForWhatsApp = (phone) => {
+  const clean = sanitizePhone(phone);
+  if (!clean) return null;
+
+  // if it already starts with '254' or any country code (10–13 digits)
+  if (clean.startsWith("254") || clean.length > 9) return clean;
+
+  // otherwise, prefix your default country code — e.g., from ENV or config
+  const DEFAULT_COUNTRY_CODE = import.meta.env.VITE_COUNTRY_CODE || "254";
+  return `${DEFAULT_COUNTRY_CODE}${clean}`;
+};
+
 const handleVoiceCall = () => {
-  if (counterpart?.phone) {
-    window.location.href = `tel:${counterpart.phone}`;
-  } else {
-    alert("❌ No phone number available for this user.");
-  }
+  const phone = sanitizePhone(counterpart?.phone);
+  if (!phone) return alert("Phone number not available for this user.");
+  window.open(`tel:${phone}`);
 };
 
 const handleWhatsAppChat = () => {
-  if (counterpart?.phone) {
-    // Ensure it works with WhatsApp international format (e.g., 254...)
-    const phoneNum = counterpart.phone.replace(/\D/g, ""); // remove symbols
-    window.open(`https://wa.me/${phoneNum}`, "_blank");
-  } else {
-    alert("❌ No phone number available for this user.");
-  }
+  const phone = formatForWhatsApp(counterpart?.phone);
+  if (!phone) return alert("WhatsApp number not available for this user.");
+  window.open(`https://wa.me/${phone}`, "_blank");
 };
-
-
   return (
     <div
       className="d-flex flex-column vh-100 position-relative"
@@ -393,26 +405,21 @@ const handleWhatsAppChat = () => {
 
         <div className="d-flex gap-2">
           <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={handleVoiceCall}
-    className="btn btn-light border-0 rounded-circle p-2"
-    style={{ width: 40, height: 40 }}
-    title="Call"
-  >
-    <Phone size={18} color={theme.accent} />
-  </motion.button>
-
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={handleWhatsAppChat}
-    className="btn btn-light border-0 rounded-circle p-2"
-    style={{ width: 40, height: 40 }}
-    title="WhatsApp Chat"
-  >
-    <Video size={18} color={theme.accent} />
-  </motion.button>
+  whileHover={{ scale: counterpart?.phone ? 1.05 : 1 }}
+  whileTap={{ scale: counterpart?.phone ? 0.95 : 1 }}
+  disabled={!sanitizePhone(counterpart?.phone)}
+  className="btn btn-light border-0 rounded-circle p-2"
+  style={{
+    width: 40,
+    height: 40,
+    opacity: sanitizePhone(counterpart?.phone) ? 1 : 0.4,
+    cursor: sanitizePhone(counterpart?.phone) ? "pointer" : "not-allowed",
+  }}
+  onClick={handleWhatsAppChat}
+  title="WhatsApp Chat"
+>
+  <Video size={18} color={theme.accent} />
+</motion.button>
 
   <motion.button
     whileHover={{ scale: 1.05 }}
@@ -448,7 +455,7 @@ const handleWhatsAppChat = () => {
               fontWeight: 500,
             }}
           >
-            Connecting to server...
+            Fetching Messages...
           </motion.div>
         )}
       </AnimatePresence>
@@ -757,276 +764,252 @@ const handleWhatsAppChat = () => {
         )}
       </AnimatePresence>
 
-     {/* Profile Popup */}
-<AnimatePresence>
+    <AnimatePresence>
   {showProfile && (
     <>
-      {/* Dimmed background overlay */}
+      {/* Overlay */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.5 }}
+        animate={{ opacity: 0.6 }}
         exit={{ opacity: 0 }}
         className="position-fixed top-0 start-0 w-100 h-100"
         style={{
-          background: "rgba(0, 0, 0, 0.6)",
+          background: "rgba(0,0,0,0.7)",
           backdropFilter: "blur(6px)",
           zIndex: 1040,
         }}
         onClick={() => setShowProfile(false)}
       />
 
-      {/* Popup box */}
+      {/* Center wrapper (handles responsiveness) */}
       <motion.div
-        initial={{ opacity: 0, y: -40, x: 40 }}
-        animate={{ opacity: 1, y: 0, x: 0 }}
-        exit={{ opacity: 0, y: -20, x: 20 }}
-        transition={{ duration: 0.3 }}
-        className="position-fixed shadow-lg rounded-4 overflow-hidden"
+        className="position-fixed w-100 d-flex justify-content-center"
         style={{
-          top: "5%", // 👈 places it near top
-          right: "50%", // 👈 keeps it slightly toward the center
-          transform: "translateX(50%)", // balances the right offset
+          top: "5%",
           zIndex: 1050,
-          maxWidth: "min(500px, 90vw)",
-          width: "100%",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          borderRadius: "20px",
-          background: "#ffffff",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+          pointerEvents: "none", // allows clicks to pass outside popup
         }}
       >
-        {/* Header with gradient */}
-        <div
+        {/* Popup box */}
+        <motion.div
+          initial={{ opacity: 0, y: -40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="shadow-lg rounded-4 overflow-hidden"
           style={{
-            background: theme.bubbleMine,
-            padding: "24px",
-            position: "relative",
+            pointerEvents: "auto",
+            width: "90%",
+            maxWidth: "420px",
+            background: "#fff",
+            borderRadius: "20px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
           }}
         >
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.9 }}
-            className="btn border-0 rounded-circle p-2 position-absolute"
+          {/* Header */}
+          <div
             style={{
-              top: 16,
-              right: 16,
-              background: "rgba(255, 255, 255, 0.2)",
-              backdropFilter: "blur(10px)",
+              background: theme.bubbleMine,
+              padding: "24px",
+              position: "relative",
             }}
-            onClick={() => setShowProfile(false)}
           >
-            <X size={20} color="white" />
-          </motion.button>
-
-          <div className="text-center pt-3">
-            <div
-              className="rounded-circle d-flex align-items-center justify-content-center fw-bold mx-auto mb-3"
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              className="btn border-0 rounded-circle p-2 position-absolute"
               style={{
-                width: 100,
-                height: 100,
-                background: "white",
-                color: theme.accent,
-                fontSize: 40,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-              }}
-            >
-              {(counterpart?.displayName?.[0] ||
-                counterpart?.name?.[0] ||
-                receiver?.name?.[0] ||
-                "?"
-              ).toUpperCase()}
-            </div>
-            <h4 className="fw-bold mb-2 text-white">
-              {counterpart?.displayName ||
-                counterpart?.name ||
-                receiver?.name ||
-                "User"}
-            </h4>
-            <div
-              className="d-inline-block px-3 py-1 rounded-pill"
-              style={{
+                top: 16,
+                right: 16,
                 background: "rgba(255, 255, 255, 0.2)",
                 backdropFilter: "blur(10px)",
               }}
+              onClick={() => setShowProfile(false)}
             >
-              <small className="text-white fw-medium">
-                {isOnline ? (
-                  <>
-                    <Circle
-                      size={8}
-                      fill="#10b981"
-                      color="#10b981"
-                      className="me-1"
-                    />
-                    Active now
-                  </>
-                ) : (
-                  formatLastSeen(lastSeen)
-                )}
-              </small>
+              <X size={20} color="white" />
+            </motion.button>
+
+            <div className="text-center pt-3">
+              <div
+                className="rounded-circle d-flex align-items-center justify-content-center fw-bold mx-auto mb-3"
+                style={{
+                  width: 100,
+                  height: 100,
+                  background: "white",
+                  color: theme.accent,
+                  fontSize: 40,
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+                }}
+              >
+                {(counterpart?.displayName?.[0] ||
+                  counterpart?.name?.[0] ||
+                  receiver?.name?.[0] ||
+                  "?"
+                ).toUpperCase()}
+              </div>
+              <h4 className="fw-bold mb-2 text-white">
+                {counterpart?.displayName ||
+                  counterpart?.name ||
+                  receiver?.name ||
+                  "User"}
+              </h4>
+              <div
+                className="d-inline-block px-3 py-1 rounded-pill"
+                style={{
+                  background: "rgba(255,255,255,0.2)",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
+                <small className="text-white fw-medium">
+                  {isOnline ? (
+                    <>
+                      <Circle
+                        size={8}
+                        fill="#10b981"
+                        color="#10b981"
+                        className="me-1"
+                      />
+                      Active now
+                    </>
+                  ) : (
+                    formatLastSeen(lastSeen)
+                  )}
+                </small>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Info section with dark background */}
+          {/* Info */}
+          <div
+            style={{
+              background: "#1e293b",
+              padding: "24px",
+            }}
+          >
+            <h6 className="text-white-50 text-uppercase small fw-bold mb-3 d-flex align-items-center gap-2">
+              <User size={16} />
+              Contact Information
+            </h6>
+
+            <div className="d-flex flex-column gap-3">
+  {/* Email */}
+  {counterpart?.email && String(counterpart.email).trim() !== "" && (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="p-3 rounded-3"
+      style={{
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      <div className="d-flex align-items-start gap-3">
         <div
+          className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
           style={{
-            background: "#1e293b",
-            padding: "24px",
+            width: 40,
+            height: 40,
+            background: "rgba(99,102,241,0.2)",
           }}
         >
-          <h6 className="text-white-50 text-uppercase small fw-bold mb-3 d-flex align-items-center gap-2">
-            <User size={16} />
-            Contact Information
-          </h6>
-
-          <div className="d-flex flex-column gap-3">
-            {counterpart?.email && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="p-3 rounded-3"
-                style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <div className="d-flex align-items-start gap-3">
-                  <div
-                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      background: "rgba(99, 102, 241, 0.2)",
-                    }}
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#818cf8"
-                      strokeWidth="2"
-                    >
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
-                  </div>
-                  <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                    <small className="text-white-50 d-block mb-1">
-                      Email Address
-                    </small>
-                    <p
-                      className="mb-0 text-white fw-medium"
-                      style={{ wordBreak: "break-all" }}
-                    >
-                      {counterpart.email}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {counterpart?.phone && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="p-3 rounded-3"
-                style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <div className="d-flex align-items-start gap-3">
-                  <div
-                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      background: "rgba(16, 185, 129, 0.2)",
-                    }}
-                  >
-                    <Phone size={18} color="#10b981" />
-                  </div>
-                  <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                    <small className="text-white-50 d-block mb-1">
-                      Phone Number
-                    </small>
-                    <p
-                      className="mb-0 text-white fw-medium"
-                      style={{ wordBreak: "break-all" }}
-                    >
-                      {counterpart.phone}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {counterpart?.location && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="p-3 rounded-3"
-                style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <div className="d-flex align-items-start gap-3">
-                  <div
-                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      background: "rgba(245, 158, 11, 0.2)",
-                    }}
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#f59e0b"
-                      strokeWidth="2"
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                  </div>
-                  <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                    <small className="text-white-50 d-block mb-1">
-                      Location
-                    </small>
-                    <p
-                      className="mb-0 text-white fw-medium"
-                      style={{ wordBreak: "break-word" }}
-                    >
-                      {counterpart.location}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {!counterpart?.email &&
-              !counterpart?.phone &&
-              !counterpart?.location && (
-                <div className="text-center py-4">
-                  <p className="text-white-50 mb-0">
-                    No additional information available
-                  </p>
-                </div>
-              )}
-          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
         </div>
+        <div className="flex-grow-1">
+          <small className="text-white-50 d-block mb-1">Email Address</small>
+          <p className="mb-0 text-white fw-medium" style={{ wordBreak: "break-all" }}>
+            {counterpart.email}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  )}
+
+  {/* Phone */}
+  {counterpart?.phone && String(counterpart.phone).trim() !== "" && (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.1 }}
+      className="p-3 rounded-3"
+      style={{
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      <div className="d-flex align-items-start gap-3">
+        <div
+          className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+          style={{
+            width: 40,
+            height: 40,
+            background: "rgba(16,185,129,0.2)",
+          }}
+        >
+          <Phone size={18} color="#10b981" />
+        </div>
+        <div className="flex-grow-1">
+          <small className="text-white-50 d-block mb-1">Phone Number</small>
+          <p className="mb-0 text-white fw-medium" style={{ wordBreak: "break-all" }}>
+            {String(counterpart.phone)}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  )}
+
+  {/* Location */}
+{(counterpart?.location || counterpart?.Location || counterpart?.location_description) && (
+  <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.2 }}
+      className="p-3 rounded-3"
+      style={{
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      <div className="d-flex align-items-start gap-3">
+        <div
+          className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+          style={{
+            width: 40,
+            height: 40,
+            background: "rgba(245,158,11,0.2)",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </div>
+        <div className="flex-grow-1">
+          <small className="text-white-50 d-block mb-1">Location</small>
+          <p className="mb-0 text-white fw-medium" style={{ wordBreak: "break-word" }}>
+              {String(counterpart?.location || counterpart?.Location || counterpart?.location_description || "Unknown")}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  )}
+
+  {/* Fallback */}
+  {!counterpart?.email && !counterpart?.phone && !counterpart?.location && (
+    <div className="text-center py-4">
+      <p className="text-white-50 mb-0">No additional information available</p>
+    </div>
+  )}
+</div>
+          </div>
+        </motion.div>
       </motion.div>
     </>
   )}
 </AnimatePresence>
+
 
     </div>
   );
