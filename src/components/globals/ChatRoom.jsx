@@ -761,38 +761,39 @@ const handleWhatsAppChat = () => {
 <AnimatePresence>
   {showProfile && (
     <>
-      {/* Dimmed Overlay */}
+      {/* Dimmed background overlay */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={{ opacity: 0.5 }}
         exit={{ opacity: 0 }}
         className="position-fixed top-0 start-0 w-100 h-100"
         style={{
-          background: "rgba(0, 0, 0, 0.75)",
-          backdropFilter: "blur(8px)",
+          background: "rgba(0, 0, 0, 0.6)",
+          backdropFilter: "blur(6px)",
           zIndex: 1040,
         }}
         onClick={() => setShowProfile(false)}
       />
 
-      {/* Top Center-Right Popup */}
+      {/* Popup box */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: -30, x: 50 }}
-        animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: -30, x: 50 }}
+        initial={{ opacity: 0, y: -40, x: 40 }}
+        animate={{ opacity: 1, y: 0, x: 0 }}
+        exit={{ opacity: 0, y: -20, x: 20 }}
         transition={{ duration: 0.3 }}
         className="position-fixed shadow-lg rounded-4 overflow-hidden"
         style={{
-          top: "5%",
-          right: "50%",
-          transform: "translateX(50%)", // centers it horizontally while keeping it at the top
+          top: "5%", // 👈 places it near top
+          right: "50%", // 👈 keeps it slightly toward the center
+          transform: "translateX(50%)", // balances the right offset
           zIndex: 1050,
-          width: "90%",
-          maxWidth: "420px",
-          background: "#ffffff",
+          maxWidth: "min(500px, 90vw)",
+          width: "100%",
+          maxHeight: "90vh",
+          overflowY: "auto",
           borderRadius: "20px",
+          background: "#ffffff",
           boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-          overflow: "hidden",
         }}
       >
         {/* Header with gradient */}
@@ -837,7 +838,10 @@ const handleWhatsAppChat = () => {
               ).toUpperCase()}
             </div>
             <h4 className="fw-bold mb-2 text-white">
-              {counterpart?.displayName || counterpart?.name || receiver?.name || "User"}
+              {counterpart?.displayName ||
+                counterpart?.name ||
+                receiver?.name ||
+                "User"}
             </h4>
             <div
               className="d-inline-block px-3 py-1 rounded-pill"
@@ -849,7 +853,12 @@ const handleWhatsAppChat = () => {
               <small className="text-white fw-medium">
                 {isOnline ? (
                   <>
-                    <Circle size={8} fill="#10b981" color="#10b981" className="me-1" />
+                    <Circle
+                      size={8}
+                      fill="#10b981"
+                      color="#10b981"
+                      className="me-1"
+                    />
                     Active now
                   </>
                 ) : (
@@ -860,13 +869,11 @@ const handleWhatsAppChat = () => {
           </div>
         </div>
 
-        {/* Info Section */}
+        {/* Info section with dark background */}
         <div
           style={{
             background: "#1e293b",
             padding: "24px",
-            maxHeight: "70vh",
-            overflowY: "auto",
           }}
         >
           <h6 className="text-white-50 text-uppercase small fw-bold mb-3 d-flex align-items-center gap-2">
@@ -894,14 +901,26 @@ const handleWhatsAppChat = () => {
                       background: "rgba(99, 102, 241, 0.2)",
                     }}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                      <polyline points="22,6 12,13 2,6"/>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#818cf8"
+                      strokeWidth="2"
+                    >
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
                     </svg>
                   </div>
                   <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                    <small className="text-white-50 d-block mb-1">Email Address</small>
-                    <p className="mb-0 text-white fw-medium" style={{ wordBreak: "break-all" }}>
+                    <small className="text-white-50 d-block mb-1">
+                      Email Address
+                    </small>
+                    <p
+                      className="mb-0 text-white fw-medium"
+                      style={{ wordBreak: "break-all" }}
+                    >
                       {counterpart.email}
                     </p>
                   </div>
@@ -909,7 +928,99 @@ const handleWhatsAppChat = () => {
               </motion.div>
             )}
 
-            {/* Phone & Location (unchanged) */}
+            {counterpart?.phone && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="p-3 rounded-3"
+                style={{
+                  background: "rgba(255, 255, 255, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                <div className="d-flex align-items-start gap-3">
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                    style={{
+                      width: 40,
+                      height: 40,
+                      background: "rgba(16, 185, 129, 0.2)",
+                    }}
+                  >
+                    <Phone size={18} color="#10b981" />
+                  </div>
+                  <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                    <small className="text-white-50 d-block mb-1">
+                      Phone Number
+                    </small>
+                    <p
+                      className="mb-0 text-white fw-medium"
+                      style={{ wordBreak: "break-all" }}
+                    >
+                      {counterpart.phone}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {counterpart?.location && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="p-3 rounded-3"
+                style={{
+                  background: "rgba(255, 255, 255, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                <div className="d-flex align-items-start gap-3">
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                    style={{
+                      width: 40,
+                      height: 40,
+                      background: "rgba(245, 158, 11, 0.2)",
+                    }}
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#f59e0b"
+                      strokeWidth="2"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </div>
+                  <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                    <small className="text-white-50 d-block mb-1">
+                      Location
+                    </small>
+                    <p
+                      className="mb-0 text-white fw-medium"
+                      style={{ wordBreak: "break-word" }}
+                    >
+                      {counterpart.location}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {!counterpart?.email &&
+              !counterpart?.phone &&
+              !counterpart?.location && (
+                <div className="text-center py-4">
+                  <p className="text-white-50 mb-0">
+                    No additional information available
+                  </p>
+                </div>
+              )}
           </div>
         </div>
       </motion.div>
