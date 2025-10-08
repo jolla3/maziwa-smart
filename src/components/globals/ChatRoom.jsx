@@ -4,6 +4,7 @@ import io from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js";
 import {
   Send, Check, CheckCheck, Paperclip, Smile, ArrowLeft, 
   User, MoreVertical, Phone, Video,
@@ -294,37 +295,59 @@ const useCallHandler = (socketRef, receiverId, type = "voice") => {
     }
   };
 
-  // ✅ Real call redirect handlers
+
+// ✅ Helper: Sanitize and normalize
 const sanitizePhone = (phone) => {
   if (!phone) return null;
-  const str = String(phone).replace(/\D/g, ""); // remove non-digits
-  if (str.length < 7) return null; // too short to be valid
-  return str;
+  const str = String(phone).replace(/\D/g, ""); // keep digits only
+  return str.length >= 7 ? str : null;
 };
 
-// 🔹 Dynamically decide how to format WhatsApp number
-const formatForWhatsApp = (phone) => {
-  const clean = sanitizePhone(phone);
-  if (!clean) return null;
-
-  // if it already starts with '254' or any country code (10–13 digits)
-  if (clean.startsWith("254") || clean.length > 9) return clean;
-
-  // otherwise, prefix your default country code — e.g., from ENV or config
-  const DEFAULT_COUNTRY_CODE = import.meta.env.VITE_COUNTRY_CODE || "254";
-  return `${DEFAULT_COUNTRY_CODE}${clean}`;
+// ✅ Helper: Get browser’s country (automatically detects region)
+const getBrowserCountryCode = () => {
+  try {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale; // e.g. "en-KE"
+    const region = locale.split("-")[1]; // → "KE"
+    if (!region) return "254"; // fallback Kenya
+    return getCountryCallingCode(region.toUpperCase()) || "254";
+  } catch {
+    return "254"; // fallback to Kenya
+  }
 };
 
+// ✅ Helper: Detect mobile vs desktop
+const isMobileDevice = () =>
+  /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+
+// ☎️ Voice Call
 const handleVoiceCall = () => {
   const phone = sanitizePhone(counterpart?.phone);
   if (!phone) return alert("Phone number not available for this user.");
   window.open(`tel:${phone}`);
 };
 
+// 💬 WhatsApp Chat
 const handleWhatsAppChat = () => {
-  const phone = formatForWhatsApp(counterpart?.phone);
+  let phone = sanitizePhone(counterpart?.phone);
   if (!phone) return alert("WhatsApp number not available for this user.");
-  window.open(`https://wa.me/${phone}`, "_blank");
+
+  // Add leading zero if 9 digits (common Kenya style)
+  if (phone.length === 9) phone = `0${phone}`;
+
+  // Determine proper international code dynamically
+  const code = getBrowserCountryCode();
+
+  // If number missing code, prepend it
+  if (!phone.startsWith(code) && !phone.startsWith(`+${code}`)) {
+    if (phone.startsWith("0")) phone = phone.substring(1);
+    phone = `${code}${phone}`;
+  }
+
+  const waURL = isMobileDevice()
+    ? `whatsapp://send?phone=${phone}`
+    : `https://wa.me/${phone}`;
+
+  window.open(waURL, "_blank");
 };
   return (
     <div
@@ -404,31 +427,40 @@ const handleWhatsAppChat = () => {
         </div>
 
         <div className="d-flex gap-2">
-          <motion.button
-  whileHover={{ scale: counterpart?.phone ? 1.05 : 1 }}
-  whileTap={{ scale: counterpart?.phone ? 0.95 : 1 }}
-  disabled={!sanitizePhone(counterpart?.phone)}
-  className="btn btn-light border-0 rounded-circle p-2"
-  style={{
-    width: 40,
-    height: 40,
-    opacity: sanitizePhone(counterpart?.phone) ? 1 : 0.4,
-    cursor: sanitizePhone(counterpart?.phone) ? "pointer" : "not-allowed",
-  }}
-  onClick={handleWhatsAppChat}
-  title="WhatsApp Chat"
->
-  <Video size={18} color={theme.accent} />
-</motion.button>
+          <div className="d-flex gap-2">
+  <motion.button
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    onClick={handleVoiceCall}
+    className="btn btn-light border-0 rounded-circle p-2"
+    style={{ width: 40, height: 40 }}
+    title="Call"
+  >
+    <Phone size={18} color={theme.accent} />
+  </motion.button>
+
+  <motion.button
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    onClick={handleWhatsAppChat}
+    className="btn btn-light border-0 rounded-circle p-2"
+    style={{ width: 40, height: 40 }}
+    title="WhatsApp Chat"
+  >
+    <Video size={18} color={theme.accent} />
+  </motion.button>
 
   <motion.button
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     className="btn btn-light border-0 rounded-circle p-2"
     style={{ width: 40, height: 40 }}
+    title="More Options"
   >
     <MoreVertical size={18} color={theme.text} />
   </motion.button>
+</div>
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
