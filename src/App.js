@@ -51,6 +51,10 @@ import PrivacyPolicy from "./components/PrivateComponents/PrivacyPolicy";
 import TermsOfService from "./components/PrivateComponents/TermsOfService";
 import ChatRoom from "./components/globals/ChatRoom";
 import ChatList from "./components/globals/ChatList";
+import MyListings from "./components/globals/MyListings";
+import CreateListing from "./components/globals/CreateListing";
+import EditListing from "./components/globals/EditListing";
+import ViewListing from "./components/globals/ViewListing";
 // import { GoogleLogin } from "@react-oauth/google";
 
 // import farmerLayout from './components/farmer/farmerLayout'
@@ -83,6 +87,10 @@ function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/chatroom" element={<ChatRoom />} />
             <Route path="/recents" element={<ChatList />} />
+            <Route path="/my-listings" element={<MyListings />} />
+            <Route path="/create" element={<CreateListing />} />
+            <Route path="/edit" element={<EditListing />} />
+            <Route path="/view" element={<ViewListing />} />
             
             
 
