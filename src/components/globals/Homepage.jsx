@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  Container, 
-  Grid, 
+import {
+  Box,
+  Typography,
+  Button,
+  Container,
+  Grid,
   Paper,
   Card,
   CardContent,
@@ -13,15 +13,15 @@ import {
   Fade,
   Grow,
   Avatar,
-  CardMedia 
+  CardMedia
 } from '@mui/material';
-import { 
-  TrendingUp, 
-  Users, 
-  Shield, 
-  BarChart3, 
-  Leaf, 
-  Globe, 
+import {
+  TrendingUp,
+  Users,
+  Shield,
+  BarChart3,
+  Leaf,
+  Globe,
   ArrowRight,
   Star,
   Award
@@ -99,11 +99,11 @@ const LandingPage = () => {
   return (
     <Box>
       <AppNavbar />
-      
+
       {/* Hero Section */}
       <Box
         sx={{
-          background: theme.palette.mode === 'dark' 
+          background: theme.palette.mode === 'dark'
             ? `linear-gradient(135deg, ${theme.palette.primary[500]} 0%, ${theme.palette.primary[700]} 100%)`
             : `linear-gradient(135deg, ${theme.palette.primary[100]} 0%, ${theme.palette.primary[300]} 100%)`,
           minHeight: '90vh',
@@ -125,7 +125,7 @@ const LandingPage = () => {
                              radial-gradient(circle at 75% 75%, ${theme.palette.secondary.main}15 0%, transparent 50%)`,
           }}
         />
-        
+
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <Grid container spacing={6} alignItems="center">
             <Grid item xs={12} md={6}>
@@ -146,7 +146,7 @@ const LandingPage = () => {
                   >
                     Revolutionizing Agriculture with Smart Technology
                   </Typography>
-                  
+
                   <Typography
                     variant="h5"
                     sx={{
@@ -156,10 +156,10 @@ const LandingPage = () => {
                       lineHeight: 1.6,
                     }}
                   >
-                    Connect farmers, optimize operations, and transform agricultural data into actionable insights. 
+                    Connect farmers, optimize operations, and transform agricultural data into actionable insights.
                     Join thousands of farmers already growing smarter with Maziwa Smart.
                   </Typography>
-                  
+
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <Button
                       variant="contained"
@@ -182,7 +182,7 @@ const LandingPage = () => {
                     >
                       Get Started Free
                     </Button>
-                    
+
                     <Button
                       variant="outlined"
                       size="large"
@@ -208,7 +208,7 @@ const LandingPage = () => {
                 </Box>
               </Fade>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <Grow in={true} timeout={1500}>
                 <Box
@@ -283,181 +283,181 @@ const LandingPage = () => {
       </Box>
 
       {/* Features Section */}
-<Box sx={{ py: 10, bgcolor: 'background.default' }}>
-  {/* widen so md screens (≥900px) comfortably show 3 columns */}
-  <Container maxWidth="xl">
-    <Box sx={{ textAlign: 'center', mb: 8 }}>
-      <Typography
-        variant="h2"
-        sx={{ fontSize: '2.5rem', fontWeight: 700, color: 'text.primary', mb: 2 }}
-      >
-        Why Choose Maziwa Smart?
-      </Typography>
-      <Typography
-        variant="h6"
-        sx={{ color: 'text.secondary', maxWidth: 600, mx: 'auto' }}
-      >
-        Comprehensive agricultural management platform designed for modern farming operations
-      </Typography>
-    </Box>
-
-    <Grid container spacing={4} justifyContent="center" alignItems="stretch">
-      {features.map((feature, index) => (
-        <Grid
-          item
-          xs={12}    // 1 column on phones
-          sm={6}     // 2 columns on tablets
-          md={4}     // 3 columns from md (≥900px) and up
-          key={index}
-        >
-          <Grow in timeout={1200 + index * 150}>
-            <Card
-              elevation={4}
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-8px)',
-                  boxShadow: `0 12px 30px ${theme.palette.secondary.main}20`,
-                },
-              }}
+      <Box sx={{ py: 10, bgcolor: 'background.default' }}>
+        {/* widen so md screens (≥900px) comfortably show 3 columns */}
+        <Container maxWidth="xl">
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
+            <Typography
+              variant="h2"
+              sx={{ fontSize: '2.5rem', fontWeight: 700, color: 'text.primary', mb: 2 }}
             >
-              <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}>
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    p: 2,
-                    borderRadius: '50%',
-                    bgcolor: `${theme.palette.secondary.main}20`,
-                    color: theme.palette.secondary.main,
-                    mb: 3,
-                  }}
-                >
-                  {feature.icon}
-                </Box>
-                <Typography variant="h5" component="h3" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
-                  {feature.title}
-                </Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
-                  {feature.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grow>
-        </Grid>
-      ))}
-    </Grid>
-  </Container>
-</Box>
-
-{/* Testimonials Section */}
-<Box sx={{ py: 10, bgcolor: 'background.paper' }}>
-  <Container maxWidth="xl">
-    <Box sx={{ textAlign: 'center', mb: 8 }}>
-      <Typography
-        variant="h2"
-        sx={{
-          fontSize: '2.5rem',
-          fontWeight: 700,
-          color: 'text.primary',
-          mb: 2,
-        }}
-      >
-        What Our Users Say
-      </Typography>
-      <Typography
-        variant="h6"
-        sx={{
-          color: 'text.secondary',
-          maxWidth: 600,
-          mx: 'auto',
-        }}
-      >
-        Join thousands of satisfied farmers and agricultural professionals
-      </Typography>
-    </Box>
-
-    <Grid
-      container
-      spacing={4}
-      justifyContent="center"
-      alignItems="stretch"   // makes all grid items equal height
-    >
-      {testimonials.map((testimonial, index) => (
-        <Grid
-          item
-          xs={12}   // 1 column on phones
-          sm={6}    // 2 columns on tablets
-          md={4}    // 3 columns on desktops
-          key={index}
-        >
-          <Fade in={true} timeout={1500 + index * 200}>
-            <Card
-              elevation={3}
-              sx={{
-                height: '100%',   // stretch card to fill grid item
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: `0 8px 25px ${theme.palette.secondary.main}15`,
-                },
-              }}
+              Why Choose Maziwa Smart?
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{ color: 'text.secondary', maxWidth: 600, mx: 'auto' }}
             >
-              <CardContent sx={{ flexGrow: 1, p: 4 }}>
-                <Box sx={{ display: 'flex', mb: 2 }}>
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={20}
-                      fill={theme.palette.secondary.main}
-                      color={theme.palette.secondary.main}
-                    />
-                  ))}
-                </Box>
-                <Typography
-                  variant="body1"
-                  sx={{ color: 'text.secondary', mb: 3, fontStyle: 'italic' }}
-                >
-                  "{testimonial.comment}"
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: "auto" }}>
-                  <Avatar
-                    src={testimonial.avatarSrc}
-                    alt={testimonial.name}
+              Comprehensive agricultural management platform designed for modern farming operations
+            </Typography>
+          </Box>
+
+          <Grid container spacing={4} justifyContent="center" alignItems="stretch">
+            {features.map((feature, index) => (
+              <Grid
+                item
+                xs={12}    // 1 column on phones
+                sm={6}     // 2 columns on tablets
+                md={4}     // 3 columns from md (≥900px) and up
+                key={index}
+              >
+                <Grow in timeout={1200 + index * 150}>
+                  <Card
+                    elevation={4}
                     sx={{
-                      bgcolor: theme.palette.secondary.main,
-                      mr: 2,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: `0 12px 30px ${theme.palette.secondary.main}20`,
+                      },
                     }}
                   >
-                    {!testimonial.avatarSrc && testimonial.name.charAt(0)}
-                  </Avatar>
-                  <Box>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, color: 'text.primary' }}
-                    >
-                      {testimonial.name}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: 'text.secondary' }}
-                    >
-                      {testimonial.role}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Fade>
-        </Grid>
-      ))}
-    </Grid>
-  </Container>
-</Box>
+                    <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}>
+                      <Box
+                        sx={{
+                          display: 'inline-flex',
+                          p: 2,
+                          borderRadius: '50%',
+                          bgcolor: `${theme.palette.secondary.main}20`,
+                          color: theme.palette.secondary.main,
+                          mb: 3,
+                        }}
+                      >
+                        {feature.icon}
+                      </Box>
+                      <Typography variant="h5" component="h3" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
+                        {feature.title}
+                      </Typography>
+                      <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
+                        {feature.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grow>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* Testimonials Section */}
+      <Box sx={{ py: 10, bgcolor: 'background.paper' }}>
+        <Container maxWidth="xl">
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
+            <Typography
+              variant="h2"
+              sx={{
+                fontSize: '2.5rem',
+                fontWeight: 700,
+                color: 'text.primary',
+                mb: 2,
+              }}
+            >
+              What Our Users Say
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'text.secondary',
+                maxWidth: 600,
+                mx: 'auto',
+              }}
+            >
+              Join thousands of satisfied farmers and agricultural professionals
+            </Typography>
+          </Box>
+
+          <Grid
+            container
+            spacing={4}
+            justifyContent="center"
+            alignItems="stretch"   // makes all grid items equal height
+          >
+            {testimonials.map((testimonial, index) => (
+              <Grid
+                item
+                xs={12}   // 1 column on phones
+                sm={6}    // 2 columns on tablets
+                md={4}    // 3 columns on desktops
+                key={index}
+              >
+                <Fade in={true} timeout={1500 + index * 200}>
+                  <Card
+                    elevation={3}
+                    sx={{
+                      height: '100%',   // stretch card to fill grid item
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: `0 8px 25px ${theme.palette.secondary.main}15`,
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ flexGrow: 1, p: 4 }}>
+                      <Box sx={{ display: 'flex', mb: 2 }}>
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star
+                            key={i}
+                            size={20}
+                            fill={theme.palette.secondary.main}
+                            color={theme.palette.secondary.main}
+                          />
+                        ))}
+                      </Box>
+                      <Typography
+                        variant="body1"
+                        sx={{ color: 'text.secondary', mb: 3, fontStyle: 'italic' }}
+                      >
+                        "{testimonial.comment}"
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mt: "auto" }}>
+                        <Avatar
+                          src={testimonial.avatarSrc}
+                          alt={testimonial.name}
+                          sx={{
+                            bgcolor: theme.palette.secondary.main,
+                            mr: 2,
+                          }}
+                        >
+                          {!testimonial.avatarSrc && testimonial.name.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{ fontWeight: 600, color: 'text.primary' }}
+                          >
+                            {testimonial.name}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            {testimonial.role}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Fade>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
 
 
       {/* CTA Section */}
@@ -548,6 +548,14 @@ const LandingPage = () => {
                   <Button color="inherit" onClick={() => navigate('/register')}>Register</Button>
                   <Button color="inherit">About</Button>
                   <Button color="inherit">Contact</Button>
+                  <Button color="inherit" onClick={() => navigate('/privacy')}>
+                    Privacy Policy
+                  </Button>
+                  <Button color="inherit" onClick={() => navigate('/terms')}>
+                    Terms of Service
+                  </Button>
+
+
                 </Box>
               </Box>
             </Grid>

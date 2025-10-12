@@ -1,84 +1,116 @@
-// src/components/globals/TermsOfService.jsx
 import React from "react";
-import { Box, Container, Typography, Paper } from "@mui/material";
+import { Container, Typography, Box, Link } from "@mui/material";
 
 const TermsOfService = () => {
   return (
-    <Box
-      sx={{
-        bgcolor: "background.default",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        py: 6,
-      }}
-    >
-      <Container maxWidth="md">
-        <Paper
-          elevation={4}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            bgcolor: "background.paper",
-          }}
-        >
-          <Typography variant="h4" gutterBottom fontWeight={600}>
-            Terms of Service
-          </Typography>
+    <Container maxWidth="md" sx={{ py: 6 }}>
+      <Typography variant="h3" gutterBottom fontWeight={700}>
+        Terms of Service
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
+        Last updated: October 2025
+      </Typography>
 
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            <strong>Effective Date:</strong> October 2025
-          </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        Welcome to <strong>MaziwaSmart</strong>. These Terms of Service
+        (“Terms”) govern your access and use of our application, services, and
+        related content (collectively referred to as the “Service”).
+        By using MaziwaSmart, you agree to these Terms. If you do not agree,
+        please discontinue using our platform.
+      </Typography>
 
-          <Typography variant="body1" paragraph>
-            Welcome to <strong>MaziwaSmart</strong>. By using our website and services, you agree to the following terms and conditions.
-          </Typography>
+      <Typography variant="h6" gutterBottom>
+        1. Eligibility
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        You must be at least 18 years old or have parental consent to use
+        MaziwaSmart. You also agree that the information you provide during
+        registration is accurate and up to date.
+      </Typography>
 
-          <Typography variant="h6" gutterBottom>
-            1. Acceptance of Terms
-          </Typography>
-          <Typography variant="body2" paragraph>
-            By creating an account or using this service, you agree to comply with these Terms of Service and our Privacy Policy.
-          </Typography>
+      <Typography variant="h6" gutterBottom>
+        2. Account Responsibility
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        You are responsible for maintaining the confidentiality of your account
+        and login credentials. Any activity under your account is your
+        responsibility. Notify us immediately if you suspect unauthorized
+        access.
+      </Typography>
 
-          <Typography variant="h6" gutterBottom>
-            2. Account Responsibility
-          </Typography>
-          <Typography variant="body2" paragraph>
-            You are responsible for maintaining the confidentiality of your login credentials and for all activities under your account.
-          </Typography>
+      <Typography variant="h6" gutterBottom>
+        3. Use of Service
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        You agree to use MaziwaSmart only for lawful agricultural, trading, and
+        logistics-related purposes. You may not upload harmful, false, or
+        misleading data or use the platform to engage in illegal activities.
+      </Typography>
 
-          <Typography variant="h6" gutterBottom>
-            3. Prohibited Actions
-          </Typography>
-          <Typography variant="body2" paragraph>
-            You agree not to misuse the MaziwaSmart platform, including engaging in hacking, spreading malware, or unauthorized data access.
-          </Typography>
+      <Typography variant="h6" gutterBottom>
+        4. Data and Privacy
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        Your privacy is important to us. Please read our{" "}
+        <Link href="/privacy" color="secondary">
+          Privacy Policy
+        </Link>{" "}
+        to understand how we collect, store, and use your personal data.
+      </Typography>
 
-          <Typography variant="h6" gutterBottom>
-            4. Termination
-          </Typography>
-          <Typography variant="body2" paragraph>
-            We may suspend or terminate your access if you violate our terms or engage in malicious behavior.
-          </Typography>
+      <Typography variant="h6" gutterBottom>
+        5. Intellectual Property
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        All content, trademarks, and software within MaziwaSmart are the
+        property of MaziwaSmart or its licensors. You may not reproduce,
+        distribute, or modify our platform without prior written consent.
+      </Typography>
 
-          <Typography variant="h6" gutterBottom>
-            5. Changes to Terms
-          </Typography>
-          <Typography variant="body2" paragraph>
-            MaziwaSmart reserves the right to update these Terms from time to time. Updates will be posted on this page.
-          </Typography>
+      <Typography variant="h6" gutterBottom>
+        6. Service Availability
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        We strive to ensure reliable uptime but do not guarantee uninterrupted
+        service. MaziwaSmart reserves the right to modify, suspend, or
+        discontinue any part of the Service without prior notice.
+      </Typography>
 
-          <Typography variant="h6" gutterBottom>
-            6. Contact
-          </Typography>
-          <Typography variant="body2">
-            For questions, email us at: <strong>jmweng574@gmail.com</strong>
-          </Typography>
-        </Paper>
-      </Container>
-    </Box>
+      <Typography variant="h6" gutterBottom>
+        7. Limitation of Liability
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        MaziwaSmart is not liable for any direct, indirect, incidental, or
+        consequential damages arising from your use of the Service, including
+        loss of profits or data.
+      </Typography>
+
+      <Typography variant="h6" gutterBottom>
+        8. Termination
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        We reserve the right to suspend or terminate your account if we believe
+        you have violated these Terms, engaged in fraudulent activity, or
+        caused harm to other users.
+      </Typography>
+
+      <Typography variant="h6" gutterBottom>
+        9. Updates to These Terms
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 3 }}>
+        We may revise these Terms periodically. Updated versions will be posted
+        on this page with the new effective date. Continued use of the Service
+        means you accept any changes.
+      </Typography>
+
+      <Typography variant="h6" gutterBottom>
+        10. Contact Us
+      </Typography>
+      <Typography variant="body1">
+        For questions or concerns about these Terms, please contact us at{" "}
+        <strong>support@maziwasmart.co.ke</strong>.
+      </Typography>
+    </Container>
   );
 };
 

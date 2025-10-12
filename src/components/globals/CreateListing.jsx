@@ -34,6 +34,7 @@ const CreateListing = () => {
       total_offspring: "",
       is_pregnant: false,
       expected_due_date: "",
+      insemination_id: "",
     },
   });
 
@@ -50,7 +51,6 @@ const CreateListing = () => {
     pig: ["piglet", "gilt", "sow", "boar"],
   };
 
-  // ✅ Fetch animals if farmer
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
@@ -67,7 +67,6 @@ const CreateListing = () => {
     if (user?.role === "farmer" && token) fetchAnimals();
   }, [user, token]);
 
-  // 🧠 Handle input change
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name.startsWith("animal_details.")) {
@@ -84,7 +83,6 @@ const CreateListing = () => {
     }
   };
 
-  // 🖼 Multiple image upload
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + images.length > 10) {
@@ -106,17 +104,15 @@ const CreateListing = () => {
     });
   };
 
-  // 🔔 Toast handler
   const showToast = (message, type = "info") => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: "", type: "info" }), 4000);
   };
 
-  // 🧾 Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (user?.role === "farmer" && !form.animal_type) {
+    if (!form.animal_type) {
       showToast("Select the animal type first", "error");
       return;
     }
@@ -124,6 +120,13 @@ const CreateListing = () => {
     if (user?.role === "farmer" && !form.animal_id) {
       showToast("Please select an animal from your herd", "error");
       return;
+    }
+
+    if (user?.role === "seller") {
+      if (!form.animal_details.age || !form.animal_details.breed_name) {
+        showToast("Please provide animal age and breed name", "error");
+        return;
+      }
     }
 
     if (images.length === 0) {
@@ -145,10 +148,8 @@ const CreateListing = () => {
       if (user?.role === "farmer") {
         formData.append("animal_id", form.animal_id);
       } else {
-        Object.keys(form.animal_details).forEach((key) => {
-          const val = form.animal_details[key];
-          if (val) formData.append(`animal_details[${key}]`, val);
-        });
+        formData.append("animal_details", JSON.stringify(form.animal_details));
+
       }
 
       images.forEach((img) => {
@@ -175,14 +176,12 @@ const CreateListing = () => {
     }
   };
 
-  // 🧩 Filter animals only when type is chosen
   const filteredAnimals = form.animal_type
     ? animals.filter(
         (a) => a?.species?.toLowerCase() === form.animal_type?.toLowerCase()
       )
     : [];
 
-  // 🌈 UI
   return (
     <div className="container-fluid px-3 py-4" style={{ background: "#f8fdff", minHeight: "100vh" }}>
       <motion.div
@@ -192,7 +191,6 @@ const CreateListing = () => {
         style={{ background: "#ffffff", borderRadius: "1rem", maxWidth: "900px" }}
       >
         <div className="card-body p-4">
-          {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h3 className="fw-bold text-primary m-0">Post a New Listing 🐄</h3>
             <motion.button
@@ -206,7 +204,6 @@ const CreateListing = () => {
             </motion.button>
           </div>
 
-          {/* FORM */}
           <form onSubmit={handleSubmit}>
             <div className="row">
               <div className="col-md-6 mb-3">
@@ -232,7 +229,7 @@ const CreateListing = () => {
                     setForm((prev) => ({
                       ...prev,
                       animal_type: e.target.value,
-                      animal_id: "", // reset selection when type changes
+                      animal_id: "",
                     }))
                   }
                   required
@@ -255,7 +252,7 @@ const CreateListing = () => {
                   className="form-select mb-3"
                   value={form.animal_id}
                   onChange={handleChange}
-                  disabled={!form.animal_type} // disable if no type chosen
+                  disabled={!form.animal_type}
                   required
                 >
                   <option value="">
@@ -278,7 +275,181 @@ const CreateListing = () => {
               </>
             )}
 
-            {/* Price */}
+            {user?.role === "seller" && (
+              <div className="border rounded p-3 mb-3" style={{ background: "#f0f9ff" }}>
+                <h5 className="fw-semibold text-primary mb-3">Animal Details</h5>
+                
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Age (e.g., 3 years) *</label>
+                    <input
+                      name="animal_details.age"
+                      type="text"
+                      className="form-control"
+                      placeholder="3 years"
+                      value={form.animal_details.age}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Breed Name *</label>
+                    <input
+                      name="animal_details.breed_name"
+                      type="text"
+                      className="form-control"
+                      placeholder="Friesian"
+                      value={form.animal_details.breed_name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Gender</label>
+                    <select
+                      name="animal_details.gender"
+                      className="form-select"
+                      value={form.animal_details.gender}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Stage</label>
+                    <select
+                      name="animal_details.stage"
+                      className="form-select"
+                      value={form.animal_details.stage}
+                      onChange={handleChange}
+                      disabled={!form.animal_type}
+                    >
+                      <option value="">Select stage</option>
+                      {form.animal_type && stageOptions[form.animal_type]?.map((stage) => (
+                        <option key={stage} value={stage}>
+                          {stage.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Lifetime Milk (L)</label>
+                    <input
+                      name="animal_details.lifetime_milk"
+                      type="number"
+                      className="form-control"
+                      placeholder="5000"
+                      value={form.animal_details.lifetime_milk}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Daily Average (L)</label>
+                    <input
+                      name="animal_details.daily_average"
+                      type="number"
+                      className="form-control"
+                      placeholder="15"
+                      value={form.animal_details.daily_average}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Total Offspring</label>
+                    <input
+                      name="animal_details.total_offspring"
+                      type="number"
+                      className="form-control"
+                      placeholder="3"
+                      value={form.animal_details.total_offspring}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Bull Code</label>
+                    <input
+                      name="animal_details.bull_code"
+                      type="text"
+                      className="form-control"
+                      placeholder="B001"
+                      value={form.animal_details.bull_code}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Bull Name</label>
+                    <input
+                      name="animal_details.bull_name"
+                      type="text"
+                      className="form-control"
+                      placeholder="Thunder"
+                      value={form.animal_details.bull_name}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Bull Breed</label>
+                    <input
+                      name="animal_details.bull_breed"
+                      type="text"
+                      className="form-control"
+                      placeholder="Angus"
+                      value={form.animal_details.bull_breed}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="row align-items-end">
+                  <div className="col-md-6 mb-3">
+                    <div className="form-check">
+                      <input
+                        name="animal_details.is_pregnant"
+                        type="checkbox"
+                        className="form-check-input"
+                        id="isPregnant"
+                        checked={form.animal_details.is_pregnant}
+                        onChange={handleChange}
+                      />
+                      <label className="form-check-label fw-semibold" htmlFor="isPregnant">
+                        Is Pregnant?
+                      </label>
+                    </div>
+                  </div>
+
+                  {form.animal_details.is_pregnant && (
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold">Expected Due Date</label>
+                      <input
+                        name="animal_details.expected_due_date"
+                        type="date"
+                        className="form-control"
+                        value={form.animal_details.expected_due_date}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="row">
               <div className="col-md-6 mb-3">
                 <label className="form-label fw-semibold">Price (KES) *</label>
@@ -305,7 +476,6 @@ const CreateListing = () => {
               </div>
             </div>
 
-            {/* Description */}
             <div className="mb-3">
               <label className="form-label fw-semibold">Description</label>
               <textarea
@@ -318,9 +488,8 @@ const CreateListing = () => {
               />
             </div>
 
-            {/* Image Upload */}
             <div className="mb-4">
-              <label className="form-label fw-semibold">Upload Images (Max 10)</label>
+              <label className="form-label fw-semibold">Upload Images (Max 10) *</label>
               <input
                 type="file"
                 name="images"
@@ -356,7 +525,6 @@ const CreateListing = () => {
               </div>
             </div>
 
-            {/* Submit */}
             <div className="text-end">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -376,7 +544,6 @@ const CreateListing = () => {
         </div>
       </motion.div>
 
-      {/* Toast */}
       <AnimatePresence>
         {toast.show && (
           <motion.div
@@ -390,6 +557,7 @@ const CreateListing = () => {
                 ? "bg-danger"
                 : "bg-info"
             }`}
+            style={{ zIndex: 9999 }}
           >
             {toast.message}
           </motion.div>
