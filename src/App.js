@@ -55,6 +55,9 @@ import MyListings from "./components/globals/MyListings";
 import CreateListing from "./components/globals/CreateListing";
 import EditListing from "./components/globals/EditListing";
 import ViewListing from "./components/globals/ViewListing";
+// import MarketplacePage from "./components/globals/MarketplacePage";
+import MarketPage from "./components/globals/MarketplacePage";
+import MarketView from "./components/globals/MarketView";
 // import { GoogleLogin } from "@react-oauth/google";
 
 // import farmerLayout from './components/farmer/farmerLayout'
@@ -91,6 +94,8 @@ function App() {
             <Route path="/create" element={<CreateListing />} />
             <Route path="/edit" element={<EditListing />} />
             <Route path="/view" element={<ViewListing />} />
+            <Route path="/market" element={<MarketPage/>} />
+            <Route path="/view-market" element={<MarketView/>} />
             
             
 
