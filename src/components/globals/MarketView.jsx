@@ -21,6 +21,7 @@ import {
   Baby,
 } from "lucide-react";
 import { AuthContext } from "../PrivateComponents/AuthContext";
+import ChatRoom from "./ChatRoom";
 
 const API_BASE =
   process.env.REACT_APP_API_BASE || "https://maziwasmart.onrender.com/api";
@@ -30,55 +31,90 @@ const MarketView = () => {
   const { token } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [listing, setListing] = useState(location.state?.listing || null);
+  const [listing, setListing] = useState(null);
   const [mainPhoto, setMainPhoto] = useState("");
-  const [loading, setLoading] = useState(!location.state?.listing);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
 
-  // ✅ FIXED: Changed photos to images
-  const imgUrl = (path) =>
-    path?.startsWith("/uploads/")
-      ? `${API_BASE.replace("/api", "")}${path}`
-      : path || "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
+  // ✅ Convert relative path to full URL
+  const imgUrl = (path) => {
+    if (!path) return "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
+    if (path.startsWith("http")) return path;
+    return `${API_BASE.replace("/api", "")}${path}`;
+  };
 
+  // ✅ Get display images with proper fallback chain
+  const getDisplayImages = (listing) => {
+    if (!listing) return [];
+    return listing.images || listing.photos || listing.animal?.photos || [];
+  };
+
+  // ✅ Initialize main photo after listing loads
+  const initializeMainPhoto = (listing) => {
+    if (!listing) return "";
+    
+    // Priority: listing.images > listing.photos > animal.photos
+    const images = listing.images || listing.photos || listing.animal?.photos || [];
+    return images[0] || "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
+  };
+
+  // ✅ Fetch listing by ID from location.state.id
   useEffect(() => {
-    // Check if already in favorites
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-    setIsFavorite(favorites.includes(listing?._id));
+    const fetchListing = async () => {
+      try {
+        // Get ID from location.state
+        const listingId = location.state?.id || location.state?.listing?._id;
+        
+        if (!listingId) {
+          setError("No listing ID provided");
+          setLoading(false);
+          return;
+        }
 
-    // If no listing passed via state, fetch from API
-    if (!listing && location.state?.id) {
-      fetchListingById(location.state.id);
-    } else if (listing) {
-      // ✅ FIXED: Changed photos to images
-      setMainPhoto(listing.images?.[0] || "");
+        // If full listing object passed, use it
+        if (location.state?.listing && !location.state.id) {
+          setListing(location.state.listing);
+          setMainPhoto(initializeMainPhoto(location.state.listing));
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise fetch from API
+        const res = await axios.get(`${API_BASE}/market/${listingId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.data.success) {
+          setListing(res.data.listing);
+          setMainPhoto(initializeMainPhoto(res.data.listing));
+        } else {
+          setError(res.data.message || "Failed to fetch listing");
+        }
+      } catch (err) {
+        console.error("❌ Fetch error:", err);
+        setError("Server error while loading listing");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListing();
+  }, [location.state, token]);
+
+  // ✅ Check favorites on listing load
+  useEffect(() => {
+    if (listing?._id) {
+      const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+      setIsFavorite(favorites.includes(listing._id));
     }
   }, [listing]);
 
-  const fetchListingById = async (id) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_BASE}/market/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data.success) {
-        setListing(res.data.listing);
-        // ✅ FIXED: Changed photos to images
-        setMainPhoto(res.data.listing.images?.[0] || "");
-      } else {
-        setError(res.data.message || "Failed to fetch listing");
-      }
-    } catch (err) {
-      console.error("❌ Fetch error:", err);
-      setError("Server error while loading listing");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const toggleFavorite = () => {
+    if (!listing?._id) return;
+    
     const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
     let newFavorites;
     
@@ -93,16 +129,31 @@ const MarketView = () => {
   };
 
   const handleShare = () => {
+    if (!listing) return;
+    
+    const shareText = `Check out this ${listing.animal?.species || "livestock"} for ${formattedPrice}`;
+    
     if (navigator.share) {
       navigator.share({
         title: listing.title,
-        text: `Check out this ${listing.animal?.species} for ${formattedPrice}`,
+        text: shareText,
         url: window.location.href,
+      }).catch(() => {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard!");
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
     }
+  };
+
+  const handleOpenChat = () => {
+    if (!listing?.seller?._id) {
+      alert("Seller information not available");
+      return;
+    }
+    setShowChatModal(true);
   };
 
   if (loading) {
@@ -134,14 +185,14 @@ const MarketView = () => {
     );
   }
 
-  // ✅ FIXED: Changed photos to images
-  const { title, price, location: loc, images, createdAt, views, animal } = listing;
+  const { title, price, location: loc, createdAt, views, animal, seller } = listing;
+  const displayImages = getDisplayImages(listing);
 
   const formattedPrice = new Intl.NumberFormat("en-KE", {
     style: "currency",
     currency: "KES",
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(price || 0);
 
   const timeAgo = (date) => {
     const days = Math.floor((Date.now() - new Date(date)) / (1000 * 60 * 60 * 24));
@@ -195,21 +246,9 @@ const MarketView = () => {
           transform: translateY(-5px);
           box-shadow: 0 15px 40px rgba(0,0,0,0.1) !important;
         }
-        .floating-action-btn {
-          position: fixed;
-          bottom: 30px;
-          right: 30px;
-          z-index: 1000;
-        }
-        @media (max-width: 768px) {
-          .floating-action-btn {
-            bottom: 20px;
-            right: 20px;
-          }
-        }
       `}</style>
 
-      {/* 🔙 Header with Actions */}
+      {/* Header with Actions */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -245,7 +284,7 @@ const MarketView = () => {
       </motion.div>
 
       <div className="row g-4">
-        {/* 🖼️ Image Gallery Section */}
+        {/* Image Gallery Section */}
         <div className="col-12 col-lg-7">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -259,7 +298,7 @@ const MarketView = () => {
                   Gallery
                 </h6>
                 <span className="badge bg-light text-dark">
-                  {images?.length || 0} Photos
+                  {displayImages.length} Photos
                 </span>
               </div>
 
@@ -271,46 +310,48 @@ const MarketView = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    src={imgUrl(mainPhoto || images?.[0])}
+                    src={imgUrl(mainPhoto)}
                     alt="Main view"
                     className="w-100 object-fit-cover"
                     style={{ height: "450px", borderRadius: "20px" }}
-                    onError={(e) =>
-                      (e.target.src = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80")
-                    }
+                    onError={(e) => {
+                      e.target.src = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
+                    }}
                   />
                 </AnimatePresence>
               </div>
 
               {/* Thumbnail Strip */}
-              <div className="d-flex gap-2 overflow-auto pb-2">
-                {images?.map((img, i) => (
-                  <motion.img
-                    key={i}
-                    src={imgUrl(img)}
-                    alt={`Thumbnail ${i + 1}`}
-                    className={`thumbnail-img rounded-3 object-fit-cover ${
-                      mainPhoto === img ? "active" : ""
-                    }`}
-                    style={{
-                      width: "100px",
-                      height: "75px",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setMainPhoto(img)}
-                    onError={(e) =>
-                      (e.target.src = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=200&q=80")
-                    }
-                  />
-                ))}
-              </div>
+              {displayImages.length > 0 && (
+                <div className="d-flex gap-2 overflow-auto pb-2">
+                  {displayImages.map((img, i) => (
+                    <motion.img
+                      key={i}
+                      src={imgUrl(img)}
+                      alt={`Thumbnail ${i + 1}`}
+                      className={`thumbnail-img rounded-3 object-fit-cover ${
+                        imgUrl(mainPhoto) === imgUrl(img) ? "active" : ""
+                      }`}
+                      style={{
+                        width: "100px",
+                        height: "75px",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setMainPhoto(img)}
+                      onError={(e) => {
+                        e.target.src = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=200&q=80";
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
 
-          {/* 📊 Stats Bar */}
+          {/* Stats Bar */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -347,7 +388,7 @@ const MarketView = () => {
           </motion.div>
         </div>
 
-        {/* 📋 Details Section */}
+        {/* Details Section */}
         <div className="col-12 col-lg-5">
           {/* Title & Price Card */}
           <motion.div
@@ -361,7 +402,7 @@ const MarketView = () => {
             <div className="card-body p-4 text-white">
               <div className="d-flex align-items-center gap-2 mb-2">
                 <span className={`badge bg-white text-${animalConfig.color}`}>
-                  {animalConfig.emoji} {animal?.species || "Livestock"}
+                  {animalConfig.emoji} {animal?.species || "Unknown"}
                 </span>
                 {animal?.status === "pregnant" && (
                   <span className="badge bg-warning text-dark">
@@ -404,7 +445,7 @@ const MarketView = () => {
                   <div className="p-3 bg-light rounded-3">
                     <small className="text-muted d-block mb-1">Gender</small>
                     <strong className="text-capitalize">
-                      {animal?.gender === "male" ? "♂ Male" : "♀ Female"}
+                      {animal?.gender === "male" ? "♂ Male" : animal?.gender === "female" ? "♀ Female" : "N/A"}
                     </strong>
                   </div>
                 </div>
@@ -417,7 +458,7 @@ const MarketView = () => {
                 <div className="col-6">
                   <div className="p-3 bg-light rounded-3">
                     <small className="text-muted d-block mb-1">Status</small>
-                    <span className={`badge ${animal?.status === "pregnant" ? "bg-warning" : "bg-success"}`}>
+                    <span className={`badge ${animal?.status === "pregnant" ? "bg-warning text-dark" : "bg-success"}`}>
                       {animal?.status || "Available"}
                     </span>
                   </div>
@@ -425,13 +466,13 @@ const MarketView = () => {
                 <div className="col-12">
                   <div className="p-3 bg-light rounded-3">
                     <small className="text-muted d-block mb-1">Breed</small>
-                    <strong>{animal?.breed?.breed_name || animal?.breed || "Unknown"}</strong>
+                    <strong>{animal?.breed || "Unknown"}</strong>
                   </div>
                 </div>
               </div>
 
-              {/* Production Stats (if available) */}
-              {(animal?.lifetime_milk || animal?.daily_average || animal?.calved_count > 0) && (
+              {/* Production Stats */}
+              {(animal?.lifetime_milk || animal?.daily_average || (animal?.calved_count && animal.calved_count > 0)) && (
                 <div className="mt-3">
                   <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                     <TrendingUp size={18} className="text-success" />
@@ -490,10 +531,11 @@ const MarketView = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="btn btn-primary btn-lg rounded-pill flex-grow-1 shadow"
-              onClick={() => setShowContactModal(true)}
+              onClick={handleOpenChat}
+              disabled={!seller?._id}
             >
-              <PhoneCall size={20} className="me-2" />
-              Contact Seller
+              <MessageCircle size={20} className="me-2" />
+              Chat with Seller
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -501,7 +543,7 @@ const MarketView = () => {
               className="btn btn-outline-primary btn-lg rounded-circle shadow-sm"
               onClick={() => setShowContactModal(true)}
             >
-              <MessageCircle size={20} />
+              <PhoneCall size={20} />
             </motion.button>
           </motion.div>
 
@@ -519,7 +561,49 @@ const MarketView = () => {
         </div>
       </div>
 
-      {/* Contact Modal */}
+      {/* Chat Modal */}
+      <AnimatePresence>
+        {showChatModal && seller?._id && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="position-fixed top-0 start-0 w-100 h-100"
+            style={{ zIndex: 9999, backgroundColor: "rgba(0,0,0,0.5)" }}
+            onClick={() => setShowChatModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="position-absolute top-50 start-50 translate-middle"
+              style={{ width: "90vw", height: "90vh", maxWidth: "1200px" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-white rounded-4 shadow-lg h-100 overflow-hidden">
+                <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
+                  <h5 className="mb-0 fw-bold">Chat with Seller</h5>
+                  <button
+                    className="btn btn-light rounded-circle"
+                    onClick={() => setShowChatModal(false)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div style={{ height: "calc(100% - 60px)" }}>
+                  <ChatRoom
+                    receiverId={seller._id}
+                    listingId={listing._id}
+                    onBack={() => setShowChatModal(false)}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Contact Phone Modal */}
       <AnimatePresence>
         {showContactModal && (
           <>
@@ -554,7 +638,7 @@ const MarketView = () => {
                       <PhoneCall className="text-primary" size={24} />
                       <div>
                         <small className="text-muted d-block">Seller Phone</small>
-                        <strong className="h5 mb-0">+254 XXX XXX XXX</strong>
+                        <strong className="h5 mb-0">{seller?.phone || "+254 XXX XXX XXX"}</strong>
                       </div>
                     </div>
                     <p className="small text-muted mt-3 mb-0">
@@ -569,7 +653,7 @@ const MarketView = () => {
                       Close
                     </button>
                     <a
-                      href="tel:+254XXXXXXXXX"
+                      href={`tel:${seller?.phone || ""}`}
                       className="btn btn-primary rounded-pill px-4"
                     >
                       <PhoneCall size={18} className="me-2" />

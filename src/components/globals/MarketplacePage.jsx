@@ -15,7 +15,6 @@ import {
     Tag,
     Award,
     AlertCircle,
-    Star,
     Image as ImageIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -103,10 +102,25 @@ export default function MarketPage() {
     }, [filters]);
 
     // ✅ FIXED: Changed from /uploads/listings to match your actual path
+    // helper: pick first available image
+    const getFirstImage = (listing) => {
+        if (!listing) return '';
+        if (Array.isArray(listing.images) && listing.images.length) return listing.images[0];
+        if (Array.isArray(listing.photos) && listing.photos.length) return listing.photos[0];
+        // sometimes backend returns JSON string
+        try {
+            if (typeof listing.photos === 'string') {
+                const p = JSON.parse(listing.photos);
+                if (Array.isArray(p) && p.length) return p[0];
+            }
+        } catch { }
+        return '';
+    };
+
     const imgUrl = (path) => {
-        if (!path) return "https://placehold.co/600x400?text=No+Image";
-        const fixedPath = path.startsWith("/") ? path : `/${path}`;
-        return `${API_BASE.replace("/api", "")}${fixedPath}`;
+        if (!path) return 'https://placehold.co/600x400?text=No+Image';
+        const fixed = path.startsWith('/') ? path : `/${path}`;
+        return `${API_BASE.replace('/api', '')}${fixed}`;
     };
 
 
@@ -118,9 +132,11 @@ export default function MarketPage() {
         }).format(val || 0);
 
     // ✅ FIXED: Removed space and added proper ID navigation
-    const handleView = (listing) => {
-       navigate(`/view-market/${listing._id}`, { state: { listing } });
-    };
+   const handleView = (listing) => {
+  if (!listing) return;
+navigate("/view-market", { state: { listing } });
+};
+
 
     const toggleFavorite = (id) => {
         const newFavorites = favorites.includes(id)
@@ -497,7 +513,7 @@ export default function MarketPage() {
                                     transition={{ delay: idx * 0.1 }}
                                     whileHover={{ y: -8, boxShadow: "0 12px 40px rgba(0,0,0,0.15)" }}
                                     className="card border-0 shadow-sm rounded-4 overflow-hidden h-100 position-relative"
-                                    onClick={() => handleView(listing._id)}
+                                    onClick={() => handleView(listing)}
                                     style={{ cursor: "pointer" }}
                                 >
                                     <div className="position-absolute top-0 end-0 m-2 z-3">
@@ -509,14 +525,12 @@ export default function MarketPage() {
                                     <div className="ratio ratio-4x3 bg-light position-relative overflow-hidden">
                                         {/* ✅ FIXED: Changed photos to images */}
                                         <img
-                                            src={imgUrl(listing.images?.[0] || listing.photos?.[0])}
-                                            alt={listing.title}
+                                            src={imgUrl(getFirstImage(listing))}
+                                            alt={listing.title || 'listing'}
+                                            onError={(e) => e.target.src = 'https://placehold.co/600x400?text=No+Image'}
                                             className="object-fit-cover card-zoom-img"
-                                            onError={(e) =>
-                                            (e.target.src =
-                                                "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=600&q=80")
-                                            }
                                         />
+
 
                                         {/* ✅ NEW: Image count overlay */}
                                         {listing.images?.length > 1 && (
