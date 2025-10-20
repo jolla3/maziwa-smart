@@ -12,9 +12,10 @@ import {
   Collapse,
   Tooltip
 } from "@mui/material";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ColorModeContext, tokens } from "../../theme";
-import { AuthContext } from "../../components/PrivateComponents/AuthContext"; // Adjust path as needed
+import { AuthContext } from "../../components/PrivateComponents/AuthContext";
 import InputBase from "@mui/material/InputBase";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
@@ -26,89 +27,80 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 
-const Topbar = ({ onSearch, notifications = [], onNotificationClick, onSettingsClick, onProfileAction }) => {
+const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout, token } = useContext(AuthContext);
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  // State management
   const [searchValue, setSearchValue] = useState("");
   const [notificationAnchor, setNotificationAnchor] = useState(null);
   const [profileAnchor, setProfileAnchor] = useState(null);
   const [settingsAnchor, setSettingsAnchor] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  // Calculate unread notifications count from real data
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Handlers
+  const API_URL =  'https://maziwasmart.onrender.com/api';
+
+  // Fetch only unread count and recent 5 notifications for preview
+  const fetchNotifications = async () => {
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`${API_URL}/notifications?is_read=false`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setNotifications(result.data.slice(0, 5));
+        setUnreadCount(result.count);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [token]);
+
   const handleSearch = () => {
     if (searchValue.trim() && onSearch) {
       onSearch(searchValue.trim());
     }
   };
 
-  const handleSearchKeyPress = (event) => {
-    if (event.key === 'Enter') {
-      handleSearch();
-    }
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') handleSearch();
   };
 
-  const handleNotificationClick = (event) => {
-    setNotificationAnchor(event.currentTarget);
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const diff = Math.floor((Date.now() - d) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return d.toLocaleDateString();
   };
 
-  const handleProfileClick = (event) => {
-    setProfileAnchor(event.currentTarget);
-  };
-
-  const handleSettingsClick = (event) => {
-    setSettingsAnchor(event.currentTarget);
-  };
-
-  const handleCloseMenus = () => {
-    setNotificationAnchor(null);
-    setProfileAnchor(null);
-    setSettingsAnchor(null);
-  };
-
-  const handleLogout = () => {
-    handleCloseMenus();
-    logout();
-  };
-
-  const handleNotificationItemClick = (notification) => {
-    if (onNotificationClick) {
-      onNotificationClick(notification);
-    }
-    handleCloseMenus();
-  };
-
-  // Desktop Icons Component
   const DesktopIcons = () => (
     <Box display="flex" alignItems="center" gap={1}>
       <Tooltip title="Toggle theme">
-        <IconButton 
-          onClick={colorMode.toggleColorMode}
-          aria-label="Toggle color mode"
-          sx={{ color: colors.grey[100] }}
-        >
-          {theme.palette.mode === "dark" ? (
-            <DarkModeOutlinedIcon />
-          ) : (
-            <LightModeOutlinedIcon />
-          )}
+        <IconButton onClick={colorMode.toggleColorMode} sx={{ color: colors.grey[100] }}>
+          {theme.palette.mode === "dark" ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
         </IconButton>
       </Tooltip>
 
       <Tooltip title="Notifications">
-        <IconButton 
-          onClick={handleNotificationClick}
-          aria-label={`${unreadCount} unread notifications`}
-          sx={{ color: colors.grey[100] }}
-        >
+        <IconButton onClick={(e) => setNotificationAnchor(e.currentTarget)} sx={{ color: colors.grey[100] }}>
           <Badge badgeContent={unreadCount} color="error">
             <NotificationsOutlinedIcon />
           </Badge>
@@ -116,59 +108,14 @@ const Topbar = ({ onSearch, notifications = [], onNotificationClick, onSettingsC
       </Tooltip>
 
       <Tooltip title="Settings">
-        <IconButton 
-          onClick={handleSettingsClick}
-          aria-label="Settings"
-          sx={{ color: colors.grey[100] }}
-        >
+        <IconButton onClick={(e) => setSettingsAnchor(e.currentTarget)} sx={{ color: colors.grey[100] }}>
           <SettingsOutlinedIcon />
         </IconButton>
       </Tooltip>
 
       <Tooltip title="Profile">
-        <IconButton 
-          onClick={handleProfileClick}
-          aria-label="User profile"
-          sx={{ color: colors.grey[100] }}
-        >
-          {user?.avatar ? (
-            <Avatar 
-              src={user.avatar} 
-              alt={user.name}
-              sx={{ width: 32, height: 32 }}
-            />
-          ) : (
-            <PersonOutlinedIcon />
-          )}
-        </IconButton>
-      </Tooltip>
-    </Box>
-  );
-
-  // Mobile Icons Component
-  const MobileIcons = () => (
-    <Box display="flex" alignItems="center">
-      <Tooltip title="Toggle theme">
-        <IconButton 
-          onClick={colorMode.toggleColorMode}
-          aria-label="Toggle color mode"
-          sx={{ color: colors.grey[100] }}
-        >
-          {theme.palette.mode === "dark" ? (
-            <DarkModeOutlinedIcon />
-          ) : (
-            <LightModeOutlinedIcon />
-          )}
-        </IconButton>
-      </Tooltip>
-
-      <Tooltip title="Menu">
-        <IconButton 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Open menu"
-          sx={{ color: colors.grey[100] }}
-        >
-          {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+        <IconButton onClick={(e) => setProfileAnchor(e.currentTarget)} sx={{ color: colors.grey[100] }}>
+          {user?.avatar ? <Avatar src={user.avatar} alt={user.name} sx={{ width: 32, height: 32 }} /> : <PersonOutlinedIcon />}
         </IconButton>
       </Tooltip>
     </Box>
@@ -177,104 +124,51 @@ const Topbar = ({ onSearch, notifications = [], onNotificationClick, onSettingsC
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
-        {/* SEARCH BAR */}
         <Box
           display="flex"
           backgroundColor={colors.primary[400]}
           borderRadius="3px"
           minWidth={isMobile ? "200px" : "300px"}
           maxWidth={isMobile ? "250px" : "400px"}
-          sx={{ 
-            transition: 'all 0.3s ease',
-            '&:focus-within': {
-              boxShadow: `0 0 0 2px ${colors.blueAccent[500]}`,
-            }
-          }}
         >
           <InputBase 
-            sx={{ 
-              ml: 2, 
-              flex: 1, 
-              color: colors.grey[100],
-              '&::placeholder': {
-                color: colors.grey[300]
-              }
-            }} 
+            sx={{ ml: 2, flex: 1, color: colors.grey[100] }} 
             placeholder="Search..." 
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyPress={handleSearchKeyPress}
-            aria-label="Search"
           />
-          <Tooltip title="Search">
-            <IconButton 
-              type="button" 
-              sx={{ p: 1, color: colors.grey[100] }}
-              onClick={handleSearch}
-              aria-label="Execute search"
-            >
-              <SearchIcon />
-            </IconButton>
-          </Tooltip>
+          <IconButton sx={{ p: 1, color: colors.grey[100] }} onClick={handleSearch}>
+            <SearchIcon />
+          </IconButton>
         </Box>
 
-        {/* ICONS */}
-        {isMobile ? <MobileIcons /> : <DesktopIcons />}
+        {isMobile ? (
+          <Box display="flex" alignItems="center">
+            <IconButton onClick={colorMode.toggleColorMode} sx={{ color: colors.grey[100] }}>
+              {theme.palette.mode === "dark" ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
+            </IconButton>
+            <IconButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)} sx={{ color: colors.grey[100] }}>
+              {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+            </IconButton>
+          </Box>
+        ) : (
+          <DesktopIcons />
+        )}
       </Box>
 
       {/* MOBILE MENU */}
       {isMobile && (
         <Collapse in={mobileMenuOpen}>
-          <Box 
-            p={2} 
-            backgroundColor={colors.primary[400]}
-            borderTop={`1px solid ${colors.grey[700]}`}
-          >
+          <Box p={2} backgroundColor={colors.primary[400]} borderTop={`1px solid ${colors.grey[700]}`}>
             <Box display="flex" flexDirection="column" gap={2}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Tooltip title="Notifications">
-                  <IconButton 
-                    onClick={handleNotificationClick}
-                    sx={{ color: colors.grey[100] }}
-                  >
-                    <Badge badgeContent={unreadCount} color="error">
-                      <NotificationsOutlinedIcon />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
+              <Box display="flex" alignItems="center" gap={2} onClick={(e) => setNotificationAnchor(e.currentTarget)}>
+                <IconButton sx={{ color: colors.grey[100] }}>
+                  <Badge badgeContent={unreadCount} color="error">
+                    <NotificationsOutlinedIcon />
+                  </Badge>
+                </IconButton>
                 <Typography color={colors.grey[100]}>Notifications</Typography>
-              </Box>
-
-              <Box display="flex" alignItems="center" gap={2}>
-                <Tooltip title="Settings">
-                  <IconButton 
-                    onClick={handleSettingsClick}
-                    sx={{ color: colors.grey[100] }}
-                  >
-                    <SettingsOutlinedIcon />
-                  </IconButton>
-                </Tooltip>
-                <Typography color={colors.grey[100]}>Settings</Typography>
-              </Box>
-
-              <Box display="flex" alignItems="center" gap={2}>
-                <Tooltip title="Profile">
-                  <IconButton 
-                    onClick={handleProfileClick}
-                    sx={{ color: colors.grey[100] }}
-                  >
-                    {user?.avatar ? (
-                      <Avatar 
-                        src={user.avatar} 
-                        alt={user.name}
-                        sx={{ width: 32, height: 32 }}
-                      />
-                    ) : (
-                      <PersonOutlinedIcon />
-                    )}
-                  </IconButton>
-                </Tooltip>
-                <Typography color={colors.grey[100]}>Profile</Typography>
               </Box>
             </Box>
           </Box>
@@ -285,102 +179,95 @@ const Topbar = ({ onSearch, notifications = [], onNotificationClick, onSettingsC
       <Menu
         anchorEl={notificationAnchor}
         open={Boolean(notificationAnchor)}
-        onClose={handleCloseMenus}
+        onClose={() => setNotificationAnchor(null)}
         PaperProps={{
           sx: {
             backgroundColor: colors.primary[400],
             color: colors.grey[100],
-            minWidth: 300,
-            maxHeight: 400,
+            minWidth: 320,
+            maxHeight: 450,
           }
         }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         <MenuItem disabled>
-          <Typography variant="h6" color={colors.grey[100]}>
-            Notifications {unreadCount > 0 && `(${unreadCount} new)`}
+          <Typography variant="h6" fontWeight="bold">
+            Notifications {unreadCount > 0 && `(${unreadCount})`}
           </Typography>
         </MenuItem>
         <Divider sx={{ backgroundColor: colors.grey[700] }} />
+        
         {notifications.length === 0 ? (
           <MenuItem disabled>
-            <Typography variant="body2" color={colors.grey[300]}>
-              No notifications
-            </Typography>
+            <Typography variant="body2" color={colors.grey[300]}>No new notifications</Typography>
           </MenuItem>
         ) : (
-          notifications.map((notification) => (
+          notifications.map((notif) => (
             <MenuItem 
-              key={notification.id}
-              onClick={() => handleNotificationItemClick(notification)}
+              key={notif._id}
+              onClick={() => {
+                setNotificationAnchor(null);
+                navigate('/notifications', { state: { selectedId: notif._id } });
+              }}
               sx={{
-                backgroundColor: notification.unread ? colors.blueAccent[800] : 'transparent',
-                '&:hover': {
-                  backgroundColor: colors.blueAccent[700],
-                }
+                backgroundColor: colors.blueAccent[800],
+                '&:hover': { backgroundColor: colors.blueAccent[700] },
+                py: 1.5,
+                borderBottom: `1px solid ${colors.grey[700]}`
               }}
             >
-              <Box>
-                <Typography variant="body2" color={colors.grey[100]}>
-                  {notification.title}
-                </Typography>
+              <Box width="100%">
+                <Box display="flex" justifyContent="space-between" mb={0.5}>
+                  <Typography variant="body2" fontWeight="bold">{notif.title}</Typography>
+                  <Typography variant="caption" color={colors.grey[400]}>{formatDate(notif.created_at)}</Typography>
+                </Box>
                 <Typography variant="caption" color={colors.grey[300]}>
-                  {notification.time || notification.createdAt}
+                  {notif.message?.substring(0, 60)}{notif.message?.length > 60 ? '...' : ''}
                 </Typography>
               </Box>
             </MenuItem>
           ))
         )}
+        
+        <Divider sx={{ backgroundColor: colors.grey[700] }} />
+        <MenuItem 
+          onClick={() => {
+            setNotificationAnchor(null);
+            navigate('/notifications');
+          }}
+          sx={{ justifyContent: 'center', color: colors.blueAccent[400], fontWeight: 'bold' }}
+        >
+          View All Notifications
+        </MenuItem>
       </Menu>
 
       {/* PROFILE MENU */}
       <Menu
         anchorEl={profileAnchor}
         open={Boolean(profileAnchor)}
-        onClose={handleCloseMenus}
-        PaperProps={{
-          sx: {
-            backgroundColor: colors.primary[400],
-            color: colors.grey[100],
-            minWidth: 200,
-          }
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        onClose={() => setProfileAnchor(null)}
+        PaperProps={{ sx: { backgroundColor: colors.primary[400], color: colors.grey[100], minWidth: 200 } }}
       >
         {user && (
           <MenuItem disabled>
             <Box display="flex" alignItems="center" gap={2}>
-              {user.avatar ? (
-                <Avatar src={user.avatar} alt={user.name} sx={{ width: 32, height: 32 }} />
-              ) : (
-                <PersonOutlinedIcon />
-              )}
+              {user.avatar ? <Avatar src={user.avatar} alt={user.name} sx={{ width: 32, height: 32 }} /> : <PersonOutlinedIcon />}
               <Box>
-                <Typography variant="body2" color={colors.grey[100]}>
-                  {user.name || 'User'}
-                </Typography>
-                <Typography variant="caption" color={colors.grey[300]}>
-                  {user.email || 'user@example.com'}
-                </Typography>
+                <Typography variant="body2">{user.name || 'User'}</Typography>
+                <Typography variant="caption" color={colors.grey[300]}>{user.email || 'user@example.com'}</Typography>
               </Box>
             </Box>
           </MenuItem>
         )}
         <Divider sx={{ backgroundColor: colors.grey[700] }} />
-        <MenuItem onClick={() => { handleCloseMenus(); onProfileAction?.('view-profile'); }}>
-          <PersonOutlinedIcon sx={{ mr: 2 }} />
-          View Profile
+        <MenuItem onClick={() => { setProfileAnchor(null); onProfileAction?.('view-profile'); }}>
+          <PersonOutlinedIcon sx={{ mr: 2 }} />View Profile
         </MenuItem>
-        <MenuItem onClick={() => { handleCloseMenus(); onProfileAction?.('account-settings'); }}>
-          <SettingsOutlinedIcon sx={{ mr: 2 }} />
-          Account Settings
+        <MenuItem onClick={() => { setProfileAnchor(null); onProfileAction?.('account-settings'); }}>
+          <SettingsOutlinedIcon sx={{ mr: 2 }} />Account Settings
         </MenuItem>
         <Divider sx={{ backgroundColor: colors.grey[700] }} />
-        <MenuItem onClick={handleLogout} sx={{ color: colors.redAccent[400] }}>
-          <LogoutIcon sx={{ mr: 2 }} />
-          Logout
+        <MenuItem onClick={() => { setProfileAnchor(null); logout(); }} sx={{ color: colors.redAccent[400] }}>
+          <LogoutIcon sx={{ mr: 2 }} />Logout
         </MenuItem>
       </Menu>
 
@@ -388,30 +275,14 @@ const Topbar = ({ onSearch, notifications = [], onNotificationClick, onSettingsC
       <Menu
         anchorEl={settingsAnchor}
         open={Boolean(settingsAnchor)}
-        onClose={handleCloseMenus}
-        PaperProps={{
-          sx: {
-            backgroundColor: colors.primary[400],
-            color: colors.grey[100],
-            minWidth: 200,
-          }
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        onClose={() => setSettingsAnchor(null)}
+        PaperProps={{ sx: { backgroundColor: colors.primary[400], color: colors.grey[100], minWidth: 200 } }}
       >
-        <MenuItem onClick={() => { handleCloseMenus(); onSettingsClick?.('general'); }}>
-          General Settings
-        </MenuItem>
-        <MenuItem onClick={() => { handleCloseMenus(); onSettingsClick?.('privacy'); }}>
-          Privacy Settings
-        </MenuItem>
-        <MenuItem onClick={() => { handleCloseMenus(); onSettingsClick?.('notifications'); }}>
-          Notification Settings
-        </MenuItem>
+        <MenuItem onClick={() => { setSettingsAnchor(null); onSettingsClick?.('general'); }}>General Settings</MenuItem>
+        <MenuItem onClick={() => { setSettingsAnchor(null); onSettingsClick?.('privacy'); }}>Privacy Settings</MenuItem>
+        <MenuItem onClick={() => { setSettingsAnchor(null); onSettingsClick?.('notifications'); }}>Notification Settings</MenuItem>
         <Divider sx={{ backgroundColor: colors.grey[700] }} />
-        <MenuItem onClick={() => { handleCloseMenus(); onSettingsClick?.('help'); }}>
-          Help & Support
-        </MenuItem>
+        <MenuItem onClick={() => { setSettingsAnchor(null); onSettingsClick?.('help'); }}>Help & Support</MenuItem>
       </Menu>
     </Box>
   );

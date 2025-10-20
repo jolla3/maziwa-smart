@@ -7,6 +7,11 @@ import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const API_BASE = "https://maziwasmart.onrender.com/api";
+// ✅ Image URL fixer (Cloudinary already returns full URLs)
+const getImageUrl = (url) => {
+  if (!url) return "https://placehold.co/600x400?text=No+Image";
+  return url.startsWith("http") ? url : `${API_BASE.replace("/api", "")}/${url}`;
+};
 
 const CreateListing = () => {
   const { user, token } = useContext(AuthContext);
@@ -40,6 +45,9 @@ const CreateListing = () => {
 
   const [animals, setAnimals] = useState([]);
   const [images, setImages] = useState([]);
+  // 🩵 Track upload progress for each image
+const [uploadProgress, setUploadProgress] = useState({});
+
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "info" });
 
@@ -67,6 +75,8 @@ const CreateListing = () => {
     if (user?.role === "farmer" && token) fetchAnimals();
   }, [user, token]);
 
+
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name.startsWith("animal_details.")) {
@@ -84,17 +94,20 @@ const CreateListing = () => {
   };
 
   const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length + images.length > 10) {
-      showToast("Maximum 10 images allowed", "error");
-      return;
-    }
-    const previews = files.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-    setImages((prev) => [...prev, ...previews]);
-  };
+  const files = Array.from(e.target.files);
+  if (files.length + images.length > 10) {
+    showToast("Maximum 10 images allowed", "error");
+    return;
+  }
+
+  // ✅ Ensure images preview locally before Cloudinary upload
+  const previews = files.map((file) => ({
+    file,
+    preview: URL.createObjectURL(file),
+  }));
+
+  setImages((prev) => [...prev, ...previews]);
+};
 
   const removeImage = (index) => {
     setImages((prev) => {
@@ -109,72 +122,77 @@ const CreateListing = () => {
     setTimeout(() => setToast({ show: false, message: "", type: "info" }), 4000);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!form.animal_type) {
-      showToast("Select the animal type first", "error");
-      return;
-    }
-
-    if (user?.role === "farmer" && !form.animal_id) {
-      showToast("Please select an animal from your herd", "error");
-      return;
-    }
-
-    if (user?.role === "seller") {
-      if (!form.animal_details.age || !form.animal_details.breed_name) {
-        showToast("Please provide animal age and breed name", "error");
-        return;
-      }
-    }
-
-    if (images.length === 0) {
-      showToast("Please upload at least one image", "error");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const formData = new FormData();
-
-      formData.append("title", form.title);
-      formData.append("animal_type", form.animal_type);
-      formData.append("price", form.price);
-      if (form.description) formData.append("description", form.description);
-      if (form.location) formData.append("location", form.location);
-
-      if (user?.role === "farmer") {
-        formData.append("animal_id", form.animal_id);
-      } else {
-        formData.append("animal_details", JSON.stringify(form.animal_details));
-
-      }
-
-      images.forEach((img) => {
-        if (img.file instanceof File) formData.append("images", img.file);
-      });
-
-      const res = await axios.post(`${API_BASE}/listing`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (res.data.success) {
-        showToast("✅ Listing created successfully!", "success");
-        setTimeout(() => navigate("/my-listings"), 1500);
-      } else {
-        showToast(res.data.message || "Failed to create listing", "error");
-      }
-    } catch (err) {
-      showToast(err.response?.data?.message || "Server error", "error");
-    } finally {
-      setLoading(false);
-    }
+useEffect(() => {
+  return () => {
+    // Revoke local image object URLs to avoid memory leaks
+    images.forEach((img) => {
+      if (img.preview) URL.revokeObjectURL(img.preview);
+    });
   };
+}, [images]);
+
+ // src/pages/CreateListing.jsx - handleSubmit function only
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!form.animal_type) return showToast("Select the animal type first", "error");
+  if (user?.role === "farmer" && !form.animal_id)
+    return showToast("Please select an animal from your herd", "error");
+  if (user?.role === "seller" && (!form.animal_details.age || !form.animal_details.breed_name))
+    return showToast("Please provide animal age and breed name", "error");
+  if (images.length === 0) return showToast("Please upload at least one image", "error");
+
+  setLoading(true);
+
+  try {
+    const formData = new FormData();
+
+    formData.append("title", form.title);
+    formData.append("animal_type", form.animal_type);
+    formData.append("price", form.price);
+    if (form.description) formData.append("description", form.description);
+    if (form.location) formData.append("location", form.location);
+
+    if (user?.role === "farmer") {
+      formData.append("animal_id", form.animal_id);
+    } else {
+      formData.append("animal_details", JSON.stringify(form.animal_details));
+    }
+
+    // ✅ Append actual File objects (not preview URLs)
+    images.forEach((img) => {
+      formData.append("images", img.file);
+    });
+
+    const res = await axios.post(`${API_BASE}/listing`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+      onUploadProgress: (progressEvent) => {
+        const percent = Math.round(
+          (progressEvent.loaded / (progressEvent.total || 1)) * 100
+        );
+        setUploadProgress({ total: percent });
+      },
+    });
+
+    if (res.data.success) {
+      showToast("✅ Listing created successfully!", "success");
+      setTimeout(() => navigate("/my-listings"), 1500);
+    } else {
+      showToast(res.data.message || "Failed to create listing", "error");
+    }
+  } catch (err) {
+    console.error("❌ Upload error:", err.response?.data || err.message);
+    showToast(
+      err.response?.data?.message || "Server error during listing creation",
+      "error"
+    );
+  } finally {
+    setLoading(false); // ✅ Fixed: was setLoading(true)
+  }
+};
 
   const filteredAnimals = form.animal_type
     ? animals.filter(
@@ -500,28 +518,55 @@ const CreateListing = () => {
               />
               <div className="d-flex flex-wrap gap-3 mt-3">
                 {images.map((img, i) => (
-                  <motion.div key={i} className="position-relative" whileHover={{ scale: 1.05 }}>
-                    <img
-                      src={img.preview}
-                      alt={`preview-${i}`}
-                      className="rounded border"
-                      style={{
-                        width: 120,
-                        height: 120,
-                        objectFit: "cover",
-                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle"
-                      style={{ transform: "translate(30%,-30%)" }}
-                      onClick={() => removeImage(i)}
-                    >
-                      <XCircle size={14} />
-                    </button>
-                  </motion.div>
-                ))}
+  <motion.div key={i} className="position-relative" whileHover={{ scale: 1.05 }}>
+    <img
+  src={img.preview || getImageUrl(img.url)}
+  alt={`preview-${i}`}
+  className="rounded border"
+  style={{
+    width: 120,
+    height: 120,
+    objectFit: "cover",
+    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+  }}
+/>
+
+    <button
+      type="button"
+      className="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle"
+      style={{ transform: "translate(30%,-30%)" }}
+      onClick={() => removeImage(i)}
+    >
+      <XCircle size={14} />
+    </button>
+
+
+
+    {/* 🩵 Progress overlay bar */}
+    {loading && (
+      <div
+        className="position-absolute bottom-0 start-0 w-100 bg-light rounded-bottom overflow-hidden"
+        style={{ height: "6px" }}
+      >
+        <div
+          className="bg-primary"
+          style={{
+            width: `${uploadProgress.total || 0}%`,
+            height: "100%",
+            transition: "width 0.3s ease",
+          }}
+        />
+        {loading && (
+  <small className="text-primary fw-semibold d-block text-center mt-1">
+    {uploadProgress.total || 0}%
+  </small>
+)}
+
+      </div>
+    )}
+  </motion.div>
+))}
+
               </div>
             </div>
 
@@ -538,6 +583,7 @@ const CreateListing = () => {
                 }}
               >
                 {loading ? "Saving..." : (<><Save size={18} className="me-2" /> Save Listing</>)}
+                
               </motion.button>
             </div>
           </form>

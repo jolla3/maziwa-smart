@@ -8,7 +8,7 @@ import {
   DollarSign,
   Info,
   PhoneCall,
-  Image as ImageIcon,
+  Image,
   Eye,
   Calendar,
   Heart,
@@ -39,72 +39,83 @@ const MarketView = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
 
-  // ✅ Convert relative path to full URL
-  const imgUrl = (path) => {
-    if (!path) return "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
-    if (path.startsWith("http")) return path;
-    return `${API_BASE.replace("/api", "")}${path}`;
-  };
+  const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
 
-  // ✅ Get display images with proper fallback chain
+  // Helper function to convert relative paths to full URLs
+  const imgUrl = (path) => {
+  if (!path) {
+    return "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
+  }
+
+  // If full URL (external image), return as is
+  if (/^https?:\/\//.test(path)) return path;
+
+  // If old /uploads path, rewrite to proxy endpoint
+  if (path.startsWith("/uploads/")) {
+    const relative = path.replace("/uploads/", "");
+    return `${API_BASE.replace("/api", "")}/image/${relative}`;
+  }
+
+  // Default fallback
+  return `${API_BASE.replace("/api", "")}${path}`;
+};
+
+
+
+  // Get all available images from listing
   const getDisplayImages = (listing) => {
     if (!listing) return [];
-    return listing.images || listing.photos || listing.animal?.photos || [];
-  };
-
-  // ✅ Initialize main photo after listing loads
-  const initializeMainPhoto = (listing) => {
-    if (!listing) return "";
-    
-    // Priority: listing.images > listing.photos > animal.photos
     const images = listing.images || listing.photos || listing.animal?.photos || [];
-    return images[0] || "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
+    return images.length > 0 ? images : [DEFAULT_IMAGE];
   };
 
-  // ✅ Fetch listing by ID from location.state.id
-  useEffect(() => {
-    const fetchListing = async () => {
-      try {
-        // Get ID from location.state
-        const listingId = location.state?.id || location.state?.listing?._id;
+  // Fetch listing by ID
+  const fetchListingById = async (id) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get(`${API_BASE}/market/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success && res.data.listing) {
+        const fetchedListing = res.data.listing;
+        setListing(fetchedListing);
         
-        if (!listingId) {
-          setError("No listing ID provided");
-          setLoading(false);
-          return;
-        }
-
-        // If full listing object passed, use it
-        if (location.state?.listing && !location.state.id) {
-          setListing(location.state.listing);
-          setMainPhoto(initializeMainPhoto(location.state.listing));
-          setLoading(false);
-          return;
-        }
-
-        // Otherwise fetch from API
-        const res = await axios.get(`${API_BASE}/market/${listingId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.data.success) {
-          setListing(res.data.listing);
-          setMainPhoto(initializeMainPhoto(res.data.listing));
-        } else {
-          setError(res.data.message || "Failed to fetch listing");
-        }
-      } catch (err) {
-        console.error("❌ Fetch error:", err);
-        setError("Server error while loading listing");
-      } finally {
-        setLoading(false);
+        // Initialize mainPhoto with first available image
+        const images = getDisplayImages(fetchedListing);
+        setMainPhoto(images[0] || DEFAULT_IMAGE);
+      } else {
+        setError(res.data.message || "Failed to fetch listing");
       }
-    };
+    } catch (err) {
+      console.error("❌ Fetch error:", err);
+      setError("Server error while loading listing");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchListing();
-  }, [location.state, token]);
+  // Initialize listing on mount
+  useEffect(() => {
+    const stateData = location.state;
+    
+    if (stateData?.listing) {
+      // Listing was preloaded via navigation state
+      setListing(stateData.listing);
+      const images = getDisplayImages(stateData.listing);
+      setMainPhoto(images[0] || DEFAULT_IMAGE);
+      setLoading(false);
+    } else if (stateData?.id) {
+      // Only ID provided, fetch the listing
+      fetchListingById(stateData.id);
+    } else {
+      // No data provided
+      setError("No listing data provided");
+      setLoading(false);
+    }
+  }, []);
 
-  // ✅ Check favorites on listing load
+  // Update favorites when listing changes
   useEffect(() => {
     if (listing?._id) {
       const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
@@ -129,18 +140,18 @@ const MarketView = () => {
   };
 
   const handleShare = () => {
-    if (!listing) return;
-    
-    const shareText = `Check out this ${listing.animal?.species || "livestock"} for ${formattedPrice}`;
-    
+    const species = listing?.animal?.species || "livestock";
+    const formattedPrice = new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency: "KES",
+      maximumFractionDigits: 0,
+    }).format(listing?.price || 0);
+
     if (navigator.share) {
       navigator.share({
-        title: listing.title,
-        text: shareText,
+        title: listing?.title || "Livestock Listing",
+        text: `Check out this ${species} for ${formattedPrice}`,
         url: window.location.href,
-      }).catch(() => {
-        navigator.clipboard.writeText(window.location.href);
-        alert("Link copied to clipboard!");
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
@@ -210,7 +221,7 @@ const MarketView = () => {
     pig: { color: "danger", emoji: "🐖" },
   };
 
-  const animalConfig = speciesConfig[animal?.species] || { color: "secondary", emoji: "🐾" };
+  const animalConfig = speciesConfig[animal?.species?.toLowerCase()] || { color: "secondary", emoji: "🐾" };
 
   return (
     <div className="container-fluid px-3 py-4" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
@@ -294,7 +305,7 @@ const MarketView = () => {
             <div className="card-body p-4">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                  <ImageIcon size={20} className="text-primary" />
+                  <Image size={20} className="text-primary" />
                   Gallery
                 </h6>
                 <span className="badge bg-light text-dark">
@@ -315,39 +326,37 @@ const MarketView = () => {
                     className="w-100 object-fit-cover"
                     style={{ height: "450px", borderRadius: "20px" }}
                     onError={(e) => {
-                      e.target.src = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
+                      e.target.src = DEFAULT_IMAGE;
                     }}
                   />
                 </AnimatePresence>
               </div>
 
               {/* Thumbnail Strip */}
-              {displayImages.length > 0 && (
-                <div className="d-flex gap-2 overflow-auto pb-2">
-                  {displayImages.map((img, i) => (
-                    <motion.img
-                      key={i}
-                      src={imgUrl(img)}
-                      alt={`Thumbnail ${i + 1}`}
-                      className={`thumbnail-img rounded-3 object-fit-cover ${
-                        imgUrl(mainPhoto) === imgUrl(img) ? "active" : ""
-                      }`}
-                      style={{
-                        width: "100px",
-                        height: "75px",
-                        cursor: "pointer",
-                        flexShrink: 0,
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setMainPhoto(img)}
-                      onError={(e) => {
-                        e.target.src = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=200&q=80";
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="d-flex gap-2 overflow-auto pb-2">
+                {displayImages.map((img, i) => (
+                  <motion.img
+                    key={i}
+                    src={imgUrl(img)}
+                    alt={`Thumbnail ${i + 1}`}
+                    className={`thumbnail-img rounded-3 object-fit-cover ${
+                      imgUrl(mainPhoto) === imgUrl(img) ? "active" : ""
+                    }`}
+                    style={{
+                      width: "100px",
+                      height: "75px",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setMainPhoto(img)}
+                    onError={(e) => {
+                      e.target.src = DEFAULT_IMAGE;
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </motion.div>
 
@@ -402,7 +411,7 @@ const MarketView = () => {
             <div className="card-body p-4 text-white">
               <div className="d-flex align-items-center gap-2 mb-2">
                 <span className={`badge bg-white text-${animalConfig.color}`}>
-                  {animalConfig.emoji} {animal?.species || "Unknown"}
+                  {animalConfig.emoji} {animal?.species || "Livestock"}
                 </span>
                 {animal?.status === "pregnant" && (
                   <span className="badge bg-warning text-dark">
@@ -443,6 +452,12 @@ const MarketView = () => {
                 </div>
                 <div className="col-6">
                   <div className="p-3 bg-light rounded-3">
+                    <small className="text-muted d-block mb-1">Species</small>
+                    <strong className="text-capitalize">{animal?.species || "Unknown"}</strong>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="p-3 bg-light rounded-3">
                     <small className="text-muted d-block mb-1">Gender</small>
                     <strong className="text-capitalize">
                       {animal?.gender === "male" ? "♂ Male" : animal?.gender === "female" ? "♀ Female" : "N/A"}
@@ -458,12 +473,12 @@ const MarketView = () => {
                 <div className="col-6">
                   <div className="p-3 bg-light rounded-3">
                     <small className="text-muted d-block mb-1">Status</small>
-                    <span className={`badge ${animal?.status === "pregnant" ? "bg-warning text-dark" : "bg-success"}`}>
+                    <span className={`badge ${animal?.status === "pregnant" ? "bg-warning" : "bg-success"}`}>
                       {animal?.status || "Available"}
                     </span>
                   </div>
                 </div>
-                <div className="col-12">
+                <div className="col-6">
                   <div className="p-3 bg-light rounded-3">
                     <small className="text-muted d-block mb-1">Breed</small>
                     <strong>{animal?.breed || "Unknown"}</strong>
@@ -472,7 +487,7 @@ const MarketView = () => {
               </div>
 
               {/* Production Stats */}
-              {(animal?.lifetime_milk || animal?.daily_average || (animal?.calved_count && animal.calved_count > 0)) && (
+              {(animal?.lifetime_milk || animal?.daily_average || animal?.calved_count > 0) && (
                 <div className="mt-3">
                   <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                     <TrendingUp size={18} className="text-success" />
@@ -551,7 +566,7 @@ const MarketView = () => {
           <div className="mt-3 p-3 bg-white rounded-4 shadow-sm">
             <div className="d-flex align-items-center gap-2 text-success small">
               <CheckCircle size={16} />
-              <span>Verified Listing</span>
+              <span>Verified product</span>
             </div>
             <div className="d-flex align-items-center gap-2 text-primary small mt-2">
               <CheckCircle size={16} />
@@ -590,7 +605,7 @@ const MarketView = () => {
                     ×
                   </button>
                 </div>
-                <div style={{ height: "calc(100% - 60px)" }}>
+                <div className="h-100">
                   <ChatRoom
                     receiverId={seller._id}
                     listingId={listing._id}

@@ -101,27 +101,40 @@ export default function MarketPage() {
         fetchTrending();
     }, [filters]);
 
-    // ✅ FIXED: Changed from /uploads/listings to match your actual path
-    // helper: pick first available image
-    const getFirstImage = (listing) => {
-        if (!listing) return '';
-        if (Array.isArray(listing.images) && listing.images.length) return listing.images[0];
-        if (Array.isArray(listing.photos) && listing.photos.length) return listing.photos[0];
-        // sometimes backend returns JSON string
-        try {
-            if (typeof listing.photos === 'string') {
-                const p = JSON.parse(listing.photos);
-                if (Array.isArray(p) && p.length) return p[0];
-            }
-        } catch { }
-        return '';
-    };
+ // ✅ Helper: pick the first valid image for a listing
+const getFirstImage = (listing) => {
+  if (!listing) return "";
 
-    const imgUrl = (path) => {
-        if (!path) return 'https://placehold.co/600x400?text=No+Image';
-        const fixed = path.startsWith('/') ? path : `/${path}`;
-        return `${API_BASE.replace('/api', '')}${fixed}`;
-    };
+  // Prefer new Cloudinary field names if any
+  const photos =
+    listing.photos ||
+    listing.images ||
+    (typeof listing.photos === "string"
+      ? (() => {
+          try {
+            return JSON.parse(listing.photos);
+          } catch {
+            return [];
+          }
+        })()
+      : []);
+
+  if (Array.isArray(photos) && photos.length > 0) return photos[0];
+
+  return "";
+};
+
+// ✅ Helper: generate usable image URL (Cloudinary OR local fallback)
+const imgUrl = (path) => {
+  if (!path) return "https://placehold.co/600x400?text=No+Image";
+
+  // 🧠 If already a Cloudinary URL, use as-is
+  if (path.startsWith("http")) return path;
+
+  // 🧠 Otherwise, serve from your API's uploads directory (legacy)
+  const fixed = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE.replace("/api", "")}${fixed}`;
+};
 
 
     const formatCurrency = (val) =>
@@ -525,11 +538,12 @@ navigate("/view-market", { state: { listing } });
                                     <div className="ratio ratio-4x3 bg-light position-relative overflow-hidden">
                                         {/* ✅ FIXED: Changed photos to images */}
                                         <img
-                                            src={imgUrl(getFirstImage(listing))}
-                                            alt={listing.title || 'listing'}
-                                            onError={(e) => e.target.src = 'https://placehold.co/600x400?text=No+Image'}
-                                            className="object-fit-cover card-zoom-img"
-                                        />
+  src={imgUrl(getFirstImage(listing))}
+  alt={listing.title}
+  className="rounded w-100"
+  style={{ objectFit: "cover", height: 200 }}
+/>
+
 
 
                                         {/* ✅ NEW: Image count overlay */}

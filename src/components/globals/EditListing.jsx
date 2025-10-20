@@ -158,47 +158,44 @@ export default function EditListing() {
   };
 
   const confirmDelete = async () => {
-    if (showConfirm.index === null) return;
+  if (showConfirm.index === null) return;
+  
+  const photoIndex = showConfirm.index;
+  setDeletingPhoto(true);
+  
+  try {
+    const remaining = existingPhotos.filter((_, i) => i !== photoIndex);
     
-    const photoIndex = showConfirm.index;
-    setDeletingPhoto(true);
-    
-    try {
-      const remaining = existingPhotos.filter((_, i) => i !== photoIndex);
-      
-      const formData = new FormData();
-      
-      // Send remaining photos as individual form fields
-      remaining.forEach(photo => {
-        formData.append("photos", photo);
-      });
-
-      const listingId = listing._id || listing.id;
-      const res = await axios.put(
-        `${API_BASE}/listing/${listingId}`,
-        formData,
-        {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (res.data.success) {
-        setExistingPhotos(remaining);
-        setListing(res.data.listing);
-        showToast("success", "Photo deleted successfully");
-      } else {
-        showToast("error", res.data.message || "Failed to delete photo");
+    // ✅ Send as JSON, not FormData
+    const listingId = listing._id || listing.id;
+    const res = await axios.patch(
+      `${API_BASE}/listing/${listingId}`,
+      { photos: remaining }, // Send as plain object
+      {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
-    } catch (err) {
-      console.error("Delete photo error:", err);
-      showToast("error", err.response?.data?.message || "Failed to delete photo");
-    } finally {
-      setDeletingPhoto(false);
-      setShowConfirm({ show: false, index: null });
+    );
+
+    if (res.data.success) {
+      setExistingPhotos(remaining);
+      setListing(res.data.listing);
+      showToast("success", "Photo deleted successfully");
+    } else {
+      showToast("error", res.data.message || "Failed to delete photo");
     }
-  };
+  } catch (err) {
+    console.error("Delete photo error:", err);
+    showToast("error", err.response?.data?.message || "Failed to delete photo");
+  } finally {
+    setDeletingPhoto(false);
+    setShowConfirm({ show: false, index: null });
+  }
+};
+
+// duplicate handleSave removed — consolidated save logic is kept later in the file
 
   const validateForm = () => {
     if (!form.title.trim()) {
@@ -224,74 +221,73 @@ export default function EditListing() {
     return true;
   };
 
-  const handleSave = async () => {
-    if (!validateForm()) return;
+ // src/pages/EditListing.jsx - handleSave function only
+const handleSave = async () => {
+  if (!validateForm()) return;
 
-    if (!listing?._id && !listing?.id) {
-      showToast("error", "Invalid listing ID");
-      return;
-    }
+  if (!listing?._id && !listing?.id) {
+    showToast("error", "Invalid listing ID");
+    return;
+  }
 
-    setSaving(true);
-    const formData = new FormData();
+  setSaving(true);
+  const formData = new FormData();
 
-    // Add form fields
-    Object.entries(form).forEach(([k, v]) => {
-      formData.append(k, v);
-    });
+  // Add form fields
+  Object.entries(form).forEach(([k, v]) => {
+    formData.append(k, v);
+  });
 
-    // Add existing photos - send each photo path separately
-    existingPhotos.forEach(photo => {
-      formData.append("photos", photo);
-    });
+  // ✅ Add existing photos as separate indexed fields
+  existingPhotos.forEach((photo, index) => {
+    formData.append(`photos[${index}]`, photo);
+  });
 
-    // Add animal details if seller
-    if (user?.role === "seller" && animalDetails.age) {
-      formData.append("animal_details", JSON.stringify(animalDetails));
-    }
+  // Add animal details if seller
+  if (user?.role === "seller" && animalDetails.age) {
+    formData.append("animal_details", JSON.stringify(animalDetails));
+  }
 
-    // Add new image files
-    newFiles.forEach((file) => {
-      formData.append("images", file);
-    });
+  // Add new image files
+  newFiles.forEach((file) => {
+    formData.append("images", file);
+  });
 
-    const listingId = listing._id || listing.id;
-    console.log("Saving listing with ID:", listingId);
+  const listingId = listing._id || listing.id;
 
-    try {
-      const res = await axios.put(
-        `${API_BASE}/listing/${listingId}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (res.data.success) {
-        setListing(res.data.listing);
-        setExistingPhotos(res.data.listing.photos || []);
-        showToast("success", "Listing updated successfully");
-        setNewFiles([]);
-        setPreviews([]);
-        
-        setTimeout(() => {
-          navigate("/my-listings");
-        }, 1500);
-      } else {
-        showToast("error", res.data.message || "Failed to update listing");
+  try {
+    const res = await axios.patch(
+      `${API_BASE}/listing/${listingId}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       }
-    } catch (err) {
-      console.error("Save error:", err);
-      console.error("Error response:", err.response?.data);
-      const errorMsg = err.response?.data?.message || err.message || "Server error during save";
-      showToast("error", errorMsg);
-    } finally {
-      setSaving(false);
-    }
-  };
+    );
 
+    if (res.data.success) {
+      setListing(res.data.listing);
+      setExistingPhotos(res.data.listing.photos || []);
+      showToast("success", "Listing updated successfully");
+      setNewFiles([]);
+      setPreviews([]);
+      
+      setTimeout(() => {
+        navigate("/my-listings");
+      }, 1500);
+    } else {
+      showToast("error", res.data.message || "Failed to update listing");
+    }
+  } catch (err) {
+    console.error("Save error:", err);
+    const errorMsg = err.response?.data?.message || err.message || "Server error during save";
+    showToast("error", errorMsg);
+  } finally {
+    setSaving(false);
+  }
+};
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
     setTimeout(() => setToast({ show: false, type: "", message: "" }), 3000);

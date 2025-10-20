@@ -58,6 +58,7 @@ import ViewListing from "./components/globals/ViewListing";
 // import MarketplacePage from "./components/globals/MarketplacePage";
 import MarketPage from "./components/globals/MarketplacePage";
 import MarketView from "./components/globals/MarketView";
+import Notifications from "./components/globals/Notification";
 // import { GoogleLogin } from "@react-oauth/google";
 
 // import farmerLayout from './components/farmer/farmerLayout'
@@ -96,6 +97,7 @@ function App() {
             <Route path="/view" element={<ViewListing />} />
             <Route path="/market" element={<MarketPage/>} />
             <Route path="/view-market" element={<MarketView/>} />
+            <Route path="/notifications" element={<Notifications/>} />
             
             
 
