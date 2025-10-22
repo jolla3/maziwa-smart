@@ -291,7 +291,7 @@ const HeroSection = ({ navigate }) => {
                   <Button
                     variant="contained"
                     size="large"
-                    onClick={() => navigate('/register')}
+                    onClick={() => navigate('/register_farmer')}
                     endIcon={<ArrowRight size={20} />}
                     sx={{
                       px: 4,
