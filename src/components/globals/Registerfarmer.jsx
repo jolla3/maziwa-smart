@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../PrivateComponents/AuthContext';
 import AppNavbar from '../scenes/AppNavbar';
 import {
     Box,
@@ -17,7 +18,7 @@ import {
     Divider,
     useTheme
 } from '@mui/material';
-import { User, Phone, Mail, Eye, EyeOff, Lock, MapPin, Image } from 'lucide-react';
+import { User, Phone, Mail, Eye, EyeOff, Lock, MapPin, Image, Sprout } from 'lucide-react';
 
 const FarmerRegister = () => {
     const [formData, setFormData] = useState({
@@ -36,6 +37,7 @@ const FarmerRegister = () => {
     const [alert, setAlert] = useState({ type: '', message: '' });
     const theme = useTheme();
     const navigate = useNavigate();
+    const { setToken, setUser } = useContext(AuthContext);
 
     // API Base URL
     const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://maziwasmart.onrender.com';
@@ -155,6 +157,23 @@ const FarmerRegister = () => {
                         }}
                     >
                         <Box component="form" onSubmit={handleSubmit} noValidate>
+                            {/* Header with Sprout Icon */}
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                                <Box
+                                    sx={{
+                                        width: 60,
+                                        height: 60,
+                                        borderRadius: '50%',
+                                        bgcolor: 'success.main',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Sprout size={30} color="white" />
+                                </Box>
+                            </Box>
+
                             <Typography
                                 variant="h4"
                                 align="center"
@@ -276,7 +295,7 @@ const FarmerRegister = () => {
                                 fullWidth
                                 type="email"
                                 name="email"
-                                label="Email (Optional)"
+                                label="Email "
                                 placeholder="Enter your email"
                                 value={formData.email}
                                 onChange={handleChange}
@@ -309,6 +328,57 @@ const FarmerRegister = () => {
                                     },
                                 }}
                             />
+
+                              <TextField
+                                fullWidth
+                                type={showPassword ? 'text' : 'password'}
+                                name="password"
+                                label="Password"
+                                placeholder="Create a password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                margin="normal"
+                                variant="outlined"
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Lock size={20} color={theme.palette.text.secondary} />
+                                        </InputAdornment>
+                                    ),
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() => setShowPassword(prev => !prev)}
+                                                edge="end"
+                                                sx={{ color: theme.palette.text.secondary }}
+                                            >
+                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    mb: 3,
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[400],
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: theme.palette.primary.main,
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: theme.palette.primary.main,
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        '&.Mui-focused': {
+                                            color: theme.palette.primary.main,
+                                        },
+                                    },
+                                }}
+                            />
+
 
                             <TextField
                                 fullWidth
@@ -386,94 +456,9 @@ const FarmerRegister = () => {
                                 }}
                             />
 
-                            <TextField
-                                fullWidth
-                                type="text"
-                                name="photo"
-                                label="Photo URL (Optional)"
-                                placeholder="Enter photo URL"
-                                value={formData.photo}
-                                onChange={handleChange}
-                                margin="normal"
-                                variant="outlined"
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Image size={20} color={theme.palette.text.secondary} />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                sx={{
-                                    mb: 2,
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[400],
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: theme.palette.primary.main,
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: theme.palette.primary.main,
-                                        },
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        '&.Mui-focused': {
-                                            color: theme.palette.primary.main,
-                                        },
-                                    },
-                                }}
-                            />
+                          
 
-                            <TextField
-                                fullWidth
-                                type={showPassword ? 'text' : 'password'}
-                                name="password"
-                                label="Password"
-                                placeholder="Create a password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                margin="normal"
-                                variant="outlined"
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Lock size={20} color={theme.palette.text.secondary} />
-                                        </InputAdornment>
-                                    ),
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowPassword(prev => !prev)}
-                                                edge="end"
-                                                sx={{ color: theme.palette.text.secondary }}
-                                            >
-                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                sx={{
-                                    mb: 3,
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[400],
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: theme.palette.primary.main,
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: theme.palette.primary.main,
-                                        },
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        '&.Mui-focused': {
-                                            color: theme.palette.primary.main,
-                                        },
-                                    },
-                                }}
-                            />
-
+                          
                             <Button
                                 type="submit"
                                 fullWidth
@@ -484,11 +469,11 @@ const FarmerRegister = () => {
                                     mb: 2,
                                     fontSize: '1rem',
                                     fontWeight: 600,
-                                    bgcolor: theme.palette.primary.main,
+                                    bgcolor: 'success.main',
                                     '&:hover': {
-                                        bgcolor: theme.palette.primary.dark,
+                                        bgcolor: 'success.dark',
                                         transform: 'translateY(-2px)',
-                                        boxShadow: `0 6px 20px ${theme.palette.primary.main}40`,
+                                        boxShadow: '0 6px 20px rgba(76, 175, 80, 0.4)',
                                     },
                                     '&:disabled': {
                                         bgcolor: theme.palette.action.disabled,
@@ -587,6 +572,25 @@ const FarmerRegister = () => {
                                         }}
                                     >
                                         Sign In
+                                    </Link>
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{ mt: 2, textAlign: 'center' }}>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    Want to register as a seller?{' '}
+                                    <Link
+                                        href="/register/seller"
+                                        sx={{
+                                            color: theme.palette.primary.main,
+                                            textDecoration: 'none',
+                                            fontWeight: 600,
+                                            '&:hover': {
+                                                textDecoration: 'underline',
+                                            },
+                                        }}
+                                    >
+                                        Register here
                                     </Link>
                                 </Typography>
                             </Box>
