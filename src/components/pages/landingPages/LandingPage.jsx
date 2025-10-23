@@ -3,19 +3,19 @@ import React, { useState, useEffect } from 'react';
 import { Box, ThemeProvider, CssBaseline } from '@mui/material';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
-import AppNavbar from '../AppNavbar';
-import theme from './theme';
+import AppNavbar from '../../scenes/AppNavbar';
+import theme from '../landingPages/theme';
 
-// Section imports
-import HeroSection from './sections/HeroSection';
-import StatsSection from './sections/StatsSection';
-import FeaturesSection from './sections/FeaturesSection';
-import HowItWorksSection from './sections/HowItWorksSection';
-import MarketSection from './sections/MarketSection';
-import TestimonialsSection from './sections/TestimonialsSection';
-import CTASection from './sections/CTASection';
-import Footer from './sections/Footer';
-import FloatingChatButton from './sections/FloatingChatButton';
+// Section imports - FIXED
+import HeroSection from '../sections/HeroSection';
+import StatsSection from '../sections/StatsSection';
+import FeaturesSection from '../sections/FeaturesSection';
+import HowItWorksSection from '../sections/HowItWorksSection';
+import MarketSection from '../sections/MarketSection';
+import TestimonialsSection from '../sections/TestimonialsSection';
+import CTASection from '../sections/CTASection';
+import Footer from '../sections/Footer';
+import FloatingChatButton from '../sections/FloatingChatButton';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -67,7 +67,7 @@ const LandingPage = () => {
         <AppNavbar />
       </Box>
 
-      {/* Main content with subtle background texture */}
+      {/* Main content */}
       <Box 
         sx={{ 
           pt: '64px',

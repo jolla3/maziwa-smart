@@ -31,7 +31,7 @@ import Heart from 'lucide-react/dist/esm/icons/heart';
 import Shield from 'lucide-react/dist/esm/icons/shield';
 import Users from 'lucide-react/dist/esm/icons/users';
 import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
-import AppNavbar from '../AppNavbar';
+import AppNavbar from '../scenes/AppNavbar';
 
 // Custom MUI Theme
 const theme = createTheme({
@@ -135,7 +135,7 @@ const WaveSeparator = ({ flip = false, color = '#fafafa' }) => (
 const AnimatedStat = ({ number, label, inView }) => {
   const numericValue = parseInt(number.replace(/[^0-9]/g, ''));
   const suffix = number.replace(/[0-9]/g, '');
-  
+
   return (
     <Box sx={{ textAlign: 'center' }}>
       <Typography
@@ -161,7 +161,7 @@ const AnimatedStat = ({ number, label, inView }) => {
 // Hero Section Component
 const HeroSection = ({ navigate }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   return (
     <Box
       sx={{
@@ -265,7 +265,7 @@ const HeroSection = ({ navigate }) => {
                   px: 1,
                 }}
               />
-              
+
               <Typography variant="h1" sx={{ color: 'text.primary', mb: 3 }}>
                 Empowering Farmers with{' '}
                 <Box
@@ -282,7 +282,7 @@ const HeroSection = ({ navigate }) => {
               </Typography>
 
               <Typography variant="h5" sx={{ color: 'text.secondary', mb: 4 }}>
-                Monitor your farm digitally, trade livestock and products on our trusted marketplace, 
+                Monitor your farm digitally, trade livestock and products on our trusted marketplace,
                 and grow smarter with the MaziwaSmart ecosystem.
               </Typography>
 
@@ -802,7 +802,7 @@ const MarketSection = ({ navigate }) => {
                         <Heart size={18} />
                       </IconButton>
                     </Box>
-                    
+
                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'text.primary', fontSize: '1rem' }}>
                       {listing.title}
                     </Typography>
@@ -983,7 +983,7 @@ const CTASection = ({ navigate }) => {
                            radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)`,
         }}
       />
-      
+
       <Container maxWidth="md" sx={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -1002,16 +1002,16 @@ const CTASection = ({ navigate }) => {
           >
             <Leaf size={50} />
           </Box>
-          
+
           <Typography variant="h2" sx={{ mb: 3 }}>
             Join the MaziwaSmart Ecosystem
           </Typography>
-          
+
           <Typography variant="h5" sx={{ mb: 5, opacity: 0.95, lineHeight: 1.6 }}>
-            Monitor your farm, trade with confidence, and grow smarter. 
+            Monitor your farm, trade with confidence, and grow smarter.
             Start your journey today — it's free!
           </Typography>
-          
+
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
@@ -1090,7 +1090,7 @@ const Footer = ({ navigate }) => {
               </Typography>
             </Box>
             <Typography variant="body1" sx={{ color: '#94a3b8', mb: 3, lineHeight: 1.7 }}>
-              Powering the future of smart farming in Kenya and beyond. 
+              Powering the future of smart farming in Kenya and beyond.
               Monitor, trade, and grow with Africa's leading agricultural platform.
             </Typography>
             <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -1234,7 +1234,7 @@ const FloatingChatButton = () => {
           <MessageCircle size={28} />
         </IconButton>
       </motion.div>
-      
+
       {isHovered && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}

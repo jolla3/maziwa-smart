@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-              import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
 import { useNavigate } from 'react-router-dom';
-import AppNavbar from '../AppNavbar';
-import { 
-  Box, 
-  TextField, 
-  Button, 
-  Typography, 
-  InputAdornment, 
-  IconButton, 
+import AppNavbar from '../scenes/AppNavbar';
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  InputAdornment,
+  IconButton,
   Paper,
   Container,
   Link,
@@ -76,9 +76,9 @@ const Register = () => {
         phone: formData.phone || undefined // Only send if provided
       });
 
-      setAlert({ 
-        type: 'success', 
-        message: response.data.message || 'Account created successfully!' 
+      setAlert({
+        type: 'success',
+        message: response.data.message || 'Account created successfully!'
       });
 
       // Clear form
@@ -128,17 +128,17 @@ const Register = () => {
               bgcolor: 'background.paper',
               borderRadius: 3,
               border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
-              boxShadow: theme.palette.mode === 'dark' 
-                ? '0 8px 32px rgba(0, 0, 0, 0.3)' 
+              boxShadow: theme.palette.mode === 'dark'
+                ? '0 8px 32px rgba(0, 0, 0, 0.3)'
                 : '0 8px 32px rgba(0, 0, 0, 0.1)',
             }}
           >
             <Box component="form" onSubmit={handleSubmit} noValidate>
-              <Typography 
-                variant="h4" 
-                align="center" 
+              <Typography
+                variant="h4"
+                align="center"
                 gutterBottom
-                sx={{ 
+                sx={{
                   color: 'text.primary',
                   mb: 2,
                   fontWeight: 600,
@@ -147,10 +147,10 @@ const Register = () => {
                 Create Account
               </Typography>
 
-              <Typography 
-                variant="body2" 
-                align="center" 
-                sx={{ 
+              <Typography
+                variant="body2"
+                align="center"
+                sx={{
                   color: 'text.secondary',
                   mb: 4,
                 }}
@@ -159,9 +159,9 @@ const Register = () => {
               </Typography>
 
               {alert.message && (
-                <Alert 
+                <Alert
                   severity={alert.type === 'error' ? 'error' : 'success'}
-                  sx={{ 
+                  sx={{
                     mb: 3,
                     '& .MuiAlert-message': {
                       fontWeight: 500,

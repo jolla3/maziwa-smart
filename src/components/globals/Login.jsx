@@ -7,16 +7,16 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import AppNavbar from '../../components/AppNavbar';
+import AppNavbar from '../scenes/AppNavbar';
 import { AuthContext } from '../../components/PrivateComponents/AuthContext';
 import { jwtDecode } from 'jwt-decode';
-import { 
-  Box, 
-  TextField, 
-  Button, 
-  Typography, 
-  InputAdornment, 
-  IconButton, 
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  InputAdornment,
+  IconButton,
   Paper,
   Container,
   Link,
@@ -134,17 +134,17 @@ const Login = () => {
               bgcolor: 'background.paper',
               borderRadius: 3,
               border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
-              boxShadow: theme.palette.mode === 'dark' 
-                ? '0 8px 32px rgba(0, 0, 0, 0.3)' 
+              boxShadow: theme.palette.mode === 'dark'
+                ? '0 8px 32px rgba(0, 0, 0, 0.3)'
                 : '0 8px 32px rgba(0, 0, 0, 0.1)',
             }}
           >
             <Box component="form" onSubmit={handleLogin} noValidate>
-              <Typography 
-                variant="h4" 
-                align="center" 
+              <Typography
+                variant="h4"
+                align="center"
                 gutterBottom
-                sx={{ 
+                sx={{
                   color: 'text.primary',
                   mb: 2,
                   fontWeight: 600,
@@ -153,10 +153,10 @@ const Login = () => {
                 Welcome Back
               </Typography>
 
-              <Typography 
-                variant="body2" 
-                align="center" 
-                sx={{ 
+              <Typography
+                variant="body2"
+                align="center"
+                sx={{
                   color: 'text.secondary',
                   mb: 4,
                 }}
@@ -390,44 +390,44 @@ const Login = () => {
 
 
 
-<Typography
-  variant="caption"
-  align="center"
-  display="block"
-  sx={{
-    color: 'text.disabled',
-    fontSize: '0.75rem',
-    mt: 2,
-  }}
->
-  By signing in, you agree to our{' '}
-  <Link
-    component={RouterLink}
-    to="/terms"
-    sx={{
-      color: 'primary.main',
-      textDecoration: 'none',
-      fontWeight: 500,
-      '&:hover': { textDecoration: 'underline' },
-    }}
-  >
-    Terms of Service
-  </Link>{' '}
-  and{' '}
-  <Link
-    component={RouterLink}
-    to="/privacy"
-    sx={{
-      color: 'primary.main',
-      textDecoration: 'none',
-      fontWeight: 500,
-      '&:hover': { textDecoration: 'underline' },
-    }}
-  >
-    Privacy Policy
-  </Link>
-  .
-</Typography>
+              <Typography
+                variant="caption"
+                align="center"
+                display="block"
+                sx={{
+                  color: 'text.disabled',
+                  fontSize: '0.75rem',
+                  mt: 2,
+                }}
+              >
+                By signing in, you agree to our{' '}
+                <Link
+                  component={RouterLink}
+                  to="/terms"
+                  sx={{
+                    color: 'primary.main',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    '&:hover': { textDecoration: 'underline' },
+                  }}
+                >
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link
+                  component={RouterLink}
+                  to="/privacy"
+                  sx={{
+                    color: 'primary.main',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    '&:hover': { textDecoration: 'underline' },
+                  }}
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </Typography>
 
             </Box>
           </Paper>

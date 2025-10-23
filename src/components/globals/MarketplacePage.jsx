@@ -57,7 +57,7 @@ export default function MarketPage() {
     };
 
     // Fetch main listings
-    const fetchListings = async () => {
+    const fetchListings = React.useCallback(async () => {
         setLoading(true);
         try {
             const params = Object.fromEntries(
@@ -80,10 +80,10 @@ export default function MarketPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters, token]);
 
     // Fetch trending listings
-    const fetchTrending = async () => {
+    const fetchTrending = React.useCallback(async () => {
         try {
             const res = await axios.get(`${API_BASE}/market/extra/trending`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -94,46 +94,56 @@ export default function MarketPage() {
         } catch (err) {
             console.error("❌ Trending fetch error:", err);
         }
-    };
+    }, [token]);
 
     useEffect(() => {
-        fetchListings();
         fetchTrending();
-    }, [filters]);
+    }, [fetchTrending]);
+
+   useEffect(() => {
+  // 🧠 Only trigger after first mount
+  const delay = setTimeout(() => {
+    fetchListings();
+  }, 300); // debounce 300ms to avoid multiple API hits
+  return () => clearTimeout(delay);
+}, [filters, searchQuery, fetchListings]); // include search and fetchListings
+
 
  // ✅ Helper: pick the first valid image for a listing
+// ✅ Always resolve Cloudinary + JSON strings correctly
 const getFirstImage = (listing) => {
   if (!listing) return "";
+  let photos = [];
 
-  // Prefer new Cloudinary field names if any
-  const photos =
-    listing.photos ||
-    listing.images ||
-    (typeof listing.photos === "string"
-      ? (() => {
-          try {
-            return JSON.parse(listing.photos);
-          } catch {
-            return [];
-          }
-        })()
-      : []);
+  if (Array.isArray(listing.photos)) photos = listing.photos;
+  else if (Array.isArray(listing.images)) photos = listing.images;
+  else if (typeof listing.photos === "string") {
+    try {
+      const parsed = JSON.parse(listing.photos);
+      if (Array.isArray(parsed)) photos = parsed;
+    } catch {
+      photos = [];
+    }
+  }
 
-  if (Array.isArray(photos) && photos.length > 0) return photos[0];
-
-  return "";
+  // Prefer first Cloudinary image
+  if (photos.length > 0) return photos[0];
+  return "https://placehold.co/600x400?text=No+Image";
 };
 
-// ✅ Helper: generate usable image URL (Cloudinary OR local fallback)
+// ✅ Handles Cloudinary & old uploads gracefully
 const imgUrl = (path) => {
   if (!path) return "https://placehold.co/600x400?text=No+Image";
 
-  // 🧠 If already a Cloudinary URL, use as-is
-  if (path.startsWith("http")) return path;
+  if (/^https?:\/\//.test(path)) return path; // Cloudinary or remote image
 
-  // 🧠 Otherwise, serve from your API's uploads directory (legacy)
-  const fixed = path.startsWith("/") ? path : `/${path}`;
-  return `${API_BASE.replace("/api", "")}${fixed}`;
+  // For legacy /uploads/ paths
+  if (path.startsWith("/uploads/")) {
+    const relative = path.replace("/uploads/", "");
+    return `${API_BASE.replace("/api", "")}/photo/${relative}`;
+  }
+
+  return `${API_BASE.replace("/api", "")}${path}`;
 };
 
 
@@ -537,12 +547,14 @@ navigate("/view-market", { state: { listing } });
                                     </div>
                                     <div className="ratio ratio-4x3 bg-light position-relative overflow-hidden">
                                         {/* ✅ FIXED: Changed photos to images */}
-                                        <img
+                                       <img
   src={imgUrl(getFirstImage(listing))}
   alt={listing.title}
   className="rounded w-100"
   style={{ objectFit: "cover", height: 200 }}
+  onError={(e) => (e.target.src = "https://placehold.co/600x400?text=No+Image")}
 />
+
 
 
 
