@@ -56,6 +56,37 @@ export default function MarketPage() {
         pig: { color: "bg-danger", emoji: "🐖" },
     };
 
+    // --- IMAGE HELPERS ---
+    // Always use this to get the first image, regardless of source
+    const getFirstImage = (listing) => {
+        if (!listing) return "";
+        let photos = [];
+        if (Array.isArray(listing.photos)) photos = listing.photos;
+        else if (Array.isArray(listing.images)) photos = listing.images;
+        else if (typeof listing.photos === "string") {
+            try {
+                const parsed = JSON.parse(listing.photos);
+                if (Array.isArray(parsed)) photos = parsed;
+            } catch {
+                photos = [];
+            }
+        }
+        // Prefer first Cloudinary image
+        if (photos.length > 0) return photos[0];
+        return "https://placehold.co/600x400?text=No+Image";
+    };
+
+    // Always use this for URLs (handles Cloudinary, legacy, etc)
+    const imgUrl = (path) => {
+        if (!path) return "https://placehold.co/600x400?text=No+Image";
+        if (/^https?:\/\//.test(path)) return path; // Cloudinary or remote image
+        if (path.startsWith("/uploads/")) {
+            const relative = path.replace("/uploads/", "");
+            return `${API_BASE.replace("/api", "")}/photo/${relative}`;
+        }
+        return `${API_BASE.replace("/api", "")}${path}`;
+    };
+
     // Fetch main listings
     const fetchListings = React.useCallback(async () => {
         setLoading(true);
@@ -63,7 +94,8 @@ export default function MarketPage() {
             const params = Object.fromEntries(
                 Object.entries(filters).filter(([_, v]) => v !== "")
             );
-
+            // Optionally add searchQuery for backend-side search
+            if (searchQuery) params.search = searchQuery;
             const res = await axios.get(`${API_BASE}/market`, {
                 params,
                 headers: { Authorization: `Bearer ${token}` },
@@ -80,7 +112,7 @@ export default function MarketPage() {
         } finally {
             setLoading(false);
         }
-    }, [filters, token]);
+    }, [filters, token, searchQuery]);
 
     // Fetch trending listings
     const fetchTrending = React.useCallback(async () => {
@@ -100,52 +132,12 @@ export default function MarketPage() {
         fetchTrending();
     }, [fetchTrending]);
 
-   useEffect(() => {
-  // 🧠 Only trigger after first mount
-  const delay = setTimeout(() => {
-    fetchListings();
-  }, 300); // debounce 300ms to avoid multiple API hits
-  return () => clearTimeout(delay);
-}, [filters, searchQuery, fetchListings]); // include search and fetchListings
-
-
- // ✅ Helper: pick the first valid image for a listing
-// ✅ Always resolve Cloudinary + JSON strings correctly
-const getFirstImage = (listing) => {
-  if (!listing) return "";
-  let photos = [];
-
-  if (Array.isArray(listing.photos)) photos = listing.photos;
-  else if (Array.isArray(listing.images)) photos = listing.images;
-  else if (typeof listing.photos === "string") {
-    try {
-      const parsed = JSON.parse(listing.photos);
-      if (Array.isArray(parsed)) photos = parsed;
-    } catch {
-      photos = [];
-    }
-  }
-
-  // Prefer first Cloudinary image
-  if (photos.length > 0) return photos[0];
-  return "https://placehold.co/600x400?text=No+Image";
-};
-
-// ✅ Handles Cloudinary & old uploads gracefully
-const imgUrl = (path) => {
-  if (!path) return "https://placehold.co/600x400?text=No+Image";
-
-  if (/^https?:\/\//.test(path)) return path; // Cloudinary or remote image
-
-  // For legacy /uploads/ paths
-  if (path.startsWith("/uploads/")) {
-    const relative = path.replace("/uploads/", "");
-    return `${API_BASE.replace("/api", "")}/photo/${relative}`;
-  }
-
-  return `${API_BASE.replace("/api", "")}${path}`;
-};
-
+    useEffect(() => {
+        const delay = setTimeout(() => {
+            fetchListings();
+        }, 300); // debounce 300ms to avoid multiple API hits
+        return () => clearTimeout(delay);
+    }, [filters, searchQuery, fetchListings]);
 
     const formatCurrency = (val) =>
         new Intl.NumberFormat("en-KE", {
@@ -154,12 +146,10 @@ const imgUrl = (path) => {
             maximumFractionDigits: 0,
         }).format(val || 0);
 
-    // ✅ FIXED: Removed space and added proper ID navigation
-   const handleView = (listing) => {
-  if (!listing) return;
-navigate("/view-market", { state: { listing } });
-};
-
+    const handleView = (listing) => {
+        if (!listing) return;
+        navigate("/view-market", { state: { listing } });
+    };
 
     const toggleFavorite = (id) => {
         const newFavorites = favorites.includes(id)
@@ -169,11 +159,12 @@ navigate("/view-market", { state: { listing } });
         localStorage.setItem("favorites", JSON.stringify(newFavorites));
     };
 
+    // Frontend-side search as fallback (if backend doesn't support search param)
     const filteredListings = listings.filter((l) =>
         searchQuery
             ? l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             l.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            l.animal_id?.species?.toLowerCase().includes(searchQuery.toLowerCase())
+            (l.animal_id?.species?.toLowerCase() || "").includes(searchQuery.toLowerCase())
             : true
     );
 
@@ -546,23 +537,22 @@ navigate("/view-market", { state: { listing } });
                                         </span>
                                     </div>
                                     <div className="ratio ratio-4x3 bg-light position-relative overflow-hidden">
-                                        {/* ✅ FIXED: Changed photos to images */}
-                                       <img
-  src={imgUrl(getFirstImage(listing))}
-  alt={listing.title}
-  className="rounded w-100"
-  style={{ objectFit: "cover", height: 200 }}
-  onError={(e) => (e.target.src = "https://placehold.co/600x400?text=No+Image")}
-/>
-
-
-
-
+                                        {/* --- ALWAYS USE THE IMAGE HELPER --- */}
+                                        <img
+                                            src={imgUrl(getFirstImage(listing))}
+                                            alt={listing.title}
+                                            className="rounded w-100"
+                                            style={{ objectFit: "cover", height: 200 }}
+                                            onError={(e) => (e.target.src = "https://placehold.co/600x400?text=No+Image")}
+                                        />
                                         {/* ✅ NEW: Image count overlay */}
-                                        {listing.images?.length > 1 && (
+                                        {(
+                                            (Array.isArray(listing.photos) && listing.photos.length > 1) ||
+                                            (Array.isArray(listing.images) && listing.images.length > 1)
+                                        ) && (
                                             <div className="image-overlay">
                                                 <ImageIcon size={14} className="me-1" />
-                                                {listing.images.length} photos
+                                                {(listing.photos?.length || listing.images?.length) + " photos"}
                                             </div>
                                         )}
                                     </div>
@@ -626,9 +616,9 @@ navigate("/view-market", { state: { listing } });
                                             className="ratio ratio-4x3 bg-light overflow-hidden position-relative"
                                             onClick={() => handleView(listing)}
                                         >
-                                            {/* ✅ FIXED: Changed photos to images */}
+                                            {/* --- ALWAYS USE THE IMAGE HELPER --- */}
                                             <img
-                                                src={imgUrl(listing.images?.[0])}
+                                                src={imgUrl(getFirstImage(listing))}
                                                 alt={listing.title}
                                                 className="object-fit-cover card-zoom-img"
                                                 onError={(e) =>
@@ -636,10 +626,13 @@ navigate("/view-market", { state: { listing } });
                                                 }
                                             />
                                             {/* ✅ NEW: Image count overlay */}
-                                            {listing.images?.length > 1 && (
+                                            {(
+                                                (Array.isArray(listing.photos) && listing.photos.length > 1) ||
+                                                (Array.isArray(listing.images) && listing.images.length > 1)
+                                            ) && (
                                                 <div className="image-overlay">
                                                     <ImageIcon size={14} className="me-1" />
-                                                    {listing.images.length} photos
+                                                    {(listing.photos?.length || listing.images?.length) + " photos"}
                                                 </div>
                                             )}
                                         </div>

@@ -43,24 +43,22 @@ const MarketView = () => {
 
   // Helper function to convert relative paths to full URLs
   const imgUrl = (path) => {
-  if (!path) {
-    return "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
-  }
+    if (!path) {
+      return DEFAULT_IMAGE;
+    }
 
-  // If full URL (external image), return as is
-  if (/^https?:\/\//.test(path)) return path;
+    // If full URL (external image), return as is
+    if (/^https?:\/\//.test(path)) return path;
 
-  // If old /uploads path, rewrite to proxy endpoint
-  if (path.startsWith("/uploads/")) {
-    const relative = path.replace("/uploads/", "");
-    return `${API_BASE.replace("/api", "")}/image/${relative}`;
-  }
+    // If old /uploads path, rewrite to proxy endpoint
+    if (path.startsWith("/uploads/")) {
+      const relative = path.replace("/uploads/", "");
+      return `${API_BASE.replace("/api", "")}/image/${relative}`;
+    }
 
-  // Default fallback
-  return `${API_BASE.replace("/api", "")}${path}`;
-};
-
-
+    // Default fallback
+    return `${API_BASE.replace("/api", "")}${path}`;
+  };
 
   // Get all available images from listing
   const getDisplayImages = (listing) => {
@@ -80,7 +78,7 @@ const MarketView = () => {
       if (res.data.success && res.data.listing) {
         const fetchedListing = res.data.listing;
         setListing(fetchedListing);
-        
+
         // Initialize mainPhoto with first available image
         const images = getDisplayImages(fetchedListing);
         setMainPhoto(images[0] || DEFAULT_IMAGE);
@@ -98,7 +96,7 @@ const MarketView = () => {
   // Initialize listing on mount
   useEffect(() => {
     const stateData = location.state;
-    
+
     if (stateData?.listing) {
       // Listing was preloaded via navigation state
       setListing(stateData.listing);
@@ -125,16 +123,16 @@ const MarketView = () => {
 
   const toggleFavorite = () => {
     if (!listing?._id) return;
-    
+
     const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
     let newFavorites;
-    
+
     if (isFavorite) {
       newFavorites = favorites.filter((id) => id !== listing._id);
     } else {
       newFavorites = [...favorites, listing._id];
     }
-    
+
     localStorage.setItem("favorites", JSON.stringify(newFavorites));
     setIsFavorite(!isFavorite);
   };
@@ -160,7 +158,9 @@ const MarketView = () => {
   };
 
   const handleOpenChat = () => {
+
     if (!listing?.seller?._id) {
+      navigate('/chatroom')
       alert("Seller information not available");
       return;
     }
@@ -185,8 +185,8 @@ const MarketView = () => {
           className="card border-0 shadow-sm rounded-4 text-center py-5"
         >
           <h5 className="text-danger mb-3">{error || "Listing not found"}</h5>
-          <button 
-            className="btn btn-primary rounded-pill px-4" 
+          <button
+            className="btn btn-primary rounded-pill px-4"
             onClick={() => navigate("/market")}
           >
             <ArrowLeft size={16} className="me-2" /> Back to Market
@@ -196,8 +196,19 @@ const MarketView = () => {
     );
   }
 
+  // ---- UNPACK DATA FOR DISPLAY ----
   const { title, price, location: loc, createdAt, views, animal, seller } = listing;
   const displayImages = getDisplayImages(listing);
+
+  // --- Extract extra backend animal details ---
+  // These are mapped from your backend's animalDetails construction:
+  // bull_code, bull_name, bull_breed, pregnancy, calved_count, etc.
+  const bullCode = animal?.bull_code;
+  const bullName = animal?.bull_name;
+  const bullBreed = animal?.bull_breed;
+  const calvedCount = animal?.calved_count;
+  const pregnancy = animal?.pregnancy;
+  const expectedDueDate = pregnancy?.expected_due_date;
 
   const formattedPrice = new Intl.NumberFormat("en-KE", {
     style: "currency",
@@ -273,7 +284,7 @@ const MarketView = () => {
         >
           <ArrowLeft size={20} />
         </motion.button>
-        
+
         <div className="d-flex gap-2">
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -442,7 +453,6 @@ const MarketView = () => {
                 <Info size={20} className="text-primary" />
                 Animal Details
               </h6>
-              
               <div className="row g-3">
                 <div className="col-6">
                   <div className="p-3 bg-light rounded-3">
@@ -484,10 +494,51 @@ const MarketView = () => {
                     <strong>{animal?.breed || "Unknown"}</strong>
                   </div>
                 </div>
+                {/* --- EXTRA ANIMAL DETAILS --- */}
+                {bullCode && (
+                  <div className="col-6">
+                    <div className="p-3 bg-light rounded-3">
+                      <small className="text-muted d-block mb-1">Bull Code</small>
+                      <strong>{bullCode}</strong>
+                    </div>
+                  </div>
+                )}
+                {bullName && (
+                  <div className="col-6">
+                    <div className="p-3 bg-light rounded-3">
+                      <small className="text-muted d-block mb-1">Bull Name</small>
+                      <strong>{bullName}</strong>
+                    </div>
+                  </div>
+                )}
+                {bullBreed && (
+                  <div className="col-6">
+                    <div className="p-3 bg-light rounded-3">
+                      <small className="text-muted d-block mb-1">Bull Breed</small>
+                      <strong>{bullBreed}</strong>
+                    </div>
+                  </div>
+                )}
+                {animal?.status === "pregnant" && expectedDueDate && (
+                  <div className="col-6">
+                    <div className="p-3 bg-light rounded-3">
+                      <small className="text-muted d-block mb-1">Expected Due Date</small>
+                      <strong>{new Date(expectedDueDate).toLocaleDateString()}</strong>
+                    </div>
+                  </div>
+                )}
+                {calvedCount !== undefined && calvedCount !== null && calvedCount > 0 && (
+                  <div className="col-6">
+                    <div className="p-3 bg-light rounded-3">
+                      <small className="text-muted d-block mb-1">Total Offspring</small>
+                      <strong>{calvedCount}</strong>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Production Stats */}
-              {(animal?.lifetime_milk || animal?.daily_average || animal?.calved_count > 0) && (
+              {(animal?.lifetime_milk || animal?.daily_average) && (
                 <div className="mt-3">
                   <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                     <TrendingUp size={18} className="text-success" />
@@ -515,17 +566,6 @@ const MarketView = () => {
                           <strong className="text-primary">
                             {animal.lifetime_milk.toLocaleString()} L
                           </strong>
-                        </div>
-                      </div>
-                    )}
-                    {animal?.calved_count > 0 && (
-                      <div className="col-12">
-                        <div className="d-flex align-items-center justify-content-between p-3 bg-warning bg-opacity-10 rounded-3">
-                          <div className="d-flex align-items-center gap-2">
-                            <Baby size={18} className="text-warning" />
-                            <span className="small fw-semibold">Calved Count</span>
-                          </div>
-                          <strong className="text-warning">{animal.calved_count}</strong>
                         </div>
                       </div>
                     )}

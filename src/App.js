@@ -62,7 +62,10 @@ import Notifications from "./components/globals/Notification";
 import FarmerRegister from "./components/globals/Registerfarmer";
 import LandingPage from "./components/pages/landingPages/LandingPage";
 import SellerRegister from "./components/globals/SellerRegister";
+import SellerRequest from "./components/seller/SellerRequest";
+import AdminSellerRequests from "./components/globals/AdminSellerRequests";
 // import { GoogleLogin } from "@react-oauth/google";
+
 
 // import farmerLayout from './components/farmer/farmerLayout'
 // import Calendar from "./components/globals/Calendar";
@@ -103,6 +106,8 @@ function App() {
             <Route path="/market" element={<MarketPage/>} />
             <Route path="/view-market" element={<MarketView/>} />
             <Route path="/notifications" element={<Notifications/>} />
+            <Route path="/seller-approval" element={<SellerRequest/>} />
+            <Route path="/admin-approval" element={<AdminSellerRequests/>} />
             
             
 

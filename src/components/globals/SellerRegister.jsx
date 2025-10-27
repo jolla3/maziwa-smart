@@ -82,7 +82,7 @@ const SellerRegister = () => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        phone: formData.phone || undefined // Only send if provided
+        phone: formData.phone || "" // Only send if provided
       });
 
       setAlert({
@@ -104,7 +104,7 @@ const SellerRegister = () => {
       }, 3000);
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
-      setAlert({ type: 'error', message: errorMessage });
+      setAlert({ type: 'error', message: errorMessage })
     } finally {
       setLoading(false);
     }
