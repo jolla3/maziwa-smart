@@ -16,10 +16,18 @@ const API_BASE = "https://maziwasmart.onrender.com/api";
 const SOCKET_URL = "https://maziwasmart.onrender.com";
 const MESSAGE_CACHE_PREFIX = "chat_messages_";
 
-export default function ChatRoom() {
+// NEW CODE:
+export default function ChatRoom({ 
+  receiverId: propReceiverId, 
+  receiver: propReceiver,
+  onBack: propOnBack 
+} = {}) {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { receiverId, receiver } = state || {};
+  
+  // Use props if provided, otherwise fall back to location state
+  const receiverId = propReceiverId || state?.receiverId;
+  const receiver = propReceiver || state?.receiver;
 
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -140,13 +148,22 @@ useEffect(() => {
     socket.emit("join_chat", { receiverId });
   });
 
+  // Add inside useEffect after socket connects
+socket.on("new_message", (newMsg) => {
+  console.log("📩 Incoming message:", newMsg);
+  setMessages((prev) => {
+    const updated = [...prev, { ...newMsg, from: "them" }];
+    setCachedMessages(updated);
+    return updated;
+  });
+});
+
+
   socket.on("disconnect", () => setSocketConnected(false));
   socket.on("connect_error", (err) => console.error("Socket error:", err));
 
-  return () => {
-    socket.emit("leave_chat", { receiverId });
-    socket.disconnect();
-  };
+  return () => socket.off("new_message");
+
 }, [receiverId]);
 // --- Online/offline status and call handling helpers ---
 const useUserStatus = (socketRef, receiverId, setIsOnline, setLastSeen) => {
@@ -373,7 +390,7 @@ const handleWhatsAppChat = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/recents")}
+           onClick={() => propOnBack ? propOnBack() : navigate("/recents")}
             className="btn btn-light border-0 rounded-circle p-2 d-flex align-items-center justify-content-center"
             style={{ width: 40, height: 40 }}
           >

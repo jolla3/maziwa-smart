@@ -57,13 +57,14 @@ import EditListing from "./components/globals/EditListing";
 import ViewListing from "./components/globals/ViewListing";
 // import MarketplacePage from "./components/globals/MarketplacePage";
 import MarketPage from "./components/globals/MarketplacePage";
-import MarketView from "./components/globals/MarketView";
+// import MarketView from "./components/globals/MarketView";
 import Notifications from "./components/globals/Notification";
 import FarmerRegister from "./components/globals/Registerfarmer";
 import LandingPage from "./components/pages/landingPages/LandingPage";
 import SellerRegister from "./components/globals/SellerRegister";
 import SellerRequest from "./components/seller/SellerRequest";
 import AdminSellerRequests from "./components/globals/AdminSellerRequests";
+import MarketView from "./components/market/MarketView";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
