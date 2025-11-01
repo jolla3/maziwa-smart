@@ -69,7 +69,7 @@ const sidebarItems = [
       
       {
         title: "Insemination Card  ",
-        to: "/farmerdashboard/inseminationcard",
+        to: "/farmerdashboard/insemination-record",
         icon: <PersonOutlinedIcon />,
       },
       {

@@ -32,8 +32,8 @@ import { TabContext, TabList, TabPanel } from '@mui/lab';
 
 const InseminationCard = () => {
     const theme = useTheme();
-    const colors = tokens(theme.palette.mode);
-    const { token } = useContext(AuthContext);
+    const colors = tokens(theme.palette.mode)
+    const { token } = useContext(AuthContext)
 
     const [animals, setAnimals] = useState([]);
     const [fetchAnimalsLoading, setFetchAnimalsLoading] = useState(true);

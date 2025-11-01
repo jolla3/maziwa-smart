@@ -427,6 +427,13 @@ const AnimalDashboard = () => {
   const handleViewDetails = (animalId) => {
     navigate('/farmerdashboard/dairysummaries', { state: { cowId: animalId } });
   };
+  const handleViewInsemination = () => {
+    navigate('/farmerdashboard/inseminationcard', { });
+  };
+  
+  const handleAddMilk = () => {
+    navigate('/farmerdashboard/milkrecording', { });
+  };
 
   const handleAddcalf = ()=>{
     navigate('/farmerdashboard/calf')
@@ -1147,8 +1154,11 @@ const AnimalDashboard = () => {
   // ========================
 
   return (
-    <Box m="20px">
+    <Box m="20px"
+    
+    >
       <Header
+      
         title="ANIMAL DASHBOARD"
         subtitle="Manage all your farm animals across species"
       />
@@ -1171,7 +1181,7 @@ const AnimalDashboard = () => {
       </Snackbar>
 
       {/* Notification alerts for anomalies and pregnancy */}
-      {notifications.length > 0 && (
+      {/* {notifications.length > 0 && (
         <Box mb={2}>
           {notifications.map((notification, index) => (
             <Alert 
@@ -1184,7 +1194,7 @@ const AnimalDashboard = () => {
             </Alert>
           ))}
         </Box>
-      )}
+      )} */}
 
       <Fade in timeout={800}>
         <Box>
@@ -1321,8 +1331,35 @@ const AnimalDashboard = () => {
                 startIcon={<AddIcon />}
                 onClick={handleAddcalf}
               >
-                Add Calf
+                Add Farm Offspring
               </Button>
+
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: colors.greenAccent[600],
+                  color: colors.grey[100],
+                  '&:hover': { backgroundColor: colors.greenAccent[700] },
+                }}
+                startIcon={<AddIcon />}
+                onClick={handleViewInsemination}
+              >
+                Add Animal Insemination
+              </Button>
+
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: colors.greenAccent[600],
+                  color: colors.grey[100],
+                  '&:hover': { backgroundColor: colors.greenAccent[700] },
+                }}
+                startIcon={<AddIcon />}
+                onClick={handleAddMilk}
+              >
+                 Daily Milk Production 
+              </Button>
+
             </Box>
           </Box>
 

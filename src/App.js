@@ -65,6 +65,7 @@ import SellerRegister from "./components/globals/SellerRegister";
 import SellerRequest from "./components/seller/SellerRequest";
 import AdminSellerRequests from "./components/globals/AdminSellerRequests";
 import MarketView from "./components/market/MarketView";
+import InseminationRecordsList from "./components/farmer/InseminationRecordsList";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -175,13 +176,15 @@ function App() {
               <Route path="daily" element={<DailyMilkSummary />} />
               <Route path="breeds" element={<BreedManagement />} />
               <Route path="cows" element={<CowManagement />} />
-              <Route path="calf" element={<AddCalf />} />
+              <Route path="calf" element={<AddCalfForm />} />
+              
               <Route path="familytree" element={<CowFamilyTree />} />
               <Route path="register-cow" element={<CowRegistrationForm />} />
               <Route path="register-calf" element={<AddCalfForm />} />
               <Route path="milkrecording" element={<MilkRecording />} />
               <Route path="dairysummaries" element={<DairySummaries />} />
               <Route path="inseminationcard" element={<InseminationCard />} />
+              <Route path="insemination-record" element={<InseminationRecordsList />} />
               <Route path="farmerdash" element={<EnhancedFarmDashboard />} />
             </Route>
 
