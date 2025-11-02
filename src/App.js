@@ -37,8 +37,8 @@ import FarmerLayout from "./components/farmer/farmerLayout";
 import DailyMilkSummary from "./components/farmer/DailyMilkSummary";
 import FarmerHome from "./components/farmer/FarmerHome";
 import BreedManagement from "./components/farmer/BreedManagment";
-import CowManagement from "./components/farmer/CowManagement";
-import AddCalf from "./components/farmer/AddCalf";
+// import CowManagement from "./components/farmer/CowManagement";
+// import AddCalf from "./components/farmer/AddCalf";
 import CowFamilyTree from "./components/farmer/CowFamilyTree";
 import CowRegistrationForm from "./components/farmer/CowRegistrationForm";
 import AddCalfForm from "./components/farmer/AddCalfForm";
@@ -66,6 +66,7 @@ import SellerRequest from "./components/seller/SellerRequest";
 import AdminSellerRequests from "./components/globals/AdminSellerRequests";
 import MarketView from "./components/market/MarketView";
 import InseminationRecordsList from "./components/farmer/InseminationRecordsList";
+import AnimalDashboard from "./components/farmer/animals/AnimalDashboard";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -175,7 +176,7 @@ function App() {
               <Route path="calendar" element={<Calendar />} />
               <Route path="daily" element={<DailyMilkSummary />} />
               <Route path="breeds" element={<BreedManagement />} />
-              <Route path="cows" element={<CowManagement />} />
+              <Route path="cows" element={<AnimalDashboard />} />
               <Route path="calf" element={<AddCalfForm />} />
               
               <Route path="familytree" element={<CowFamilyTree />} />

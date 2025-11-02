@@ -166,7 +166,7 @@ const MarketSection = ({ navigate }) => {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 variant="contained"
-                onClick={() => navigate('/marketplace')}
+                onClick={() => navigate('/market')}
                 endIcon={<ArrowRight size={18} />}
                 sx={{
                   bgcolor: 'secondary.main',

@@ -428,7 +428,7 @@ const AnimalDashboard = () => {
     navigate('/farmerdashboard/dairysummaries', { state: { cowId: animalId } });
   };
   const handleViewInsemination = () => {
-    navigate('/farmerdashboard/inseminationcard', { });
+    navigate('/farmerdashboard/insemination-record', { });
   };
   
   const handleAddMilk = () => {
@@ -1344,7 +1344,7 @@ const AnimalDashboard = () => {
                 startIcon={<AddIcon />}
                 onClick={handleViewInsemination}
               >
-                Add Animal Insemination
+                View Insemination 
               </Button>
 
               <Button
@@ -1357,7 +1357,7 @@ const AnimalDashboard = () => {
                 startIcon={<AddIcon />}
                 onClick={handleAddMilk}
               >
-                 Daily Milk Production 
+                 Track Your Milk Record 
               </Button>
 
             </Box>

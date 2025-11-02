@@ -47,9 +47,9 @@ const sidebarItems = [
         icon: <PeopleOutlinedIcon />,
       },
       {
-        title: "My farm Breeds",
-        to: "/farmerdashboard/breeds",
-        icon: <ContactsOutlinedIcon />,
+        title: "Insemination Card  ",
+        to: "/farmerdashboard/insemination-record",
+        icon: <PersonOutlinedIcon />,
       },
       {
         title: "My Farm",
@@ -65,13 +65,8 @@ const sidebarItems = [
         title: "Milk Recording",
         to: "/farmerdashboard/milkrecording",
         icon: <PersonOutlinedIcon />,
-      },
-      
-      {
-        title: "Insemination Card  ",
-        to: "/farmerdashboard/insemination-record",
-        icon: <PersonOutlinedIcon />,
-      },
+      }
+      ,
       {
         title: "Calendar",
         to: "/farmerdashboard/calendar",

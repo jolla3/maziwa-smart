@@ -1,1010 +1,719 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
-  Typography,
-  Button,
+  Container,
+  Paper,
+  Tabs,
+  Tab,
   TextField,
+  Button,
+  Grid,
+  Typography,
   MenuItem,
-  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
   Alert,
-  Snackbar,
-  ToggleButtonGroup,
-  ToggleButton,
+  Chip,
   Card,
   CardContent,
-  Chip,
   Divider,
-  Grid,
-  Paper,
+  InputAdornment,
+  CircularProgress,
+  ThemeProvider,
+  createTheme
 } from '@mui/material';
-import { useTheme } from '@mui/material';
-import { tokens } from '../../theme';
-import axios from 'axios';
-import { AuthContext } from '../../components/PrivateComponents/AuthContext';
-import Header from '../scenes/Header';
-import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  PawPrint, 
-  FileText, 
+import {
   Baby,
-  Fingerprint,
+  Plus,
+  Search,
   Calendar,
-  Users,
-  Beef,
-  Leaf,
+  User,
+  Hash,
+  Heart,
+  Save,
+  ArrowLeft
 } from 'lucide-react';
+import { GiCow, GiBull, GiGoat, GiSheep, GiPig } from 'react-icons/gi';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { AuthContext } from '../PrivateComponents/AuthContext';
 
-const AddCalfForm = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
-  const { token } = useContext(AuthContext);
+// Clean Aqua Theme - White backgrounds, Black text only
+const aquaTheme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#00bcd4',
+      light: '#62efff',
+      dark: '#008ba3',
+    },
+    secondary: {
+      main: '#10b981',
+      light: '#34d399',
+      dark: '#059669',
+    },
+    error: {
+      main: '#ef4444',
+    },
+    info: {
+      main: '#3b82f6',
+    },
+    background: {
+      default: '#ffffff',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#000000',
+      secondary: '#000000',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", sans-serif',
+    allVariants: {
+      color: '#000000',
+    },
+  },
+  components: {
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#ffffff',
+          color: '#000000',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#ffffff',
+          color: '#000000',
+        },
+      },
+    },
+  },
+});
+
+const AddCalf = () => {
   const navigate = useNavigate();
+  const { token } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  // Registration type toggle
-  const [registrationType, setRegistrationType] = useState('manual');
-
-  // Manual registration form
-  const [formData, setFormData] = useState({
-    animal_name: '',
-    breed_id: '',
-    breed_name: '',
+  const [manualForm, setManualForm] = useState({
     species: 'cow',
+    animal_name: '',
     gender: '',
     birth_date: '',
     animal_code: '',
+    breed_name: '',
     mother_id: '',
     bull_code: '',
-    bull_name: '',
+    bull_name: ''
   });
 
-  // Insemination-based registration
-  const [inseminationData, setInseminationData] = useState({
+  const [pregnancyForm, setPregnancyForm] = useState({
     insemination_id: '',
     cow_name: '',
     gender: '',
     birth_date: '',
-    cow_code: '',
+    cow_code: ''
   });
 
-  const [breeds, setBreeds] = useState([]);
   const [mothers, setMothers] = useState([]);
-  const [inseminations, setInseminations] = useState([]);
+  const [pregnancies, setPregnancies] = useState([]);
+  const [breeds, setBreeds] = useState([]);
+  const [filteredMothers, setFilteredMothers] = useState([]);
   const [selectedSpecies, setSelectedSpecies] = useState('cow');
-  const [loading, setLoading] = useState(false);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
 
-  const speciesOptions = [
-    { value: 'cow', label: 'Cattle', icon: '🐄', color: '#FF6B6B' },
-    { value: 'goat', label: 'Goat', icon: '🐐', color: '#4ECDC4' },
-    { value: 'sheep', label: 'Sheep', icon: '🐑', color: '#95E1D3' },
-    { value: 'pig', label: 'Pig', icon: '🐷', color: '#FFB6B9' },
-  ];
-
-  const stageLabels = {
-    cow: { newborn: 'Calf', female: 'Heifer', male: 'Bull', mature: ['cow'] },
-    goat: { newborn: 'Kid', female: 'Doe', male: 'Buck', mature: ['doe'] },
-    sheep: { newborn: 'Lamb', female: 'Ewe', male: 'Ram', mature: ['ewe'] },
-    pig: { newborn: 'Piglet', female: 'Sow', male: 'Boar', mature: ['sow'] },
+  const speciesConfig = {
+    cow: {
+      icon: GiCow,
+      label: 'Cattle',
+      stages: ['heifer', 'cow'],
+      newbornTerm: 'Calf'
+    },
+    bull: {
+      icon: GiBull,
+      label: 'Bull',
+      stages: ['bull'],
+      newbornTerm: 'Calf'
+    },
+    goat: {
+      icon: GiGoat,
+      label: 'Goat',
+      stages: ['doe'],
+      newbornTerm: 'Kid'
+    },
+    sheep: {
+      icon: GiSheep,
+      label: 'Sheep',
+      stages: ['ewe'],
+      newbornTerm: 'Lamb'
+    },
+    pig: {
+      icon: GiPig,
+      label: 'Pig',
+      stages: ['sow'],
+      newbornTerm: 'Piglet'
+    }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [token, selectedSpecies, registrationType]);
+    fetchAnimals();
+    fetchPregnancies();
+    fetchBreeds();
+  }, []);
 
-  const fetchData = async () => {
-    if (!token) {
-      setError('Authentication token not found.');
-      return;
-    }
+  useEffect(() => {
+    filterMothersBySpecies();
+  }, [selectedSpecies, mothers]);
 
-    setDataLoading(true);
+  const fetchAnimals = async () => {
     try {
-      // Fetch breeds
-      const breedsRes = await axios.get('https://maziwasmart.onrender.com/api/breed', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await axios.get('https://maziwasmart.onrender.com/api/animals', {
+        params: { gender: 'female', limit: 1000, page: 1 },
+        headers: { Authorization: `Bearer ${token}` }
       });
-      const allBreeds = breedsRes.data.breeds || [];
-      setBreeds(allBreeds.filter(b => !b.species || b.species === selectedSpecies));
-
-      // Fetch animals for the selected species
-      const animalsRes = await axios.get('https://maziwasmart.onrender.com/api/animals', {
-        params: { species: selectedSpecies, gender: 'female' },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Filter for mature females based on species
-      const matureStages = stageLabels[selectedSpecies]?.mature || [];
-      const potentialMothers = (animalsRes.data.animals || []).filter(animal => 
-        matureStages.includes(animal.stage)
-      );
-      setMothers(potentialMothers);
-
-      // Fetch insemination records if in insemination mode
-      if (registrationType === 'insemination') {
-        try {
-          const inseminationsRes = await axios.get('https://maziwasmart.onrender.com/api/insemination', {
-            params: { species: selectedSpecies },
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          
-          // Filter for pregnant/confirmed pregnancies
-          const pregnantInseminations = (inseminationsRes.data.inseminations || []).filter(
-            ins => ins.pregnancy_confirmed === true || ins.status === 'pregnant'
-          );
-          setInseminations(pregnantInseminations);
-        } catch (insErr) {
-          console.error('Failed to fetch inseminations:', insErr);
-          setInseminations([]);
-        }
+      if (response.data.success) {
+        const matureFemales = response.data.animals.filter(animal => {
+          const config = speciesConfig[animal.species];
+          return config && config.stages.includes(animal.stage);
+        });
+        setMothers(matureFemales);
       }
-
     } catch (err) {
-      console.error('Failed to fetch data:', err.response?.data || err.message);
-      setError('Failed to load form data. Please try again.');
-    } finally {
-      setDataLoading(false);
+      console.error('Error fetching animals:', err);
     }
   };
 
-  const handleRegistrationTypeChange = (event, newType) => {
-    if (newType !== null) {
-      setRegistrationType(newType);
+  const fetchPregnancies = async () => {
+    try {
+      const response = await axios.get('https://maziwasmart.onrender.com/api/insemination', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        const pendingPregnancies = response.data.records.filter(r => !r.has_calved && r.outcome !== 'failed');
+        setPregnancies(pendingPregnancies);
+      }
+    } catch (err) {
+      console.error('Error fetching pregnancies:', err);
     }
   };
 
-  const handleSpeciesChange = (newSpecies) => {
-    setSelectedSpecies(newSpecies);
-    setFormData({ ...formData, species: newSpecies, mother_id: '', breed_id: '' });
+  const fetchBreeds = async () => {
+    try {
+      const response = await axios.get('https://maziwasmart.onrender.com/api/breed', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.breeds) {
+        setBreeds(response.data.breeds);
+      }
+    } catch (err) {
+      console.error('Error fetching breeds:', err);
+    }
   };
 
-  const handleManualChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+  const filterMothersBySpecies = () => {
+    const filtered = mothers.filter(m => m.species === selectedSpecies);
+    setFilteredMothers(filtered);
   };
 
-  const handleInseminationChange = (e) => {
-    const { name, value } = e.target;
-    setInseminationData({ ...inseminationData, [name]: value });
+  const handleManualChange = (field, value) => {
+    setManualForm(prev => ({ ...prev, [field]: value }));
+    if (field === 'species') {
+      setSelectedSpecies(value);
+      setManualForm(prev => ({ ...prev, mother_id: '' }));
+    }
   };
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
-    if (!token) {
-      setError('Authentication token not found. Please log in.');
-      return;
-    }
     setLoading(true);
-    setError(null);
-    setSuccess(null);
+    setError('');
+    setSuccess('');
 
     try {
       const payload = {
-        animal_name: formData.animal_name,
-        species: formData.species,
-        gender: formData.gender,
-        birth_date: formData.birth_date,
-        animal_code: formData.animal_code || undefined,
-        breed_id: formData.breed_id || undefined,
-        breed_name: formData.breed_name || undefined,
-        mother_id: formData.mother_id || undefined,
-        bull_code: formData.bull_code || undefined,
-        bull_name: formData.bull_name || undefined,
+        ...manualForm,
+        bull_code: manualForm.bull_code?.trim() || undefined,
+        bull_name: manualForm.bull_name?.trim() || undefined,
+        animal_code: manualForm.animal_code?.trim() || undefined,
       };
 
-      const response = await axios.post('https://maziwasmart.onrender.com/api/calf', payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const speciesEmoji = speciesOptions.find(s => s.value === formData.species)?.icon || '🐾';
-      setSuccess(`${speciesEmoji} ${response.data.message || 'Animal registered successfully!'}`);
+      const response = await axios.post(
+        'https://maziwasmart.onrender.com/api/calf',
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       
-      // Reset form
-      setFormData({
-        animal_name: '',
-        breed_id: '',
-        breed_name: '',
-        species: selectedSpecies,
-        gender: '',
-        birth_date: '',
-        animal_code: '',
-        mother_id: '',
-        bull_code: '',
-        bull_name: '',
-      });
+      if (response.data.success) {
+        setSuccess(`${speciesConfig[manualForm.species].newbornTerm} registered successfully!`);
+        setTimeout(() => navigate('/farmerdashboard/cows'), 2000);
+      }
     } catch (err) {
-      console.error('Registration error:', err.response?.data || err.message);
-      setError(err.response?.data?.message || 'Failed to register animal. Please check the data and try again.');
+      setError(err.response?.data?.message || 'Failed to register animal');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInseminationSubmit = async (e) => {
+  const handlePregnancyChange = (field, value) => {
+    setPregnancyForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handlePregnancySubmit = async (e) => {
     e.preventDefault();
-    if (!token) {
-      setError('Authentication token not found. Please log in.');
-      return;
-    }
     setLoading(true);
-    setError(null);
-    setSuccess(null);
+    setError('');
+    setSuccess('');
 
     try {
-      const payload = {
-        insemination_id: inseminationData.insemination_id,
-        cow_name: inseminationData.cow_name,
-        gender: inseminationData.gender,
-        birth_date: inseminationData.birth_date,
-        cow_code: inseminationData.cow_code || undefined,
-      };
-
-      const response = await axios.post('https://maziwasmart.onrender.com/api/calf/from-pregnancy', payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const speciesEmoji = speciesOptions.find(s => s.value === selectedSpecies)?.icon || '🐾';
-      setSuccess(`${speciesEmoji} ${response.data.message || 'Offspring registered successfully from insemination!'}`);
-      
-      // Reset form
-      setInseminationData({
-        insemination_id: '',
-        cow_name: '',
-        gender: '',
-        birth_date: '',
-        cow_code: '',
-      });
-      
-      // Refresh data
-      fetchData();
+      const response = await axios.post(
+        'https://maziwasmart.onrender.com/api/calf/fromPregnancy',
+        pregnancyForm,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success) {
+        setSuccess('Calf registered from pregnancy successfully!');
+        setTimeout(() => navigate('/farmerdashboard/cows'), 2000);
+      }
     } catch (err) {
-      console.error('Registration error:', err.response?.data || err.message);
-      setError(err.response?.data?.message || 'Failed to register offspring. Please try again.');
+      setError(err.response?.data?.message || 'Failed to register calf');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSuccess(null);
-    setError(null);
+  const getSpeciesIcon = (species) => {
+    const Icon = speciesConfig[species]?.icon || GiCow;
+    return <Icon size={20} />;
   };
-
-  const currentSpeciesColor = speciesOptions.find(s => s.value === selectedSpecies)?.color || '#4CAF50';
 
   return (
-    <Box 
-      m="20px" 
-      sx={{ 
-        minHeight: '100vh',
-        pb: 4,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      }}
-    >
-      <Header
-        title="REGISTER NEW OFFSPRING"
-        subtitle="Add new animals to your farm - manual entry or from insemination records"
-      />
-      
-      <Snackbar
-        open={!!success || !!error}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={success ? "success" : "error"}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {success || error}
-        </Alert>
-      </Snackbar>
-
-      <Button
-        variant="contained"
-        sx={{
-          background: 'white',
-          color: '#667eea',
-          fontWeight: 700,
-          px: 3,
-          py: 1.5,
-          borderRadius: 3,
-          boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-          "&:hover": { 
-            background: '#f8f9fa',
-            transform: 'translateY(-2px)',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
-          },
-          transition: 'all 0.3s ease',
-          mb: 3
-        }}
-        startIcon={<ArrowLeft size={20} />}
-        onClick={() => navigate("/farmerdashboard/cows")}
-      >
-        Back to Animals
-      </Button>
-
-      {/* Registration Type Selection */}
-      <Paper 
-        elevation={6} 
-        sx={{ 
-          mb: 3, 
-          borderRadius: 4, 
-          overflow: 'hidden',
-          background: 'white'
-        }}
-      >
-        <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: 2 }}>
-          <Box display="flex" alignItems="center" gap={2}>
-            <FileText size={24} color="white" />
-            <Typography variant="h5" fontWeight="700" color="white">
-              Choose Registration Method
+    <ThemeProvider theme={aquaTheme}>
+      <Box sx={{ bgcolor: '#e0f7fa', minHeight: '100vh', py: 4 }}>
+        <Container maxWidth="lg">
+          <Box sx={{ mb: 4 }}>
+            <Button
+              startIcon={<ArrowLeft size={20} />}
+              onClick={() => navigate('/farmerdashboard/cows')}
+              sx={{ mb: 2, color: '#000000' }}
+            >
+              Back to Animals
+            </Button>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#000000', mb: 1 }}>
+              Register New Offspring
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#000000' }}>
+              Add a new animal to your farm - manually or from pregnancy records
             </Typography>
           </Box>
-        </Box>
-        <CardContent sx={{ p: 3 }}>
-          <ToggleButtonGroup
-            value={registrationType}
-            exclusive
-            onChange={handleRegistrationTypeChange}
-            fullWidth
-            sx={{ 
-              '& .MuiToggleButton-root': {
-                py: 2.5,
-                fontSize: '1rem',
-                fontWeight: 600,
-                border: '2px solid #e0e0e0',
-                '&.Mui-selected': {
-                  borderColor: currentSpeciesColor,
-                }
-              }
-            }}
-          >
-            <ToggleButton 
-              value="manual"
-              sx={{
-                '&.Mui-selected': {
-                  background: `linear-gradient(135deg, ${currentSpeciesColor} 0%, ${currentSpeciesColor}dd 100%)`,
-                  color: 'white',
-                  '&:hover': {
-                    background: `linear-gradient(135deg, ${currentSpeciesColor}dd 0%, ${currentSpeciesColor}bb 100%)`,
-                  }
-                }
-              }}
-            >
-              <PawPrint size={22} style={{ marginRight: 10 }} />
-              Manual Entry - All Details
-            </ToggleButton>
-            <ToggleButton 
-              value="insemination"
-              sx={{
-                '&.Mui-selected': {
-                  background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
-                  color: 'white',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #FF5252 0%, #FF7043 100%)',
-                  }
-                }
-              }}
-            >
-              <Baby size={22} style={{ marginRight: 10 }} />
-              From Insemination Record
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </CardContent>
-      </Paper>
 
-      {/* Species Selection */}
-      <Paper 
-        elevation={6} 
-        sx={{ 
-          mb: 3, 
-          borderRadius: 4, 
-          overflow: 'hidden',
-          background: 'white'
-        }}
-      >
-        <Box sx={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', p: 2 }}>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Leaf size={24} color="white" />
-            <Typography variant="h5" fontWeight="700" color="white">
-              Select Animal Species
-            </Typography>
-          </Box>
-        </Box>
-        <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={2}>
-            {speciesOptions.map((species) => (
-              <Grid item xs={6} sm={3} key={species.value}>
-                <Button
-                  fullWidth
-                  variant={selectedSpecies === species.value ? "contained" : "outlined"}
-                  onClick={() => handleSpeciesChange(species.value)}
-                  sx={{
-                    py: 3,
-                    flexDirection: 'column',
-                    gap: 1.5,
-                    background: selectedSpecies === species.value 
-                      ? `linear-gradient(135deg, ${species.color} 0%, ${species.color}dd 100%)`
-                      : 'white',
-                    color: selectedSpecies === species.value ? 'white' : species.color,
-                    borderColor: species.color,
-                    borderWidth: 2,
-                    fontWeight: 700,
-                    borderRadius: 3,
-                    boxShadow: selectedSpecies === species.value ? '0 4px 15px rgba(0,0,0,0.2)' : 'none',
-                    '&:hover': {
-                      background: selectedSpecies === species.value
-                        ? `linear-gradient(135deg, ${species.color}dd 0%, ${species.color}bb 100%)`
-                        : `${species.color}11`,
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <span style={{ fontSize: '48px' }}>{species.icon}</span>
-                  <Typography variant="h6" fontWeight="700">
-                    {species.label}
-                  </Typography>
-                </Button>
-              </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Paper>
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>
+              {success}
+            </Alert>
+          )}
 
-      {/* Manual Registration Form */}
-      {registrationType === 'manual' && (
-        <Paper 
-          elevation={6} 
-          sx={{ 
-            borderRadius: 4, 
-            overflow: 'hidden',
-            background: 'white'
-          }}
-        >
-          <Box sx={{ background: `linear-gradient(135deg, ${currentSpeciesColor} 0%, ${currentSpeciesColor}dd 100%)`, p: 2 }}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <PawPrint size={24} color="white" />
-              <Typography variant="h5" fontWeight="700" color="white">
-                {stageLabels[selectedSpecies]?.newborn || 'Animal'} Registration Details
-              </Typography>
-            </Box>
-          </Box>
-          <CardContent sx={{ p: 4 }}>
-            <Box component="form" onSubmit={handleManualSubmit}>
-              <Grid container spacing={3}>
-                {/* Animal Name */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    type="text"
-                    label={`${stageLabels[selectedSpecies]?.newborn || 'Animal'} Name *`}
-                    name="animal_name"
-                    value={formData.animal_name}
-                    onChange={handleManualChange}
-                    required
-                    InputProps={{
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  />
-                </Grid>
-
-                {/* Animal Code */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    type="text"
-                    label="Animal ID/Tag Code (Optional)"
-                    name="animal_code"
-                    value={formData.animal_code}
-                    onChange={handleManualChange}
-                    InputProps={{
-                      startAdornment: <Fingerprint size={20} style={{ marginRight: 8, color: '#757575' }} />,
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  />
-                </Grid>
-
-                {/* Gender */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    select
-                    label="Gender *"
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleManualChange}
-                    required
-                    InputProps={{
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  >
-                    <MenuItem value="male">
-                      🔵 Male ({stageLabels[selectedSpecies]?.male})
-                    </MenuItem>
-                    <MenuItem value="female">
-                      🔴 Female ({stageLabels[selectedSpecies]?.female})
-                    </MenuItem>
-                  </TextField>
-                </Grid>
-
-                {/* Birth Date */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    type="date"
-                    label="Birth Date *"
-                    name="birth_date"
-                    value={formData.birth_date}
-                    onChange={handleManualChange}
-                    required
-                    InputLabelProps={{ shrink: true }}
-                    InputProps={{
-                      startAdornment: <Calendar size={20} style={{ marginRight: 8, color: '#757575' }} />,
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  />
-                </Grid>
-
-                {/* Breed Selection */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    select
-                    label="Select Existing Breed (Optional)"
-                    name="breed_id"
-                    value={formData.breed_id}
-                    onChange={handleManualChange}
-                    InputProps={{
-                      startAdornment: <Beef size={20} style={{ marginRight: 8, color: '#757575' }} />,
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>Select a breed</em>
-                    </MenuItem>
-                    {breeds.map((breed) => (
-                      <MenuItem key={breed._id} value={breed._id}>
-                        {breed.breed_name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-
-                {/* New Breed Name */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    type="text"
-                    label="Or Enter New Breed Name"
-                    name="breed_name"
-                    value={formData.breed_name}
-                    onChange={handleManualChange}
-                    disabled={!!formData.breed_id}
-                    helperText={formData.breed_id ? "Clear breed selection to enter new breed" : ""}
-                    InputProps={{
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Divider sx={{ my: 1 }}>
-                    <Chip label="Optional Parent Information" sx={{ fontWeight: 600, bgcolor: '#e3f2fd' }} />
-                  </Divider>
-                </Grid>
-
-                {/* Mother Selection */}
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    select
-                    label="Mother (Optional)"
-                    name="mother_id"
-                    value={formData.mother_id}
-                    onChange={handleManualChange}
-                    InputProps={{
-                      startAdornment: <Users size={20} style={{ marginRight: 8, color: '#757575' }} />,
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>No mother selected</em>
-                    </MenuItem>
-                    {mothers.map((mother) => (
-                      <MenuItem key={mother.id} value={mother.id}>
-                        {mother.name} - {mother.stage} {mother.breed && `(${mother.breed})`}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-
-                {/* Bull Information */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    type="text"
-                    label="Bull/Sire Code (Optional)"
-                    name="bull_code"
-                    value={formData.bull_code}
-                    onChange={handleManualChange}
-                    InputProps={{
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    type="text"
-                    label="Bull/Sire Name (Optional)"
-                    name="bull_name"
-                    value={formData.bull_name}
-                    onChange={handleManualChange}
-                    InputProps={{
-                      sx: { 
-                        borderRadius: 2, 
-                        bgcolor: '#f8f9fa',
-                        '& fieldset': { borderWidth: 2 }
-                      }
-                    }}
-                  />
-                </Grid>
-              </Grid>
-
-              <Box display="flex" justifyContent="flex-end" mt={4} gap={2}>
-                <Button
-                  variant="outlined"
-                  onClick={() => setFormData({
-                    animal_name: '',
-                    breed_id: '',
-                    breed_name: '',
-                    species: selectedSpecies,
-                    gender: '',
-                    birth_date: '',
-                    animal_code: '',
-                    mother_id: '',
-                    bull_code: '',
-                    bull_name: '',
-                  })}
-                  sx={{
-                    borderWidth: 2,
-                    borderColor: '#e0e0e0',
-                    color: '#757575',
+          <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff' }}>
+            <Box sx={{ bgcolor: '#00bcd4', borderBottom: '2px solid #008ba3' }}>
+              <Tabs
+                value={activeTab}
+                onChange={(e, newValue) => setActiveTab(newValue)}
+                sx={{
+                  '& .MuiTab-root': {
+                    fontSize: '1rem',
                     fontWeight: 600,
+                    textTransform: 'none',
+                    minHeight: 64,
                     px: 4,
-                    py: 1.5,
-                    borderRadius: 2,
-                  }}
-                >
-                  Clear Form
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={loading}
-                  startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PawPrint size={20} />}
-                  sx={{
-                    background: loading 
-                      ? '#ccc' 
-                      : `linear-gradient(135deg, ${currentSpeciesColor} 0%, ${currentSpeciesColor}dd 100%)`,
-                    color: 'white',
-                    fontWeight: 700,
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: 2,
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                    "&:hover": loading ? {} : { 
-                      background: `linear-gradient(135deg, ${currentSpeciesColor}dd 0%, ${currentSpeciesColor}bb 100%)`,
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {loading ? "Registering..." : `Register ${stageLabels[selectedSpecies]?.newborn || 'Animal'}`}
-                </Button>
-              </Box>
-            </Box>
-          </CardContent>
-        </Paper>
-      )}
-
-      {/* Insemination-Based Registration Form */}
-      {registrationType === 'insemination' && (
-        <Paper 
-          elevation={6} 
-          sx={{ 
-            borderRadius: 4, 
-            overflow: 'hidden',
-            background: 'white'
-          }}
-        >
-          <Box sx={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)', p: 2 }}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Baby size={24} color="white" />
-              <Typography variant="h5" fontWeight="700" color="white">
-                Register from Insemination Record
-              </Typography>
-            </Box>
-          </Box>
-          <CardContent sx={{ p: 4 }}>
-            {dataLoading ? (
-              <Box display="flex" justifyContent="center" alignItems="center" py={8}>
-                <CircularProgress size={60} />
-              </Box>
-            ) : inseminations.length === 0 ? (
-              <Alert 
-                severity="info" 
-                sx={{ 
-                  borderRadius: 2, 
-                  fontSize: '1rem',
-                  '& .MuiAlert-icon': { fontSize: 28 }
+                    color: '#ffffff',
+                    '&.Mui-selected': { color: '#ffffff' }
+                  },
+                  '& .MuiTabs-indicator': { backgroundColor: '#ffffff' }
                 }}
               >
-                <Typography variant="body1" fontWeight={600}>
-                  No pregnant {selectedSpecies} found with insemination records.
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Make sure you have insemination records marked as pregnant for {selectedSpecies}.
-                </Typography>
-              </Alert>
-            ) : (
-              <>
-                <Alert 
-                  severity="success" 
-                  sx={{ 
-                    borderRadius: 2, 
-                    mb: 3,
-                    fontSize: '1rem',
-                    '& .MuiAlert-icon': { fontSize: 28 }
-                  }}
-                >
-                  <Typography variant="body1" fontWeight={600}>
-                    ✅ Found {inseminations.length} pregnant {selectedSpecies} ready for offspring registration
-                  </Typography>
-                </Alert>
+                <Tab icon={<Plus size={20} />} iconPosition="start" label="Manual Entry" />
+                <Tab icon={<Heart size={20} />} iconPosition="start" label="From Pregnancy" />
+              </Tabs>
+            </Box>
 
-                <Box component="form" onSubmit={handleInseminationSubmit}>
+            <Box sx={{ p: 4 }}>
+              {activeTab === 0 && (
+                <form onSubmit={handleManualSubmit}>
                   <Grid container spacing={3}>
-                    {/* Insemination Record Selection */}
                     <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        select
-                        label="Select Insemination Record *"
-                        name="insemination_id"
-                        value={inseminationData.insemination_id}
-                        onChange={handleInseminationChange}
-                        required
-                        InputProps={{
-                          startAdornment: <FileText size={20} style={{ marginRight: 8, color: '#757575' }} />,
-                          sx: { 
-                            borderRadius: 2, 
-                            bgcolor: '#fff3e0',
-                            '& fieldset': { borderWidth: 2, borderColor: '#FF6B6B' }
-                          }
-                        }}
-                      >
-                        <MenuItem value="">
-                          <em>Select an insemination record</em>
-                        </MenuItem>
-                        {inseminations.map((ins) => (
-                          <MenuItem key={ins._id} value={ins._id}>
-                            <Box>
-                              <Typography variant="body1" fontWeight={600}>
-                                Mother: {ins.cow_name || 'Unknown'}
-                              </Typography>
-                              <Typography variant="body2" color="textSecondary">
-                                Bull: {ins.bull_name || ins.bull_code || 'Not specified'} 
-                                {ins.bull_breed && ` | Breed: ${ins.bull_breed}`}
-                                {ins.expected_due_date && ` | Due: ${new Date(ins.expected_due_date).toLocaleDateString()}`}
-                              </Typography>
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </TextField>
+                      <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#000000' }}>
+                        Animal Type
+                      </Typography>
+                      <Grid container spacing={2}>
+                        {Object.entries(speciesConfig).map(([key, config]) => {
+                          const Icon = config.icon;
+                          return (
+                            <Grid item xs={6} sm={4} md={2.4} key={key}>
+                              <Card
+                                sx={{
+                                  cursor: 'pointer',
+                                  border: manualForm.species === key ? '2px solid #10b981' : '2px solid #e2e8f0',
+                                  bgcolor: manualForm.species === key ? '#f0fdfa' : 'white',
+                                  transition: 'all 0.3s',
+                                  '&:hover': { borderColor: '#10b981', transform: 'translateY(-4px)', boxShadow: 3 }
+                                }}
+                                onClick={() => handleManualChange('species', key)}
+                              >
+                                <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                                  <Box
+                                    sx={{
+                                      width: 50,
+                                      height: 50,
+                                      borderRadius: '50%',
+                                      bgcolor: manualForm.species === key ? '#10b981' : '#f1f5f9',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      mx: 'auto',
+                                      mb: 1.5,
+                                      color: manualForm.species === key ? 'white' : '#64748b'
+                                    }}
+                                  >
+                                    <Icon size={24} />
+                                  </Box>
+                                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000' }}>
+                                    {config.label}
+                                  </Typography>
+                                </CardContent>
+                              </Card>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
                     </Grid>
 
-                    {/* Offspring Name */}
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12}><Divider /></Grid>
+
+                    <Grid item xs={12}>
+                      <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#000000' }}>
+                        Basic Information
+                      </Typography>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        variant="outlined"
-                        type="text"
-                        label={`${stageLabels[selectedSpecies]?.newborn || 'Offspring'} Name *`}
-                        name="cow_name"
-                        value={inseminationData.cow_name}
-                        onChange={handleInseminationChange}
                         required
+                        label="Animal Name"
+                        value={manualForm.animal_name}
+                        onChange={(e) => handleManualChange('animal_name', e.target.value)}
                         InputProps={{
-                          sx: { 
-                            borderRadius: 2, 
-                            bgcolor: '#f8f9fa',
-                            '& fieldset': { borderWidth: 2 }
-                          }
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <User size={20} color="#64748b" />
+                            </InputAdornment>
+                          )
                         }}
                       />
                     </Grid>
 
-                    {/* Offspring Code */}
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        variant="outlined"
-                        type="text"
-                        label="Animal ID/Tag Code (Optional)"
-                        name="cow_code"
-                        value={inseminationData.cow_code}
-                        onChange={handleInseminationChange}
+                        label="Animal Code (Optional)"
+                        value={manualForm.animal_code}
+                        onChange={(e) => handleManualChange('animal_code', e.target.value)}
                         InputProps={{
-                          startAdornment: <Fingerprint size={20} style={{ marginRight: 8, color: '#757575' }} />,
-                          sx: { 
-                            borderRadius: 2, 
-                            bgcolor: '#f8f9fa',
-                            '& fieldset': { borderWidth: 2 }
-                          }
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Hash size={20} color="#64748b" />
+                            </InputAdornment>
+                          )
                         }}
                       />
                     </Grid>
 
-                    {/* Gender */}
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        select
-                        label="Gender *"
-                        name="gender"
-                        value={inseminationData.gender}
-                        onChange={handleInseminationChange}
-                        required
-                        InputProps={{
-                          sx: { 
-                            borderRadius: 2, 
-                            bgcolor: '#f8f9fa',
-                            '& fieldset': { borderWidth: 2 }
-                          }
-                        }}
-                      >
-                        <MenuItem value="male">
-                          🔵 Male ({stageLabels[selectedSpecies]?.male})
-                        </MenuItem>
-                        <MenuItem value="female">
-                          🔴 Female ({stageLabels[selectedSpecies]?.female})
-                        </MenuItem>
-                      </TextField>
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth required>
+                        <InputLabel>Gender</InputLabel>
+                        <Select
+                          value={manualForm.gender}
+                          onChange={(e) => handleManualChange('gender', e.target.value)}
+                          label="Gender"
+                        >
+                          <MenuItem value="male">Male</MenuItem>
+                          <MenuItem value="female">Female</MenuItem>
+                        </Select>
+                      </FormControl>
                     </Grid>
 
-                    {/* Birth Date */}
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        variant="outlined"
+                        required
                         type="date"
-                        label="Birth Date *"
-                        name="birth_date"
-                        value={inseminationData.birth_date}
-                        onChange={handleInseminationChange}
-                        required
+                        label="Birth Date"
+                        value={manualForm.birth_date}
+                        onChange={(e) => handleManualChange('birth_date', e.target.value)}
                         InputLabelProps={{ shrink: true }}
                         InputProps={{
-                          startAdornment: <Calendar size={20} style={{ marginRight: 8, color: '#757575' }} />,
-                          sx: { 
-                            borderRadius: 2, 
-                            bgcolor: '#f8f9fa',
-                            '& fieldset': { borderWidth: 2 }
-                          }
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Calendar size={20} color="#64748b" />
+                            </InputAdornment>
+                          )
                         }}
                       />
                     </Grid>
-                  </Grid>
 
-                  <Box display="flex" justifyContent="flex-end" mt={4} gap={2}>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setInseminationData({
-                        insemination_id: '',
-                        cow_name: '',
-                        gender: '',
-                        birth_date: '',
-                        cow_code: '',
-                      })}
-                      sx={{
-                        borderWidth: 2,
-                        borderColor: '#e0e0e0',
-                        color: '#757575',
-                        fontWeight: 600,
-                        px: 4,
-                        py: 1.5,
-                        borderRadius: 2,
-                      }}
-                    >
-                      Clear Form
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={loading}
-                      startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Baby size={20} />}
-                      sx={{
-                        background: loading 
-                          ? '#ccc' 
-                          : 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
-                        color: 'white',
-                        fontWeight: 700,
-                        px: 4,
-                        py: 1.5,
-                        borderRadius: 2,
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                        "&:hover": loading ? {} : { 
-                          background: 'linear-gradient(135deg, #FF5252 0%, #FF7043 100%)',
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
-                        },
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      {loading ? "Registering..." : `Register ${stageLabels[selectedSpecies]?.newborn || 'Offspring'}`}
-                    </Button>
-                  </Box>
-                </Box>
-              </>
-            )}
-          </CardContent>
-        </Paper>
-      )}
-    </Box>
+                    <Grid item xs={12}><Divider /></Grid>
+
+                    <Grid item xs={12}>
+                      <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#000000' }}>
+                        Parentage Information
+                      </Typography>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth>
+                        <InputLabel>Mother (Optional)</InputLabel>
+                        <Select
+                          value={manualForm.mother_id}
+                          onChange={(e) => handleManualChange('mother_id', e.target.value)}
+                          label="Mother (Optional)"
+                        >
+                          <MenuItem value=""><em>None</em></MenuItem>
+                          {filteredMothers.map((mother) => (
+                            <MenuItem key={mother.id} value={mother.id}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                {getSpeciesIcon(mother.species)}
+                                <span>{mother.name}</span>
+                                <Chip label={mother.stage} size="small" sx={{ ml: 1 }} />
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Breed Name"
+                        value={manualForm.breed_name}
+                        onChange={(e) => handleManualChange('breed_name', e.target.value)}
+                        placeholder="e.g., Friesian, Ayrshire"
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Bull Code (Optional)"
+                        value={manualForm.bull_code}
+                        onChange={(e) => handleManualChange('bull_code', e.target.value)}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Hash size={20} color="#64748b" />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Bull Name (Optional)"
+                        value={manualForm.bull_name}
+                        onChange={(e) => handleManualChange('bull_name', e.target.value)}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <GiBull size={20} color="#64748b" />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+                        <Button
+                          variant="outlined"
+                          size="large"
+                          onClick={() => navigate('/farmerdashboard/cows')}
+                          sx={{ px: 4, color: '#000000', borderColor: '#000000' }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          size="large"
+                          disabled={loading}
+                          startIcon={loading ? <CircularProgress size={20} /> : <Save size={20} />}
+                          sx={{
+                            px: 4,
+                            bgcolor: '#10b981',
+                            color: '#ffffff',
+                            '&:hover': { bgcolor: '#059669' }
+                          }}
+                        >
+                          {loading ? 'Registering...' : `Register ${speciesConfig[manualForm.species].newbornTerm}`}
+                        </Button>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </form>
+              )}
+
+              {activeTab === 1 && (
+                <form onSubmit={handlePregnancySubmit}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                      <Alert severity="info" icon={<Heart size={20} />} sx={{ color: '#000000', bgcolor: '#e3f2fd' }}>
+                        Register offspring from confirmed pregnancy records
+                      </Alert>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <FormControl fullWidth required>
+                        <InputLabel>Select Pregnancy Record</InputLabel>
+                        <Select
+                          value={pregnancyForm.insemination_id}
+                          onChange={(e) => handlePregnancyChange('insemination_id', e.target.value)}
+                          label="Select Pregnancy Record"
+                        >
+                          {pregnancies.length === 0 ? (
+                            <MenuItem disabled>No pending pregnancies found</MenuItem>
+                          ) : (
+                            pregnancies.map((preg) => (
+                              <MenuItem key={preg.id} value={preg.id}>
+                                <Box>
+                                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                    {preg.animal?.name || 'Unknown'} - {preg.bull?.name || 'Unknown Bull'}
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: '#000000' }}>
+                                    Inseminated: {new Date(preg.insemination_date).toLocaleDateString()} | 
+                                    Due: {new Date(preg.expected_due_date).toLocaleDateString()}
+                                  </Typography>
+                                </Box>
+                              </MenuItem>
+                            ))
+                          )}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        required
+                        label="Calf Name"
+                        value={pregnancyForm.cow_name}
+                        onChange={(e) => handlePregnancyChange('cow_name', e.target.value)}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Baby size={20} color="#64748b" />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Calf Code (Optional)"
+                        value={pregnancyForm.cow_code}
+                        onChange={(e) => handlePregnancyChange('cow_code', e.target.value)}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Hash size={20} color="#64748b" />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth required>
+                        <InputLabel>Gender</InputLabel>
+                        <Select
+                          value={pregnancyForm.gender}
+                          onChange={(e) => handlePregnancyChange('gender', e.target.value)}
+                          label="Gender"
+                        >
+                          <MenuItem value="male">Male</MenuItem>
+                          <MenuItem value="female">Female</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        required
+                        type="date"
+                        label="Birth Date"
+                        value={pregnancyForm.birth_date}
+                        onChange={(e) => handlePregnancyChange('birth_date', e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Calendar size={20} color="#64748b" />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+                        <Button
+                          variant="outlined"
+                          size="large"
+                          onClick={() => navigate('/farmerdashboard/cows')}
+                          sx={{ px: 4, color: '#000000', borderColor: '#000000' }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          size="large"
+                          disabled={loading}
+                          startIcon={loading ? <CircularProgress size={20} /> : <Save size={20} />}
+                          sx={{
+                            px: 4,
+                            bgcolor: '#10b981',
+                            color: '#ffffff',
+                            '&:hover': { bgcolor: '#059669' }
+                          }}
+                        >
+                          {loading ? 'Registering...' : 'Register Calf'}
+                        </Button>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </form>
+              )}
+            </Box>
+          </Paper>
+        </Container>
+      </Box>
+    </ThemeProvider>
   );
 };
 
-export default AddCalfForm;
+export default AddCalf;
