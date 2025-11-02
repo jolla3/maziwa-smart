@@ -41,8 +41,8 @@ const Footer = ({ navigate }) => {
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {[
-                { label: 'Marketplace', path: '/marketplace' },
-                { label: 'Farm Dashboard', path: '/dashboard' },
+                { label: 'Marketplace', path: '/market' },
+                { label: 'Farm Dashboard', path: '/farmerdashboard' },
                 { label: 'Analytics', path: '#' },
                 { label: 'Community', path: '#' }
               ].map((item, i) => (
