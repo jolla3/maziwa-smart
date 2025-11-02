@@ -1,7 +1,7 @@
 // animals/api/animalApi.js
 import axios from 'axios';
 
-const BASE_URL = 'https://maziwasmart.onrender.com/api/farmer/animals';
+const BASE_URL = 'https://maziwasmart.onrender.com/api/animals';
 
 const getAuthHeaders = (token) => ({
   Authorization: `Bearer ${token}`,

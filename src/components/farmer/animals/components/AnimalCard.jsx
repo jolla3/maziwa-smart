@@ -414,37 +414,63 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
             </Grid>
 
             {/* Parentage Information */}
-            <Grid item xs={12} md={6}>
-              <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e0e0e0' }}>
-                <Typography variant="h6" color="#000000" fontWeight={700} mb={2}>
-                  👨‍👩‍👧‍👦 Parentage
-                </Typography>
-                <Stack spacing={1.5}>
-                  {animal.mother && (
-                    <Box>
-                      <Typography color="#666666" fontWeight={600} fontSize="0.85rem">Mother:</Typography>
-                      <Typography color="#000000" fontWeight={700}>
-                        {animal.mother.name} ({animal.mother.species})
-                      </Typography>
-                    </Box>
-                  )}
-                  {animal.father && (
-                    <Box>
-                      <Typography color="#666666" fontWeight={600} fontSize="0.85rem">Father/Sire:</Typography>
-                      <Typography color="#000000" fontWeight={700}>
-                        {animal.father.name || 'Unknown'}
-                        {animal.father.code && ` (${animal.father.code})`}
-                      </Typography>
-                    </Box>
-                  )}
-                  {!animal.mother && !animal.father && (
-                    <Typography color="#666666" fontStyle="italic">
-                      No parentage information recorded
-                    </Typography>
-                  )}
-                </Stack>
-              </Box>
-            </Grid>
+<Grid item xs={12} md={6}>
+  <Box
+    sx={{
+      p: 2,
+      backgroundColor: '#f8f9fa',
+      borderRadius: '12px',
+      border: '1px solid #e0e0e0',
+    }}
+  >
+    <Typography variant="h6" color="#000000" fontWeight={700} mb={2}>
+      👨‍👩‍👧‍👦 Parentage
+    </Typography>
+    <Stack spacing={1.5}>
+      {animal.mother && (
+        <Box>
+          <Typography color="#666666" fontWeight={600} fontSize="0.85rem">
+            Mother:
+          </Typography>
+          <Typography color="#000000" fontWeight={700}>
+            {animal.mother.name} ({animal.mother.species})
+          </Typography>
+        </Box>
+      )}
+
+      {animal.father ? (
+        <Box>
+          <Typography color="#666666" fontWeight={600} fontSize="0.85rem">
+            Father/Sire:
+          </Typography>
+          <Typography color="#000000" fontWeight={700}>
+            {animal.father.name}
+            {animal.father.code && ` (${animal.father.code})`}
+          </Typography>
+        </Box>
+      ) : (
+        (animal.bull_name || animal.bull_code) && (
+          <Box>
+            <Typography color="#666666" fontWeight={600} fontSize="0.85rem">
+              Bull Used for Breeding:
+            </Typography>
+            <Typography color="#000000" fontWeight={700}>
+              {animal.bull_name || 'Unknown'}
+              {animal.bull_code && ` (${animal.bull_code})`}
+            </Typography>
+          </Box>
+        )
+      )}
+
+      {!animal.mother && !animal.father && !animal.bull_name && (
+        <Typography color="#666666" fontStyle="italic">
+          No parentage information recorded
+        </Typography>
+      )}
+    </Stack>
+  </Box>
+</Grid>
+
 
             {/* Pregnancy Status */}
             {animal.pregnancy?.is_pregnant && (
