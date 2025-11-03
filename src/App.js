@@ -35,7 +35,6 @@ import PorterHome from "./components/porters/PorterHome";
 import FarmerLayout from "./components/farmer/farmerLayout";
 // import NotAuthorized from "./components/globals/NotAuthorized";
 import DailyMilkSummary from "./components/farmer/DailyMilkSummary";
-import FarmerHome from "./components/farmer/FarmerHome";
 import BreedManagement from "./components/farmer/BreedManagment";
 // import CowManagement from "./components/farmer/CowManagement";
 // import AddCalf from "./components/farmer/AddCalf";
@@ -67,6 +66,7 @@ import AdminSellerRequests from "./components/globals/AdminSellerRequests";
 import MarketView from "./components/market/MarketView";
 import InseminationRecordsList from "./components/farmer/InseminationRecordsList";
 import AnimalDashboard from "./components/farmer/animals/AnimalDashboard";
+import FarmerHome from "./components/farmer/farmhome/FarmerHome";
 // import { GoogleLogin } from "@react-oauth/google";
 
 

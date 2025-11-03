@@ -52,6 +52,11 @@ const sidebarItems = [
         icon: <PersonOutlinedIcon />,
       },
       {
+        title: "My farm Breeds",
+        to: "/farmerdashboard/breeds",
+        icon: <ContactsOutlinedIcon />,
+      },
+      {
         title: "My Farm",
         to: "/farmerdashboard/cows",
         icon: <ReceiptOutlinedIcon />,
