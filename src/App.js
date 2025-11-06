@@ -10,8 +10,8 @@ import { ColorModeContext, useMode } from "./theme";
 import { AuthProvider } from "./components/PrivateComponents/AuthContext";
 import Topbar from "./components/globals/Topbar";
 import Homepage from "./components/globals/Homepage";
-import Login from "./components/globals/Login";
-import AdminRegister from "./components/globals/RegisterAdmin";
+import Login from "./components/globals/logins/Login";
+import AdminRegister from "./components/globals/logins/RegisterAdmin";
 import PrivateRoute from "./components/PrivateComponents/PrivateRoute";
 
 import AdminLayout from "./components/admin/AdminLayout";
@@ -25,7 +25,7 @@ import UpdateFarmer from "./components/admin/myfarmers/UpdateFarmer";
 import Records from "./components/admin/Records";
 import DownloadMonthlyReport from "./components/scenes/DownloadReport";
 import AdminMilkSummary from "./components/admin/AdminMilkSummary";
-import Calendar from "./components/globals/calendar";
+import Calendar from "./components/scenes/calendar";
 import PorterProfileForm from "./components/porters/MyProfile";
 import AddMilk from "./components/porters/AddMilk";
 import PorterLayout from "./components/porters/porterLayout";
@@ -34,37 +34,37 @@ import MonthlyPorterSummary from "./components/porters/MonthlyPorterSummary";
 import PorterHome from "./components/porters/PorterHome";
 import FarmerLayout from "./components/farmer/farmerLayout";
 // import NotAuthorized from "./components/globals/NotAuthorized";
-import DailyMilkSummary from "./components/farmer/DailyMilkSummary";
-import BreedManagement from "./components/farmer/BreedManagment";
+import DailyMilkSummary from "./components/farmer/CRUD/DailyMilkSummary";
+import BreedManagement from "./components/farmer/CRUD/BreedManagment";
 // import CowManagement from "./components/farmer/CowManagement";
 // import AddCalf from "./components/farmer/AddCalf";
 import CowFamilyTree from "./components/farmer/CowFamilyTree";
-import CowRegistrationForm from "./components/farmer/CowRegistrationForm";
-import AddCalfForm from "./components/farmer/AddCalfForm";
-import MilkRecording from "./components/farmer/MilkRecording";
-import DairySummaries from "./components/farmer/DairySummaries";
-import InseminationCard from "./components/farmer/InseminationCard";
+import CowRegistrationForm from "./components/farmer/CRUD/CowRegistrationForm";
+import AddCalfForm from "./components/farmer/CRUD/AddCalfForm";
+import MilkRecording from "./components/farmer/CRUD/MilkRecording";
+import DairySummaries from "./components/farmer/CRUD/DairySummaries";
+import InseminationCard from "./components/farmer/CRUD/InseminationCard";
 import EnhancedFarmDashboard from "./components/farmer/FarmDashboard";
-import GoogleCallbackHandler from "./components/globals/GoogleCallbackHandle";
+import GoogleCallbackHandler from "./components/globals/logins/GoogleCallbackHandle";
 import PrivacyPolicy from "./components/PrivateComponents/PrivacyPolicy";
 import TermsOfService from "./components/PrivateComponents/TermsOfService";
-import ChatRoom from "./components/globals/ChatRoom";
-import ChatList from "./components/globals/ChatList";
-import MyListings from "./components/globals/MyListings";
-import CreateListing from "./components/globals/CreateListing";
-import EditListing from "./components/globals/EditListing";
-import ViewListing from "./components/globals/ViewListing";
+import ChatRoom from "./components/globals/CHAT/ChatRoom";
+import ChatList from "./components/globals/CHAT/ChatList";
+import MyListings from "./components/globals/market crud/MyListings";
+import CreateListing from "./components/globals/market crud/CreateListing";
+import EditListing from "./components/globals/market crud/EditListing";
+import ViewListing from "./components/globals/market crud/ViewListing";
 // import MarketplacePage from "./components/globals/MarketplacePage";
 import MarketPage from "./components/globals/MarketplacePage";
 // import MarketView from "./components/globals/MarketView";
 import Notifications from "./components/globals/Notification";
-import FarmerRegister from "./components/globals/Registerfarmer";
-import LandingPage from "./components/pages/landingPages/LandingPage";
-import SellerRegister from "./components/globals/SellerRegister";
-import SellerRequest from "./components/seller/SellerRequest";
-import AdminSellerRequests from "./components/globals/AdminSellerRequests";
-import MarketView from "./components/market/MarketView";
-import InseminationRecordsList from "./components/farmer/InseminationRecordsList";
+import FarmerRegister from "./components/globals/logins/Registerfarmer";
+import LandingPage from "./components/pages/landingPages -- HOMEPAGE/LandingPage";
+import SellerRegister from "./components/globals/logins/SellerRegister";
+import SellerRequest from "./components/Sellers/seller Request approval/SellerRequest";
+import AdminSellerRequests from "./components/SUPERaDMIN/AdminSellerRequests";
+import MarketView from "./components/market homepage/MarketView";
+import InseminationRecordsList from "./components/farmer/CRUD/InseminationRecordsList";
 import AnimalDashboard from "./components/farmer/animals/AnimalDashboard";
 import FarmerHome from "./components/farmer/farmhome/FarmerHome";
 // import { GoogleLogin } from "@react-oauth/google";
@@ -106,13 +106,13 @@ function App() {
             <Route path="/create" element={<CreateListing />} />
             <Route path="/edit" element={<EditListing />} />
             <Route path="/view" element={<ViewListing />} />
-            <Route path="/market" element={<MarketPage/>} />
-            <Route path="/view-market" element={<MarketView/>} />
-            <Route path="/notifications" element={<Notifications/>} />
-            <Route path="/seller-approval" element={<SellerRequest/>} />
-            <Route path="/admin-approval" element={<AdminSellerRequests/>} />
-            
-            
+            <Route path="/market" element={<MarketPage />} />
+            <Route path="/view-market" element={<MarketView />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/seller-approval" element={<SellerRequest />} />
+            <Route path="/admin-approval" element={<AdminSellerRequests />} />
+
+
 
             {/* Admin Routes */}
             <Route
@@ -162,7 +162,7 @@ function App() {
 
             {/* Farmer Routes */}
             <Route
-              path="/farmerdashboard"
+              path="/fmr.drb"
               element={
                 <PrivateRoute role="farmer">
                   <FarmerLayout />
@@ -170,15 +170,15 @@ function App() {
               }
             >
               {/* Default dashboard landing page */}
-              <Route index element={< FarmerHome/>} />
+              <Route index element={< FarmerHome />} />
               {/* Other porter pages */}
-              
+
               <Route path="calendar" element={<Calendar />} />
               <Route path="daily" element={<DailyMilkSummary />} />
               <Route path="breeds" element={<BreedManagement />} />
               <Route path="cows" element={<AnimalDashboard />} />
               <Route path="calf" element={<AddCalfForm />} />
-              
+
               <Route path="familytree" element={<CowFamilyTree />} />
               <Route path="register-cow" element={<CowRegistrationForm />} />
               <Route path="register-calf" element={<AddCalfForm />} />
@@ -187,6 +187,78 @@ function App() {
               <Route path="inseminationcard" element={<InseminationCard />} />
               <Route path="insemination-record" element={<InseminationRecordsList />} />
               <Route path="farmerdash" element={<EnhancedFarmDashboard />} />
+            </Route>
+
+
+            {/* managers  Routes */}
+            <Route
+              path="/man.drb"
+              element={
+                <PrivateRoute role="manager">
+                  <FarmerLayout />
+                </PrivateRoute>
+              }
+            >
+              {/* Default dashboard landing page */}
+              <Route index element={< FarmerHome />} />
+              {/* Other porter pages */}
+
+              <Route path="calendar" element={<Calendar />} />
+              <Route path="daily" element={<DailyMilkSummary />} />
+              <Route path="breeds" element={<BreedManagement />} />
+              <Route path="cows" element={<AnimalDashboard />} />
+              <Route path="calf" element={<AddCalfForm />} />
+
+              <Route path="familytree" element={<CowFamilyTree />} />
+              <Route path="register-cow" element={<CowRegistrationForm />} />
+              <Route path="register-calf" element={<AddCalfForm />} />
+              <Route path="milkrecording" element={<MilkRecording />} />
+              <Route path="dairysummaries" element={<DairySummaries />} />
+              <Route path="inseminationcard" element={<InseminationCard />} />
+              <Route path="insemination-record" element={<InseminationRecordsList />} />
+              <Route path="farmerdash" element={<EnhancedFarmDashboard />} />
+            </Route>
+
+
+            {/* sellers  Routes */}
+            <Route
+              path="/slr.drb"
+              element={
+                <PrivateRoute role="seller">
+                  <FarmerLayout />
+                </PrivateRoute>
+              }
+            >
+              {/* Default dashboard landing page */}
+              <Route index element={< FarmerHome />} />
+              {/* Other porter pages */}
+
+              <Route path="/my-listings" element={<MyListings />} />
+              <Route path="/create" element={<CreateListing />} />
+              <Route path="/edit" element={<EditListing />} />
+              <Route path="/view" element={<ViewListing />} />
+              <Route path="/seller-approval" element={<SellerRequest />} />
+              <Route path="/market" element={<MarketPage />} />
+              <Route path="/view-market" element={<MarketView />} />
+            </Route>
+
+            {/* buyer  Routes */}
+            <Route
+              path="/byr.drb"
+              element={
+                <PrivateRoute role="buyer">
+                  <FarmerLayout />
+                </PrivateRoute>
+              }
+            >
+              {/* Default dashboard landing page */}
+              <Route index element={< FarmerHome />} />
+              {/* Other porter pages */}
+
+
+              <Route path="/seller-approval" element={<SellerRequest />} />
+              <Route path="/market" element={<MarketPage />} />
+              <Route path="/view-market" element={<MarketView />} />
             </Route>
 
             {/* 404 Page */}

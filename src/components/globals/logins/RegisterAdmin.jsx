@@ -1,8 +1,9 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
+import { Link as RouterLink } from 'react-router-dom';
+
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../PrivateComponents/AuthContext';
-import AppNavbar from '../scenes/AppNavbar';
+import AppNavbar from '../../scenes/AppNavbar';
 import {
   Box,
   TextField,
@@ -18,9 +19,9 @@ import {
   Divider,
   useTheme
 } from '@mui/material';
-import { User, Phone, Mail, Eye, EyeOff, Lock, Store } from 'lucide-react';
+import { User, Phone, Mail, Eye, EyeOff, Lock } from 'lucide-react';
 
-const SellerRegister = () => {
+const Register = () => {
   const [formData, setFormData] = useState({
     username: '',
     phone: '',
@@ -34,7 +35,6 @@ const SellerRegister = () => {
   const [alert, setAlert] = useState({ type: '', message: '' });
   const theme = useTheme();
   const navigate = useNavigate();
-  const { setToken, setUser } = useContext(AuthContext);
 
   // API Base URL
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://maziwasmart.onrender.com';
@@ -59,15 +59,6 @@ const SellerRegister = () => {
       return;
     }
 
-    // Phone validation (optional but validate if provided)
-    if (formData.phone) {
-      const phoneRegex = /^[0-9+\-\s()]+$/;
-      if (!phoneRegex.test(formData.phone)) {
-        setAlert({ type: 'error', message: 'Please enter a valid phone number!' });
-        return;
-      }
-    }
-
     // Password strength validation
     if (formData.password.length < 6) {
       setAlert({ type: 'error', message: 'Password must be at least 6 characters long!' });
@@ -78,16 +69,16 @@ const SellerRegister = () => {
     setAlert({ type: '', message: '' });
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/userAuth/register/seller`, {
+      const response = await axios.post(`${API_BASE_URL}/api/userAuth/register`, {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        phone: formData.phone || "" // Only send if provided
+        phone: formData.phone || undefined // Only send if provided
       });
 
       setAlert({
         type: 'success',
-        message: response.data.message || 'Seller account created successfully! Awaiting admin approval.'
+        message: response.data.message || 'Account created successfully!'
       });
 
       // Clear form
@@ -98,13 +89,13 @@ const SellerRegister = () => {
         password: ''
       });
 
-      // Redirect to login after 3 seconds to allow user to read the approval message
+      // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
-      }, 3000);
+      }, 2000);
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
-      setAlert({ type: 'error', message: errorMessage })
+      setAlert({ type: 'error', message: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -143,23 +134,6 @@ const SellerRegister = () => {
             }}
           >
             <Box component="form" onSubmit={handleSubmit} noValidate>
-              {/* Header with Store Icon */}
-              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <Box
-                  sx={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: '50%',
-                    bgcolor: theme.palette.primary.main,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Store size={30} color="white" />
-                </Box>
-              </Box>
-
               <Typography
                 variant="h4"
                 align="center"
@@ -170,7 +144,7 @@ const SellerRegister = () => {
                   fontWeight: 600,
                 }}
               >
-                Register as Seller
+                Create Account
               </Typography>
 
               <Typography
@@ -181,7 +155,7 @@ const SellerRegister = () => {
                   mb: 4,
                 }}
               >
-                Start selling on MaziWaSmart today
+                Join MaziWaSmart today
               </Typography>
 
               {alert.message && (
@@ -199,25 +173,12 @@ const SellerRegister = () => {
                 </Alert>
               )}
 
-              {/* Info Alert about approval process */}
-              <Alert
-                severity="info"
-                sx={{
-                  mb: 3,
-                  '& .MuiAlert-message': {
-                    fontSize: '0.875rem',
-                  }
-                }}
-              >
-                Your seller account will require admin approval before you can start selling.
-              </Alert>
-
               <TextField
                 fullWidth
                 type="text"
                 name="username"
-                label="Business/Store Name"
-                placeholder="Enter your business or store name"
+                label="Full Name"
+                placeholder="Enter your full name"
                 value={formData.username}
                 onChange={handleChange}
                 required
@@ -404,10 +365,10 @@ const SellerRegister = () => {
                 {loading ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <CircularProgress size={20} color="inherit" />
-                    Creating Seller Account...
+                    Creating Account...
                   </Box>
                 ) : (
-                  'Register as Seller'
+                  'Create Account'
                 )}
               </Button>
 
@@ -495,25 +456,6 @@ const SellerRegister = () => {
                 </Typography>
               </Box>
 
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Want to register as a farmer?{' '}
-                  <Link
-                    href="/register/farmer"
-                    sx={{
-                      color: theme.palette.primary.main,
-                      textDecoration: 'none',
-                      fontWeight: 600,
-                      '&:hover': {
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  >
-                    Register here
-                  </Link>
-                </Typography>
-              </Box>
-
               <Box sx={{ mt: 3, textAlign: 'center' }}>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   By signing up, you agree to our{' '}
@@ -552,4 +494,4 @@ const SellerRegister = () => {
   );
 };
 
-export default SellerRegister;
+export default Register;

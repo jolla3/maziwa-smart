@@ -14,7 +14,7 @@ import {
   Loader,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AuthContext } from "../PrivateComponents/AuthContext";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
 
 const API_BASE = "https://maziwasmart.onrender.com/api";
 
@@ -123,21 +123,21 @@ export default function EditListing() {
   const handleNewFiles = useCallback((files) => {
     const currentTotal = existingPhotos.length + newFiles.length;
     const available = MAX_PHOTOS - currentTotal;
-    
+
     if (available <= 0) {
       showToast("error", `Maximum ${MAX_PHOTOS} photos allowed`);
       return;
     }
 
     const arr = Array.from(files).slice(0, available);
-    
+
     if (arr.length < files.length) {
       showToast("warning", `Only ${arr.length} photos added (max ${MAX_PHOTOS} total)`);
     }
 
     const newFilesList = [...arr];
     setNewFiles((prev) => [...prev, ...newFilesList]);
-    
+
     // Create previews for each file
     newFilesList.forEach((file) => {
       const reader = new FileReader();
@@ -158,44 +158,44 @@ export default function EditListing() {
   };
 
   const confirmDelete = async () => {
-  if (showConfirm.index === null) return;
-  
-  const photoIndex = showConfirm.index;
-  setDeletingPhoto(true);
-  
-  try {
-    const remaining = existingPhotos.filter((_, i) => i !== photoIndex);
-    
-    // ✅ Send as JSON, not FormData
-    const listingId = listing._id || listing.id;
-    const res = await axios.patch(
-      `${API_BASE}/listing/${listingId}`,
-      { photos: remaining }, // Send as plain object
-      {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+    if (showConfirm.index === null) return;
+
+    const photoIndex = showConfirm.index;
+    setDeletingPhoto(true);
+
+    try {
+      const remaining = existingPhotos.filter((_, i) => i !== photoIndex);
+
+      // ✅ Send as JSON, not FormData
+      const listingId = listing._id || listing.id;
+      const res = await axios.patch(
+        `${API_BASE}/listing/${listingId}`,
+        { photos: remaining }, // Send as plain object
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (res.data.success) {
+        setExistingPhotos(remaining);
+        setListing(res.data.listing);
+        showToast("success", "Photo deleted successfully");
+      } else {
+        showToast("error", res.data.message || "Failed to delete photo");
       }
-    );
-
-    if (res.data.success) {
-      setExistingPhotos(remaining);
-      setListing(res.data.listing);
-      showToast("success", "Photo deleted successfully");
-    } else {
-      showToast("error", res.data.message || "Failed to delete photo");
+    } catch (err) {
+      console.error("Delete photo error:", err);
+      showToast("error", err.response?.data?.message || "Failed to delete photo");
+    } finally {
+      setDeletingPhoto(false);
+      setShowConfirm({ show: false, index: null });
     }
-  } catch (err) {
-    console.error("Delete photo error:", err);
-    showToast("error", err.response?.data?.message || "Failed to delete photo");
-  } finally {
-    setDeletingPhoto(false);
-    setShowConfirm({ show: false, index: null });
-  }
-};
+  };
 
-// duplicate handleSave removed — consolidated save logic is kept later in the file
+  // duplicate handleSave removed — consolidated save logic is kept later in the file
 
   const validateForm = () => {
     if (!form.title.trim()) {
@@ -221,73 +221,73 @@ export default function EditListing() {
     return true;
   };
 
- // src/pages/EditListing.jsx - handleSave function only
-const handleSave = async () => {
-  if (!validateForm()) return;
+  // src/pages/EditListing.jsx - handleSave function only
+  const handleSave = async () => {
+    if (!validateForm()) return;
 
-  if (!listing?._id && !listing?.id) {
-    showToast("error", "Invalid listing ID");
-    return;
-  }
-
-  setSaving(true);
-  const formData = new FormData();
-
-  // Add form fields
-  Object.entries(form).forEach(([k, v]) => {
-    formData.append(k, v);
-  });
-
-  // ✅ Add existing photos as separate indexed fields
-  existingPhotos.forEach((photo, index) => {
-    formData.append(`photos[${index}]`, photo);
-  });
-
-  // Add animal details if seller
-  if (user?.role === "seller" && animalDetails.age) {
-    formData.append("animal_details", JSON.stringify(animalDetails));
-  }
-
-  // Add new image files
-  newFiles.forEach((file) => {
-    formData.append("images", file);
-  });
-
-  const listingId = listing._id || listing.id;
-
-  try {
-    const res = await axios.patch(
-      `${API_BASE}/listing/${listingId}`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    if (res.data.success) {
-      setListing(res.data.listing);
-      setExistingPhotos(res.data.listing.photos || []);
-      showToast("success", "Listing updated successfully");
-      setNewFiles([]);
-      setPreviews([]);
-      
-      setTimeout(() => {
-        navigate("/my-listings");
-      }, 1500);
-    } else {
-      showToast("error", res.data.message || "Failed to update listing");
+    if (!listing?._id && !listing?.id) {
+      showToast("error", "Invalid listing ID");
+      return;
     }
-  } catch (err) {
-    console.error("Save error:", err);
-    const errorMsg = err.response?.data?.message || err.message || "Server error during save";
-    showToast("error", errorMsg);
-  } finally {
-    setSaving(false);
-  }
-};
+
+    setSaving(true);
+    const formData = new FormData();
+
+    // Add form fields
+    Object.entries(form).forEach(([k, v]) => {
+      formData.append(k, v);
+    });
+
+    // ✅ Add existing photos as separate indexed fields
+    existingPhotos.forEach((photo, index) => {
+      formData.append(`photos[${index}]`, photo);
+    });
+
+    // Add animal details if seller
+    if (user?.role === "seller" && animalDetails.age) {
+      formData.append("animal_details", JSON.stringify(animalDetails));
+    }
+
+    // Add new image files
+    newFiles.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    const listingId = listing._id || listing.id;
+
+    try {
+      const res = await axios.patch(
+        `${API_BASE}/listing/${listingId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (res.data.success) {
+        setListing(res.data.listing);
+        setExistingPhotos(res.data.listing.photos || []);
+        showToast("success", "Listing updated successfully");
+        setNewFiles([]);
+        setPreviews([]);
+
+        setTimeout(() => {
+          navigate("/my-listings");
+        }, 1500);
+      } else {
+        showToast("error", res.data.message || "Failed to update listing");
+      }
+    } catch (err) {
+      console.error("Save error:", err);
+      const errorMsg = err.response?.data?.message || err.message || "Server error during save";
+      showToast("error", errorMsg);
+    } finally {
+      setSaving(false);
+    }
+  };
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
     setTimeout(() => setToast({ show: false, type: "", message: "" }), 3000);
@@ -502,9 +502,9 @@ const handleSave = async () => {
                               />
                               <button
                                 className="btn btn-sm btn-danger position-absolute"
-                                style={{ 
-                                  top: 4, 
-                                  right: 4, 
+                                style={{
+                                  top: 4,
+                                  right: 4,
                                   padding: "4px 8px",
                                   borderRadius: "4px"
                                 }}
@@ -542,9 +542,9 @@ const handleSave = async () => {
                               />
                               <button
                                 className="btn btn-sm btn-secondary position-absolute"
-                                style={{ 
-                                  top: 4, 
-                                  right: 4, 
+                                style={{
+                                  top: 4,
+                                  right: 4,
                                   padding: "4px 8px",
                                   borderRadius: "4px"
                                 }}
@@ -610,13 +610,12 @@ const handleSave = async () => {
       <AnimatePresence>
         {toast.show && (
           <motion.div
-            className={`position-fixed bottom-0 end-0 m-3 p-3 rounded shadow-lg ${
-              toast.type === "success"
+            className={`position-fixed bottom-0 end-0 m-3 p-3 rounded shadow-lg ${toast.type === "success"
                 ? "bg-success"
                 : toast.type === "warning"
-                ? "bg-warning"
-                : "bg-danger"
-            } text-white`}
+                  ? "bg-warning"
+                  : "bg-danger"
+              } text-white`}
             initial={{ opacity: 0, y: 50, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.8 }}

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import ChatRoom from "../globals/ChatRoom";
+import ChatRoom from "../globals/CHAT/ChatRoom";
 
 const ChatModal = ({ showChatModal, setShowChatModal, seller, listing }) => {
   // gracefully handle invalid or missing seller

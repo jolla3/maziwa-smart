@@ -42,25 +42,25 @@ import {
     Cancel as CancelIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
-import { AuthContext } from '../../components/PrivateComponents/AuthContext';
-import Header from '../scenes/Header';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
+import Header from '../../scenes/Header';
 
 const InseminationRecordsList = () => {
     const { token } = useContext(AuthContext);
-    
+
     const [records, setRecords] = useState([]);
     const [filteredRecords, setFilteredRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterOutcome, setFilterOutcome] = useState('all');
     const [filterSpecies, setFilterSpecies] = useState('all');
-    
+
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
-    
+
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [editLoading, setEditLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
@@ -192,30 +192,30 @@ const InseminationRecordsList = () => {
 
     const getOutcomeChip = (outcome) => {
         const config = {
-            pregnant: { 
-                label: 'Pregnant', 
-                color: '#10b981', 
+            pregnant: {
+                label: 'Pregnant',
+                color: '#10b981',
                 bgColor: '#d1fae5',
-                icon: <CheckCircleIcon sx={{ fontSize: 16 }} /> 
+                icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
             },
-            not_pregnant: { 
-                label: 'Not Pregnant', 
-                color: '#ef4444', 
+            not_pregnant: {
+                label: 'Not Pregnant',
+                color: '#ef4444',
                 bgColor: '#fee2e2',
-                icon: <CancelIcon sx={{ fontSize: 16 }} /> 
+                icon: <CancelIcon sx={{ fontSize: 16 }} />
             },
-            unknown: { 
-                label: 'Unknown', 
-                color: '#64748b', 
+            unknown: {
+                label: 'Unknown',
+                color: '#64748b',
                 bgColor: '#f1f5f9',
-                icon: <HourglassEmptyIcon sx={{ fontSize: 16 }} /> 
+                icon: <HourglassEmptyIcon sx={{ fontSize: 16 }} />
             },
         };
         const { label, color, bgColor, icon } = config[outcome] || config.unknown;
         return (
-            <Chip 
-                label={label} 
-                size="small" 
+            <Chip
+                label={label}
+                size="small"
                 icon={icon}
                 sx={{
                     bgcolor: bgColor,
@@ -282,7 +282,7 @@ const InseminationRecordsList = () => {
                                         </InputAdornment>
                                     ),
                                 }}
-                                sx={{ 
+                                sx={{
                                     bgcolor: '#fafafa',
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
@@ -300,7 +300,7 @@ const InseminationRecordsList = () => {
                                 label="Filter by Outcome"
                                 value={filterOutcome}
                                 onChange={(e) => setFilterOutcome(e.target.value)}
-                                sx={{ 
+                                sx={{
                                     bgcolor: '#fafafa',
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
@@ -323,7 +323,7 @@ const InseminationRecordsList = () => {
                                 label="Filter by Species"
                                 value={filterSpecies}
                                 onChange={(e) => setFilterSpecies(e.target.value)}
-                                sx={{ 
+                                sx={{
                                     bgcolor: '#fafafa',
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
@@ -345,7 +345,7 @@ const InseminationRecordsList = () => {
                                 Showing {filteredRecords.length} of {records.length} records
                             </Typography>
                         </Grid>
-                        
+
                     </Grid>
                 </CardContent>
             </Card>
@@ -369,10 +369,10 @@ const InseminationRecordsList = () => {
                     </CardContent>
                 </Card>
             ) : (
-                <TableContainer 
-                    component={Paper} 
-                    sx={{ 
-                        borderRadius: '16px', 
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        borderRadius: '16px',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                         bgcolor: '#ffffff'
                     }}
@@ -396,7 +396,7 @@ const InseminationRecordsList = () => {
                                 return (
                                     <TableRow
                                         key={record.id}
-                                        sx={{ 
+                                        sx={{
                                             '&:hover': { bgcolor: '#fafafa' },
                                             '&:last-child td': { border: 0 }
                                         }}
@@ -477,9 +477,9 @@ const InseminationRecordsList = () => {
                                                 <IconButton
                                                     onClick={(e) => handleMenuClick(e, record)}
                                                     size="small"
-                                                    sx={{ 
+                                                    sx={{
                                                         color: '#64748b',
-                                                        '&:hover': { 
+                                                        '&:hover': {
                                                             bgcolor: '#f1f5f9',
                                                             color: '#10b981'
                                                         }
@@ -631,9 +631,9 @@ const InseminationRecordsList = () => {
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 2.5, bgcolor: '#fafafa', borderTop: '1px solid #e5e7eb' }}>
-                    <Button 
-                        onClick={() => setDetailsDialogOpen(false)} 
-                        sx={{ 
+                    <Button
+                        onClick={() => setDetailsDialogOpen(false)}
+                        sx={{
                             color: '#64748b',
                             '&:hover': { bgcolor: '#f1f5f9' }
                         }}
@@ -643,10 +643,10 @@ const InseminationRecordsList = () => {
                 </DialogActions>
             </Dialog>
 
-            <Dialog 
-                open={editDialogOpen} 
-                onClose={() => setEditDialogOpen(false)} 
-                maxWidth="sm" 
+            <Dialog
+                open={editDialogOpen}
+                onClose={() => setEditDialogOpen(false)}
+                maxWidth="sm"
                 fullWidth
                 PaperProps={{
                     sx: { borderRadius: '16px' }
@@ -756,9 +756,9 @@ const InseminationRecordsList = () => {
                     </Grid>
                 </DialogContent>
                 <DialogActions sx={{ p: 2.5, bgcolor: '#fafafa', borderTop: '1px solid #e5e7eb' }}>
-                    <Button 
-                        onClick={() => setEditDialogOpen(false)} 
-                        sx={{ 
+                    <Button
+                        onClick={() => setEditDialogOpen(false)}
+                        sx={{
                             color: '#64748b',
                             '&:hover': { bgcolor: '#f1f5f9' }
                         }}
@@ -781,10 +781,10 @@ const InseminationRecordsList = () => {
                 </DialogActions>
             </Dialog>
 
-            <Dialog 
-                open={deleteDialogOpen} 
-                onClose={() => setDeleteDialogOpen(false)} 
-                maxWidth="xs" 
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                maxWidth="xs"
                 fullWidth
                 PaperProps={{
                     sx: { borderRadius: '16px' }
@@ -807,9 +807,9 @@ const InseminationRecordsList = () => {
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 2.5, bgcolor: '#fafafa', borderTop: '1px solid #e5e7eb' }}>
-                    <Button 
-                        onClick={() => setDeleteDialogOpen(false)} 
-                        sx={{ 
+                    <Button
+                        onClick={() => setDeleteDialogOpen(false)}
+                        sx={{
                             color: '#64748b',
                             '&:hover': { bgcolor: '#f1f5f9' }
                         }}

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { AuthContext } from "../PrivateComponents/AuthContext";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Save, ArrowLeft, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -197,8 +197,8 @@ const CreateListing = () => {
 
   const filteredAnimals = form.animal_type
     ? animals.filter(
-        (a) => a?.species?.toLowerCase() === form.animal_type?.toLowerCase()
-      )
+      (a) => a?.species?.toLowerCase() === form.animal_type?.toLowerCase()
+    )
     : [];
 
   return (
@@ -281,9 +281,8 @@ const CreateListing = () => {
                   </option>
                   {filteredAnimals.map((a) => {
                     const animalId = a._id || a.id;
-                    const displayName = `${a.cow_name || a.name || "Unnamed"} (${a.species}) - ${
-                      a.breed?.name || a.breed || "Unknown"
-                    }`;
+                    const displayName = `${a.cow_name || a.name || "Unnamed"} (${a.species}) - ${a.breed?.name || a.breed || "Unknown"
+                      }`;
                     return (
                       <option key={animalId} value={animalId}>
                         {displayName}
@@ -297,7 +296,7 @@ const CreateListing = () => {
             {user?.role === "seller" && (
               <div className="border rounded p-3 mb-3" style={{ background: "#f0f9ff" }}>
                 <h5 className="fw-semibold text-primary mb-3">Animal Details</h5>
-                
+
                 <div className="row">
                   <div className="col-md-6 mb-3">
                     <label className="form-label fw-semibold">Age (e.g., 3 years) *</label>
@@ -592,13 +591,12 @@ const CreateListing = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`position-fixed top-0 end-0 mt-4 me-4 px-4 py-3 rounded text-white shadow ${
-              toast.type === "success"
+            className={`position-fixed top-0 end-0 mt-4 me-4 px-4 py-3 rounded text-white shadow ${toast.type === "success"
                 ? "bg-success"
                 : toast.type === "error"
-                ? "bg-danger"
-                : "bg-info"
-            }`}
+                  ? "bg-danger"
+                  : "bg-info"
+              }`}
             style={{ zIndex: 9999 }}
           >
             {toast.message}

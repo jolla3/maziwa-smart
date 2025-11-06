@@ -6,8 +6,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import AppNavbar from '../scenes/AppNavbar';
-import { AuthContext } from '../../components/PrivateComponents/AuthContext';
+import AppNavbar from '../../scenes/AppNavbar';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
 import { jwtDecode } from 'jwt-decode';
 import {
   Box,
@@ -37,7 +37,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [redirecting, setRedirecting] = useState(false);
-  
+
   const navigate = useNavigate();
   const theme = useTheme();
   const { setUser, setToken, user, token } = useContext(AuthContext);
@@ -49,12 +49,12 @@ const Login = () => {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      toast.success('Back online!', { autoClose: 2000 });
+      toast.success('Back online!', { autoClose: 1000 });
     };
-    
+
     const handleOffline = () => {
       setIsOnline(false);
-      toast.error('No internet connection', { autoClose: false });
+      toast.error('No internet connection', { autoClose: false })
     };
 
     window.addEventListener('online', handleOnline);
@@ -80,11 +80,11 @@ const Login = () => {
           if (!isExpired) {
             setToken(savedToken);
             setUser(decoded);
-            
+
             // Navigate based on role
             setTimeout(() => {
               navigateByRole(decoded.role);
-            }, 500);
+            }, 3000);
           } else {
             // Clear expired token
             localStorage.removeItem('token');
@@ -113,20 +113,20 @@ const Login = () => {
     const roleRoutes = {
       admin: '/admindashboard',
       superadmin: '/superadmindashboard',
-      seller: '/sellerdashboard',
-      buyer: '/buyerdashboard',
-      farmer: '/farmerdashboard',
+      seller: '/slr.drb',
+      buyer: '/byr.drb',
+      farmer: '/fmr.drb',
       porter: '/porterdashboard',
       broker: '/brokerdashboard',
-      manager: '/managerdashboard',
+      manager: '/man.drb',
     };
 
     const route = roleRoutes[role?.toLowerCase()] || '/';
     setRedirecting(true);
-    
+
     setTimeout(() => {
       navigate(route);
-    }, 1500);
+    }, 5000);
   };
 
   const handleLogin = async (e) => {
@@ -207,7 +207,7 @@ const Login = () => {
 
     } catch (err) {
       console.error('Login error:', err);
-      
+
       let errorMessage = 'Login failed. Please try again.';
 
       if (err.code === 'ECONNABORTED') {
@@ -251,7 +251,7 @@ const Login = () => {
       toast.error('No internet connection. Please check your network.');
       return;
     }
-    
+
     setGoogleLoading(true);
     // Redirect to backend Google OAuth route
     window.location.href = `${API_BASE_URL}/api/userAuth/google`;
@@ -260,19 +260,19 @@ const Login = () => {
   return (
     <Box>
       <AppNavbar />
-      
+
       {/* Network offline banner */}
       {!isOnline && (
-        <Alert 
-          severity="error" 
+        <Alert
+          severity="error"
           icon={<WifiOff />}
-          sx={{ 
-            position: 'fixed', 
-            top: 64, 
-            left: 0, 
-            right: 0, 
+          sx={{
+            position: 'fixed',
+            top: 64,
+            left: 0,
+            right: 0,
             zIndex: 9999,
-            borderRadius: 0 
+            borderRadius: 0
           }}
         >
           No internet connection. Please check your network settings.
@@ -448,7 +448,7 @@ const Login = () => {
                       </Typography>
                     }
                   />
-                  
+
                   <Link
                     href="/forgot-password"
                     sx={{
@@ -624,8 +624,8 @@ const Login = () => {
           </Fade>
         </Container>
       </Box>
-      
-      <ToastContainer 
+
+      <ToastContainer
         position="top-center"
         autoClose={3000}
         hideProgressBar={false}

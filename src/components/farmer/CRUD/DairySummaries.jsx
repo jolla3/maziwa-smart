@@ -19,9 +19,9 @@ import {
   TableBody,
 } from "@mui/material";
 import { BarChart2, List } from "lucide-react";
-import { AuthContext } from "../PrivateComponents/AuthContext";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
 import axios from "axios";
-import { COLORS } from "../farmer/farmhome/utils/constants";
+import { COLORS } from "../farmhome/utils/constants";
 import {
   ResponsiveContainer,
   LineChart,
@@ -54,8 +54,8 @@ const DairySummaries = () => {
         mode === "daily"
           ? `${API_BASE_URL}/daily/${cowId}`
           : mode === "weekly"
-          ? `${API_BASE_URL}/weekly/${cowId}`
-          : `${API_BASE_URL}/monthly/${cowId}`;
+            ? `${API_BASE_URL}/weekly/${cowId}`
+            : `${API_BASE_URL}/monthly/${cowId}`;
 
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
 

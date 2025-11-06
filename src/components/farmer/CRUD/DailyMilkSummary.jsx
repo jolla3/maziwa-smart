@@ -26,17 +26,17 @@ import {
   InputLabel,
 } from '@mui/material';
 import { ResponsiveLine } from "@nivo/line";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  BarChart as BarChartIcon, 
+import {
+  TrendingUp,
+  TrendingDown,
+  BarChart as BarChartIcon,
   Timeline,
   Refresh,
   Analytics,
 } from '@mui/icons-material';
-import { tokens } from '../../theme';
-import { AuthContext } from '../../components/PrivateComponents/AuthContext';
-import Header from '../scenes/Header';
+import { tokens } from '../../../theme';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
+import Header from '../../scenes/Header';
 
 // API endpoints
 const API_BASE = 'https://maziwasmart.onrender.com/api';
@@ -56,7 +56,7 @@ const MilkTrendChart = ({ data, chartType = 'line', height = 400, isDashboard = 
 
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
-    
+
     return [{
       id: title || 'milk-production',
       color: colors.blueAccent[400],
@@ -169,9 +169,9 @@ const useMilkData = (token) => {
       const response = await fetch(API_ENDPOINTS.MILK_SUMMARY, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (!response.ok) throw new Error('Failed to fetch summary');
-      
+
       const data = await response.json();
       setSummaryData(data);
     } catch (err) {
@@ -184,12 +184,12 @@ const useMilkData = (token) => {
       const response = await fetch(API_ENDPOINTS.COWS_LIST, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (!response.ok) throw new Error('Failed to fetch cows');
-      
+
       const data = await response.json();
       setCowsData(data.cows || []);
-      
+
       // Set first cow as selected by default
       if (data.cows && data.cows.length > 0) {
         setSelectedCow(data.cows[0]);
@@ -201,7 +201,7 @@ const useMilkData = (token) => {
 
   const fetchCowTrends = useCallback(async (cowId) => {
     if (!cowId) return;
-    
+
     try {
       const [weeklyResponse, monthlyResponse, summaryResponse] = await Promise.all([
         fetch(`${API_ENDPOINTS.COW_WEEKLY_TREND}/${cowId}/weekly-trend`, {
@@ -285,15 +285,15 @@ const useMilkData = (token) => {
     fetchAllData();
   }, [fetchAllData]);
 
-  return { 
-    summaryData, 
+  return {
+    summaryData,
     cowsData,
     selectedCowTrends,
     selectedCow,
     setSelectedCow,
-    loading, 
-    error, 
-    refetch: fetchAllData 
+    loading,
+    error,
+    refetch: fetchAllData
   };
 };
 
@@ -301,7 +301,7 @@ const useMilkData = (token) => {
 const StatsCard = ({ title, value, trend, icon, color }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  
+
   const trendIcon = trend > 0 ? <TrendingUp /> : trend < 0 ? <TrendingDown /> : null;
   const trendColor = trend > 0 ? colors.greenAccent[400] : colors.redAccent[400];
 
@@ -331,8 +331,8 @@ const StatsCard = ({ title, value, trend, icon, color }) => {
             </Typography>
             {trend !== undefined && trend !== 0 && (
               <Stack direction="row" alignItems="center" mt={1}>
-                {trendIcon && React.cloneElement(trendIcon, { 
-                  sx: { fontSize: 16, color: trendColor } 
+                {trendIcon && React.cloneElement(trendIcon, {
+                  sx: { fontSize: 16, color: trendColor }
                 })}
                 <Typography variant="body2" color={trendColor} ml={0.5}>
                   {Math.abs(trend).toFixed(1)}%
@@ -340,8 +340,8 @@ const StatsCard = ({ title, value, trend, icon, color }) => {
               </Stack>
             )}
           </Box>
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               backgroundColor: `${color}20`,
               borderRadius: 2,
               p: 1,
@@ -443,17 +443,17 @@ const EnhancedMilkSummary = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   const { token, user } = useContext(AuthContext);
-  const { 
-    summaryData, 
+  const {
+    summaryData,
     cowsData,
     selectedCowTrends,
     selectedCow,
     setSelectedCow,
-    loading, 
-    error, 
-    refetch 
+    loading,
+    error,
+    refetch
   } = useMilkData(token);
 
   const [showTrends, setShowTrends] = useState(true);
@@ -463,13 +463,13 @@ const EnhancedMilkSummary = () => {
   // Calculate statistics from summary data
   const stats = useMemo(() => {
     if (!summaryData?.summary) return null;
-    
+
     const allCollections = Object.values(summaryData.summary).flat();
     const totalLitres = allCollections.reduce((sum, item) => sum + (item.litres || 0), 0);
     const collectionsCount = allCollections.length;
-    
+
     const avgDaily = collectionsCount > 0 ? (totalLitres / collectionsCount * 3).toFixed(1) : '0.0'; // Approximate daily average
-    
+
     const bestSlot = Object.entries(summaryData.summary)
       .map(([slot, collections]) => ({
         slot,
@@ -494,8 +494,8 @@ const EnhancedMilkSummary = () => {
   if (error) {
     return (
       <Box m={3}>
-        <Alert 
-          severity="error" 
+        <Alert
+          severity="error"
           action={
             <IconButton size="small" onClick={refetch}>
               <Refresh />
@@ -527,7 +527,7 @@ const EnhancedMilkSummary = () => {
           }
           label="Show Trends"
         />
-        
+
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Period</InputLabel>
           <Select
@@ -637,8 +637,8 @@ const EnhancedMilkSummary = () => {
                   />
                 </Stack>
               </Stack>
-              <MilkTrendChart 
-                data={currentTrendData} 
+              <MilkTrendChart
+                data={currentTrendData}
                 chartType={chartType}
                 height={300}
                 title={`${selectedCow?.cow_name} Production`}

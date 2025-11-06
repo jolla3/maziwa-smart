@@ -19,7 +19,7 @@ import {
   Button,
   TextField
 } from "@mui/material";
-import Header from "../scenes/Header";
+import Header from "./Header";
 import { tokens } from "../../theme";
 
 const Calendar = () => {

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Heart, Share2 } from "lucide-react";
 import { AuthContext } from "../PrivateComponents/AuthContext";
-import ImageGallery from "../market/ImageGallery";
+import ImageGallery from "../market homepage/ImageGallery";
 import StatsBar from "./StatsBar";
 import AnimalDetailsCard from "./AnimalDetailsCard";
 import ActionButtons from "./ActionButtons";

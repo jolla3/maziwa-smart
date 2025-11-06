@@ -14,7 +14,7 @@ import {
   Baby,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AuthContext } from "../PrivateComponents/AuthContext";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
 import { FaCow } from "react-icons/fa6";
 
 const API_BASE =
@@ -28,9 +28,8 @@ const calculateAge = (birthDate) => {
   const years = now.getFullYear() - b.getFullYear();
   const months = now.getMonth() - b.getMonth();
   const adjMonths = months < 0 ? months + 12 : months;
-  return `${years > 0 ? `${years} year${years > 1 ? "s" : ""}` : ""}${
-    years && adjMonths ? ", " : ""
-  }${adjMonths ? `${adjMonths} month${adjMonths > 1 ? "s" : ""}` : ""}`;
+  return `${years > 0 ? `${years} year${years > 1 ? "s" : ""}` : ""}${years && adjMonths ? ", " : ""
+    }${adjMonths ? `${adjMonths} month${adjMonths > 1 ? "s" : ""}` : ""}`;
 };
 
 export default function ViewListing() {
@@ -41,7 +40,7 @@ export default function ViewListing() {
 
   const [listing, setListing] = useState(
     passedListing ||
-      JSON.parse(localStorage.getItem("currentListing") || "null")
+    JSON.parse(localStorage.getItem("currentListing") || "null")
   );
   const [loading, setLoading] = useState(!listing);
   const [error, setError] = useState("");
@@ -150,8 +149,8 @@ export default function ViewListing() {
                   photoArray = Array.isArray(photos)
                     ? photos
                     : typeof photos === "string"
-                    ? JSON.parse(photos)
-                    : [];
+                      ? JSON.parse(photos)
+                      : [];
                 } catch {
                   photoArray = [];
                 }

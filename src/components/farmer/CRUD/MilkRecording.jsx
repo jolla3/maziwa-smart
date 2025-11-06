@@ -17,10 +17,10 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { tokens } from '../../theme';
+import { tokens } from '../../../theme';
 import axios from 'axios';
-import { AuthContext } from '../../components/PrivateComponents/AuthContext';
-import Header from '../scenes/Header';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
+import Header from '../../scenes/Header';
 import AddIcon from '@mui/icons-material/Add';
 import GrassIcon from '@mui/icons-material/Grass';
 
@@ -175,7 +175,7 @@ const MilkRecording = () => {
                     inputProps={{ step: "0.1" }}
                     placeholder="e.g., 15.5"
                   />
-                  
+
                   {/* ❌ Removed the date input field */}
 
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

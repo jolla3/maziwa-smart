@@ -37,7 +37,7 @@ import {
 import { GiCow, GiBull, GiGoat, GiSheep, GiPig } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { AuthContext } from '../PrivateComponents/AuthContext';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
 
 // Clean Aqua Theme - White backgrounds, Black text only
 const aquaTheme = createTheme({
@@ -248,7 +248,7 @@ const AddCalf = () => {
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       if (response.data.success) {
         setSuccess(`${speciesConfig[manualForm.species].newbornTerm} registered successfully!`);
         setTimeout(() => navigate('/farmerdashboard/cows'), 2000);
@@ -601,7 +601,7 @@ const AddCalf = () => {
                                     {preg.animal?.name || 'Unknown'} - {preg.bull?.name || 'Unknown Bull'}
                                   </Typography>
                                   <Typography variant="caption" sx={{ color: '#000000' }}>
-                                    Inseminated: {new Date(preg.insemination_date).toLocaleDateString()} | 
+                                    Inseminated: {new Date(preg.insemination_date).toLocaleDateString()} |
                                     Due: {new Date(preg.expected_due_date).toLocaleDateString()}
                                   </Typography>
                                 </Box>

@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../PrivateComponents/AuthContext';
-import AppNavbar from '../scenes/AppNavbar';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
+import AppNavbar from '../../scenes/AppNavbar';
 import {
     Box,
     TextField,
@@ -329,7 +329,7 @@ const FarmerRegister = () => {
                                 }}
                             />
 
-                              <TextField
+                            <TextField
                                 fullWidth
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
@@ -456,9 +456,9 @@ const FarmerRegister = () => {
                                 }}
                             />
 
-                          
 
-                          
+
+
                             <Button
                                 type="submit"
                                 fullWidth

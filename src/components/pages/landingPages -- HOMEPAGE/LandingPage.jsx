@@ -4,7 +4,7 @@ import { Box, ThemeProvider, CssBaseline } from '@mui/material';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import AppNavbar from '../../scenes/AppNavbar';
-import theme from '../landingPages/theme';
+import theme from './theme';
 
 // Section imports - FIXED
 import HeroSection from '../sections/HeroSection';
@@ -34,13 +34,13 @@ const LandingPage = () => {
       <CssBaseline />
       <Helmet>
         <title>MaziwaSmart - Smart Farm Management & Marketplace for Kenya</title>
-        <meta 
-          name="description" 
-          content="Monitor milk yields, track farm performance, and connect to buyers seamlessly. MaziwaSmart is Kenya's leading digital platform for dairy farmers and livestock traders." 
+        <meta
+          name="description"
+          content="Monitor milk yields, track farm performance, and connect to buyers seamlessly. MaziwaSmart is Kenya's leading digital platform for dairy farmers and livestock traders."
         />
-        <meta 
-          name="keywords" 
-          content="Kenya dairy farming, farm management system, livestock marketplace, milk yield tracking, smart agriculture Kenya, farm data analytics, dairy farm software" 
+        <meta
+          name="keywords"
+          content="Kenya dairy farming, farm management system, livestock marketplace, milk yield tracking, smart agriculture Kenya, farm data analytics, dairy farm software"
         />
         <meta property="og:title" content="MaziwaSmart - Smart Farm Management & Marketplace" />
         <meta property="og:description" content="Track your farm performance, manage livestock, and access Kenya's trusted agricultural marketplace — all from one dashboard." />
@@ -68,8 +68,8 @@ const LandingPage = () => {
       </Box>
 
       {/* Main content */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           pt: '64px',
           backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%2310b981" fill-opacity="0.03"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
         }}

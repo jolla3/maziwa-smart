@@ -14,10 +14,10 @@ import {
   Skeleton
 } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { tokens } from '../../theme';
+import { tokens } from '../../../theme';
 import axios from 'axios';
-import { AuthContext } from '../../components/PrivateComponents/AuthContext';
-import Header from '../scenes/Header';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
+import Header from '../../scenes/Header';
 import SendIcon from '@mui/icons-material/Send';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
@@ -163,10 +163,10 @@ const AnimalRegistration = () => {
       );
 
       setSuccess(`${selectedSpecies.charAt(0).toUpperCase() + selectedSpecies.slice(1)} registered successfully!`);
-      
+
       // Reset form without navigation
       setFormData(getInitialFormData(selectedSpecies));
-      
+
     } catch (err) {
       console.error('Animal registration error:', err.response?.data || err.message);
       setError(err.response?.data?.message || 'Failed to register animal. Please check your data.');
@@ -358,7 +358,7 @@ const AnimalRegistration = () => {
         title="REGISTER NEW ANIMAL"
         subtitle="Select a species and fill out the form to add a new animal"
       />
-      
+
       <Snackbar
         open={!!success || !!error}
         autoHideDuration={6000}
@@ -395,8 +395,8 @@ const AnimalRegistration = () => {
           <Grid item xs={12} sm={6} md={2.4} key={spec.name}>
             <Card
               sx={{
-                background: selectedSpecies === spec.name 
-                  ? colors.greenAccent[600] 
+                background: selectedSpecies === spec.name
+                  ? colors.greenAccent[600]
                   : colors.primary[400],
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
@@ -404,8 +404,8 @@ const AnimalRegistration = () => {
                   transform: 'translateY(-4px)',
                   boxShadow: `0 4px 20px ${colors.greenAccent[700]}40`
                 },
-                border: selectedSpecies === spec.name 
-                  ? `2px solid ${colors.greenAccent[400]}` 
+                border: selectedSpecies === spec.name
+                  ? `2px solid ${colors.greenAccent[400]}`
                   : `1px solid ${colors.primary[300]}`
               }}
               onClick={() => handleSpeciesSelect(spec.name)}

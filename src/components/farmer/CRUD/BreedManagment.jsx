@@ -23,12 +23,12 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 // Assuming the path to your theme/tokens is correct
-import { tokens } from '../../theme';
+import { tokens } from '../../../theme';
 import axios from 'axios';
 // Assuming the path to your AuthContext is correct
-import { AuthContext } from '../../components/PrivateComponents/AuthContext';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
 // Assuming the path to your Header component is correct
-import Header from '../scenes/Header';
+import Header from '../../scenes/Header';
 
 // MUI Icons
 import AddIcon from '@mui/icons-material/Add';
@@ -60,7 +60,7 @@ const BreedManagement = () => {
   });
   const [editBreed, setEditBreed] = useState(null);
   const [deleteBreed, setDeleteBreed] = useState(null);
-  
+
   // State for UI/UX
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -166,7 +166,7 @@ const BreedManagement = () => {
 
   const handleCreateBreed = async (e) => {
     // REQUIREMENT: No full-page reloads -> e.preventDefault()
-    e.preventDefault(); 
+    e.preventDefault();
     if (!token) {
       showSnackbar('Authentication token not found. Please log in.', 'error');
       return;
@@ -198,7 +198,7 @@ const BreedManagement = () => {
       setBreeds(prevBreeds => [newCreatedBreed, ...prevBreeds]);
 
       showSnackbar(response.data.message || 'Breed registered successfully!', 'success');
-      
+
       // Reset form state
       setNewBreed({
         breed_name: '',
@@ -239,7 +239,7 @@ const BreedManagement = () => {
       if (editBreed.country) payload.country = editBreed.country;
     }
     // We get all fields from the edit state to use for the update
-    const updatedBreedData = { ...editBreed, ...payload }; 
+    const updatedBreedData = { ...editBreed, ...payload };
 
     try {
       const response = await axios.put(
@@ -247,9 +247,9 @@ const BreedManagement = () => {
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       // REQUIREMENT: After updating -> replace that one breed in the list.
-      setBreeds(prevBreeds => prevBreeds.map(b => 
+      setBreeds(prevBreeds => prevBreeds.map(b =>
         b._id === editBreed._id ? updatedBreedData : b
       ));
 
@@ -275,7 +275,7 @@ const BreedManagement = () => {
         `https://maziwasmart.onrender.com/api/breed/${deleteBreed._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       // REQUIREMENT: After deleting -> filter it out from the list.
       setBreeds(prevBreeds => prevBreeds.filter(b => b._id !== deleteBreed._id));
 
@@ -411,18 +411,18 @@ const BreedManagement = () => {
         title="BREED MANAGEMENT"
         subtitle="Register and manage breeds for your livestock records"
       />
-      
+
       {/* REQUIREMENT: Error and success messages → Use Snackbar + Alert */}
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={6000} 
-        onClose={handleCloseSnackbar} 
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity} 
-          variant="filled" 
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
           sx={{ width: '100%' }}
           action={
             <IconButton
@@ -440,7 +440,7 @@ const BreedManagement = () => {
       </Snackbar>
 
       <Grid container spacing={4} mt={2}>
-        
+
         {/* Create Breed Form */}
         <Grid item xs={12} md={5}>
           <Fade in timeout={800}>
@@ -492,7 +492,7 @@ const BreedManagement = () => {
                     rows={4}
                     placeholder="Describe the breed characteristics, production traits, etc."
                   />
-                  
+
                   {newBreed.species === 'bull' && (
                     <Box sx={{ mt: 2, p: 2, background: colors.blueAccent[900], borderRadius: '8px' }}>
                       <Typography variant="subtitle2" color={colors.blueAccent[300]} mb={1} fontWeight="600">
@@ -575,19 +575,19 @@ const BreedManagement = () => {
         {/* Breeds List */}
         <Grid item xs={12} md={7}>
           <Fade in timeout={1000}>
-            <Card sx={{ 
-              background: colors.primary[400], 
-              border: `1px solid ${colors.primary[300]}`, 
-              borderRadius: '16px', 
-              p: 2, 
-              maxHeight: '700px', 
-              overflowY: 'auto' 
+            <Card sx={{
+              background: colors.primary[400],
+              border: `1px solid ${colors.primary[300]}`,
+              borderRadius: '16px',
+              p: 2,
+              maxHeight: '700px',
+              overflowY: 'auto'
             }}>
               <CardContent>
                 <Typography variant="h5" fontWeight="600" color={colors.grey[100]} mb={2}>
                   Your Registered Breeds ({breeds.length})
                 </Typography>
-                
+
                 {/* REQUIREMENT: UI/UX skeletons / empty state card */}
                 {loading ? (
                   <Grid container spacing={2}>
@@ -632,10 +632,10 @@ const BreedManagement = () => {
                                 <Typography variant="body2" color={colors.grey[300]} sx={{ mb: 1 }}>
                                   {breed.description}
                                 </Typography>
-                                
+
                                 {/* REQUIREMENT: Bull details must display */}
                                 {breed.species === 'bull' && <BullDetailsSubCard breed={breed} />}
-                                
+
                                 <Typography variant="caption" color={colors.grey[400]} display="block" mt={1}>
                                   Created: {formatDate(breed.created_at || breed.createdAt)}
                                 </Typography>
@@ -727,7 +727,7 @@ const BreedManagement = () => {
                 multiline
                 rows={4}
               />
-              
+
               {/* Bull-Specific Fields for Edit Dialog */}
               {editBreed.species === 'bull' && (
                 <Box sx={{ mt: 2, p: 2, background: colors.blueAccent[900], borderRadius: '8px' }}>

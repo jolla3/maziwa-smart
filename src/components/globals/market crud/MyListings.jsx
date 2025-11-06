@@ -1,6 +1,6 @@
 // src/pages/listings/MyListings.jsx
 import React, { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../PrivateComponents/AuthContext";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Edit, Trash2, Plus, X } from "lucide-react";
 import axios from "axios";
@@ -13,8 +13,8 @@ const CARD_BG = "linear-gradient(135deg,#f0fbff,#e6f7ff)";
 const Toast = ({ id, message, type = "info", onClose }) => {
   const bg =
     type === "success" ? "bg-success text-white" :
-    type === "error" ? "bg-danger text-white" :
-    "bg-info text-white";
+      type === "error" ? "bg-danger text-white" :
+        "bg-info text-white";
 
   return (
     <motion.div
@@ -109,7 +109,7 @@ const MyListings = () => {
 
     const fetchListings = async () => {
       setLoading(true);
-      
+
       // Try to load from memory cache first
       const cached = window[CACHE_KEY];
       if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_MS) {

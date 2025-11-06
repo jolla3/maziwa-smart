@@ -18,10 +18,10 @@ import {
     Tab,
 } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { tokens } from '../../theme';
+import { tokens } from '../../../theme';
 import axios from 'axios';
-import { AuthContext } from '../../components/PrivateComponents/AuthContext';
-import Header from '../scenes/Header';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
+import Header from '../../scenes/Header';
 import {
     AddCircleOutline as AddCircleOutlineIcon,
     CameraAlt as CameraAltIcon,
