@@ -1113,7 +1113,7 @@ const Footer = ({ navigate }) => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {[
                 { label: 'Maziwa Market', path: '/market' },
-                { label: 'Farmer Dashboard', path: '/farmerdashboard' },
+                { label: 'Farmer Dashboard', path: '/fmr.drb' },
                 { label: 'Digital Monitoring', path: '#' },
                 { label: 'Community', path: '#' }
               ].map((item, i) => (

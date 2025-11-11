@@ -3,13 +3,13 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Heart, Share2 } from "lucide-react";
-import { AuthContext } from "../PrivateComponents/AuthContext";
-import ImageGallery from "../market homepage/ImageGallery";
-import StatsBar from "./StatsBar";
-import AnimalDetailsCard from "./AnimalDetailsCard";
-import ActionButtons from "./ActionButtons";
-import ChatModal from "./ChatModal";
-import ContactModal from "./ContactModal";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
+import ImageGallery from "./market view/ImageGallery";
+import StatsBar from "./market view/StatsBar";
+import AnimalDetailsCard from "./market view/AnimalDetailsCard";
+import ActionButtons from "./market view/ActionButtons";
+import ChatModal from "./market view/ChatModal";
+import ContactModal from "./market view/ContactModal";
 
 const API_BASE =
   process.env.REACT_APP_API_BASE || "https://maziwasmart.onrender.com/api";
@@ -109,7 +109,7 @@ const MarketView = () => {
   };
 
   const handleShare = () => {
-    const species = listing?.animal?.species || "livestock";
+    const species = listing?.animal?.species;
     const formattedPrice = new Intl.NumberFormat("en-KE", {
       style: "currency",
       currency: "KES",
@@ -130,8 +130,9 @@ const MarketView = () => {
 
   const handleOpenChat = () => {
     if (!listing?.seller?._id) {
-      navigate('/chatroom');
-      alert("Seller information not available");
+
+      navigate("/chatroom", { state: { receiverId: listing.sellerData, receiver: "" } });
+      alert("Seller information not available")
       return;
     }
     setShowChatModal(true);

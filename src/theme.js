@@ -157,15 +157,15 @@ export const themeSettings = (mode) => {
         ? {
             // 🌙 Dark mode palette
             primary: {
-              main: colors.primary[400],
+              main: colors.greenAccent[400],
             },
             secondary: {
               main: colors.greenAccent[500],
             },
             neutral: {
-              dark: colors.grey[700],
-              main: colors.grey[500],
-              light: colors.grey[100],
+              dark: colors.blueAccent[700],
+              main: colors.blueAccent[500],
+              light: colors.blueAccent[100],
             },
             background: {
               default: "#0A0A0A",   // 🔥 dark background
@@ -190,12 +190,12 @@ export const themeSettings = (mode) => {
               light: colors.grey[100],
             },
             background: {
-              default: "#a4a9fc",   // 🔥 aqua background
-              paper: "#2e2e2e",     // lighter aqua for cards/paper
+              default: "#94e2cd",   // 🔥 aqua background
+              paper: '#fafafa',     // lighter aqua for cards/paper
             },
             text: {
-              primary: colors.grey[100],
-              secondary: colors.grey[400],
+              primary: colors.primary[100],
+              secondary: colors.primary[900],
             },
           }),
     },

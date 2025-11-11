@@ -251,7 +251,7 @@ const AddCalf = () => {
 
       if (response.data.success) {
         setSuccess(`${speciesConfig[manualForm.species].newbornTerm} registered successfully!`);
-        setTimeout(() => navigate('/farmerdashboard/cows'), 2000);
+        setTimeout(() => navigate('/fmr.drb/cows'), 2000);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to register animal');
@@ -278,7 +278,7 @@ const AddCalf = () => {
       );
       if (response.data.success) {
         setSuccess('Calf registered from pregnancy successfully!');
-        setTimeout(() => navigate('/farmerdashboard/cows'), 2000);
+        setTimeout(() => navigate('/fmr.drb/cows'), 2000);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to register calf');
@@ -299,7 +299,7 @@ const AddCalf = () => {
           <Box sx={{ mb: 4 }}>
             <Button
               startIcon={<ArrowLeft size={20} />}
-              onClick={() => navigate('/farmerdashboard/cows')}
+              onClick={() => navigate('/fmr.drb/cows')}
               sx={{ mb: 2, color: '#000000' }}
             >
               Back to Animals
@@ -548,7 +548,7 @@ const AddCalf = () => {
                         <Button
                           variant="outlined"
                           size="large"
-                          onClick={() => navigate('/farmerdashboard/cows')}
+                          onClick={() => navigate('/fmr.drb/cows')}
                           sx={{ px: 4, color: '#000000', borderColor: '#000000' }}
                         >
                           Cancel
@@ -683,7 +683,7 @@ const AddCalf = () => {
                         <Button
                           variant="outlined"
                           size="large"
-                          onClick={() => navigate('/farmerdashboard/cows')}
+                          onClick={() => navigate('/fmr.drb/cows')}
                           sx={{ px: 4, color: '#000000', borderColor: '#000000' }}
                         >
                           Cancel

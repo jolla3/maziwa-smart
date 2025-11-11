@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { AuthContext } from "../../PrivateComponents/AuthContext";
+import { AuthContext } from "../../../PrivateComponents/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Save, ArrowLeft, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";

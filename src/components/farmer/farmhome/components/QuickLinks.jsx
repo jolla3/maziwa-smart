@@ -13,37 +13,37 @@ const QuickLinks = () => {
       title: 'Record Milk',
       icon: <Droplet size={32} />,
       color: COLORS.aqua.main,
-      route: '/farmerdashboard/milkrecording',
+      route: '/fmr.drb/milkrecording',
     },
     {
       title: 'My Animals',
       icon: <Beef size={32} />,
       color: COLORS.green.main,
-      route: '/farmerdashboard/animals',
+      route: '/fmr.drb/animals',
     },
     {
       title: 'Inseminations',
       icon: <Dna size={32} />,
       color: COLORS.purple.main,
-      route: '/farmerdashboard/insemination-record',
+      route: '/fmr.drb/insemination-record',
     },
     {
       title: 'Marketplace',
       icon: <ShoppingCart size={32} />,
       color: COLORS.orange.main,
-      route: '/farmerdashboard/marketplace',
+      route: '/fmr.drb/marketplace',
     },
     {
       title: 'Notifications',
       icon: <Bell size={32} />,
       color: COLORS.red.main,
-      route: '/farmerdashboard/notifications',
+      route: '/fmr.drb/notifications',
     },
     {
       title: 'Reports',
       icon: <BarChart3 size={32} />,
       color: COLORS.blue.main,
-      route: '/farmerdashboard/reports',
+      route: '/fmr.drb/reports',
     },
   ];
 

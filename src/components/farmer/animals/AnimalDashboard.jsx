@@ -150,19 +150,19 @@ const AnimalDashboard = () => {
   }, [deleteAnimal]);
 
   const handleViewDetails = useCallback((animalId) => {
-    navigate('/farmerdashboard/dairysummaries', { state: { cowId: animalId } });
+    navigate('/fmr.drb/dairysummaries', { state: { cowId: animalId } });
   }, [navigate]);
 
   const handleViewInsemination = useCallback(() => {
-    navigate('/farmerdashboard/insemination-record');
+    navigate('/fmr.drb/insemination-record');
   }, [navigate]);
 
   const handleAddMilk = useCallback(() => {
-    navigate('/farmerdashboard/milkrecording');
+    navigate('/fmr.drb/milkrecording');
   }, [navigate]);
 
   const handleAddcalf = useCallback(() => {
-    navigate('/farmerdashboard/calf');
+    navigate('/fmr.drb/calf');
   }, [navigate]);
 
   const handleCloseSnackbar = useCallback(() => {

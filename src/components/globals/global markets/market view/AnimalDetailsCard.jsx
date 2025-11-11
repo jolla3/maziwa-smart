@@ -2,8 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Info, TrendingUp, Award, Milk } from "lucide-react";
 
-const AnimalDetailsCard = ({ animal }) => {
-  if (!animal) {
+const AnimalDetailsCard = ({ animalDetails }) => {
+  if (!animalDetails) {
     return (
       <div className="card border-0 shadow-sm rounded-4 mb-3">
         <div className="card-body p-4 text-center text-muted">
@@ -28,7 +28,7 @@ const AnimalDetailsCard = ({ animal }) => {
     lifetime_milk,
     daily_average,
     pregnancy,
-  } = animal;
+  } = animalDetails;
 
   const expectedDueDate = pregnancy?.expected_due_date;
 
@@ -169,13 +169,13 @@ const AnimalDetailsCard = ({ animal }) => {
         )}
 
         {/* Additional Health Information */}
-        {animal.health_status && (
+        {animalDetails.health_status && (
           <div className="mt-4 p-3 bg-info bg-opacity-10 rounded-3">
             <div className="d-flex align-items-start gap-2">
               <Info size={18} className="text-info mt-1" />
               <div>
                 <small className="text-muted d-block mb-1 fw-semibold">Health Status</small>
-                <span className="text-dark">{animal.health_status}</span>
+                <span className="text-dark">{animalDetails.health_status}</span>
               </div>
             </div>
           </div>

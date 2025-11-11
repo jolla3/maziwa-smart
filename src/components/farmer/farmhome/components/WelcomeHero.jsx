@@ -52,7 +52,7 @@ const WelcomeHero = ({ farmerName }) => {
             <Button
               variant="contained"
               size="large"
-              onClick={() => navigate('/farmerdashboard/milkrecording')}
+              onClick={() => navigate('/fmr.drb/milkrecording')}
               startIcon={<Droplet size={20} />}
               sx={{
                 backgroundColor: COLORS.aqua.main,
@@ -77,7 +77,7 @@ const WelcomeHero = ({ farmerName }) => {
             <Button
               variant="outlined"
               size="large"
-              onClick={() => navigate('/farmerdashboard/animals')}
+              onClick={() => navigate('/fmr.drb/animals')}
               startIcon={<Beef size={20} />}
               sx={{
                 color: COLORS.green.main,

@@ -326,7 +326,7 @@ const getBrowserCountryCode = () => {
     const locale = Intl.DateTimeFormat().resolvedOptions().locale; // e.g. "en-KE"
     const region = locale.split("-")[1]; // → "KE"
     if (!region) return "254"; // fallback Kenya
-    return getCountryCallingCode(region.toUpperCase()) || "254";
+    return getCountryCallingCode(region.toUpperCase()) 
   } catch {
     return "254"; // fallback to Kenya
   }

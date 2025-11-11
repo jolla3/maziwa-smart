@@ -1,6 +1,6 @@
 // src/pages/listings/MyListings.jsx
 import React, { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../../PrivateComponents/AuthContext";
+import { AuthContext } from "../../../PrivateComponents/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Edit, Trash2, Plus, X } from "lucide-react";
 import axios from "axios";

@@ -35,7 +35,7 @@ const sidebarItems = [
   {
     section: "Main",
     items: [
-      { title: "Dashboard", to: "/farmerdashboard", icon: <HomeOutlinedIcon /> },
+      { title: "Dashboard", to: "/fmr.drb", icon: <HomeOutlinedIcon /> },
     ],
   },
   {
@@ -43,22 +43,22 @@ const sidebarItems = [
     items: [
       {
         title: "My milk summary ",
-        to: "/farmerdashboard/daily",
+        to: "/fmr.drb/daily",
         icon: <PeopleOutlinedIcon />,
       },
       {
         title: "Insemination Card  ",
-        to: "/farmerdashboard/insemination-record",
+        to: "/fmr.drb/insemination-record",
         icon: <PersonOutlinedIcon />,
       },
       {
         title: "My farm Breeds",
-        to: "/farmerdashboard/breeds",
+        to: "/fmr.drb/breeds",
         icon: <ContactsOutlinedIcon />,
       },
       {
         title: "My Farm",
-        to: "/farmerdashboard/cows",
+        to: "/fmr.drb/cows",
         icon: <ReceiptOutlinedIcon />,
       },
     ],
@@ -68,16 +68,16 @@ const sidebarItems = [
     items: [
       {
         title: "Milk Recording",
-        to: "/farmerdashboard/milkrecording",
+        to: "/fmr.drb/milkrecording",
         icon: <PersonOutlinedIcon />,
       }
       ,
       {
         title: "Calendar",
-        to: "/farmerdashboard/calendar",
+        to: "/fmr.drb/calendar",
         icon: <CalendarTodayOutlinedIcon />,
       },
-      { title: "FAQ Page", to: "/farmerdashboard/farmerdash", icon: <HelpOutlineOutlinedIcon /> },
+      { title: "FAQ Page", to: "/fmr.drb/farmerdash", icon: <HelpOutlineOutlinedIcon /> },
     ],
   },
   {

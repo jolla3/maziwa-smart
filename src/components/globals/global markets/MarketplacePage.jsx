@@ -18,7 +18,7 @@ import {
     Image as ImageIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../PrivateComponents/AuthContext";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
 
 const API_BASE =
     process.env.REACT_APP_API_BASE || "https://maziwasmart.onrender.com/api";
@@ -550,11 +550,11 @@ export default function MarketPage() {
                                             (Array.isArray(listing.photos) && listing.photos.length > 1) ||
                                             (Array.isArray(listing.images) && listing.images.length > 1)
                                         ) && (
-                                            <div className="image-overlay">
-                                                <ImageIcon size={14} className="me-1" />
-                                                {(listing.photos?.length || listing.images?.length) + " photos"}
-                                            </div>
-                                        )}
+                                                <div className="image-overlay">
+                                                    <ImageIcon size={14} className="me-1" />
+                                                    {(listing.photos?.length || listing.images?.length) + " photos"}
+                                                </div>
+                                            )}
                                     </div>
                                     <div className="card-body p-3">
                                         <h6 className="fw-bold mb-2 text-truncate">{listing.title}</h6>
@@ -630,11 +630,11 @@ export default function MarketPage() {
                                                 (Array.isArray(listing.photos) && listing.photos.length > 1) ||
                                                 (Array.isArray(listing.images) && listing.images.length > 1)
                                             ) && (
-                                                <div className="image-overlay">
-                                                    <ImageIcon size={14} className="me-1" />
-                                                    {(listing.photos?.length || listing.images?.length) + " photos"}
-                                                </div>
-                                            )}
+                                                    <div className="image-overlay">
+                                                        <ImageIcon size={14} className="me-1" />
+                                                        {(listing.photos?.length || listing.images?.length) + " photos"}
+                                                    </div>
+                                                )}
                                         </div>
                                         <motion.button
                                             whileHover={{ scale: 1.1 }}

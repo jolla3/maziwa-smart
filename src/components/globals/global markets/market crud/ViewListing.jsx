@@ -14,7 +14,7 @@ import {
   Baby,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AuthContext } from "../../PrivateComponents/AuthContext";
+import { AuthContext } from "../../../PrivateComponents/AuthContext";
 import { FaCow } from "react-icons/fa6";
 
 const API_BASE =

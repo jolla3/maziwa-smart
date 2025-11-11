@@ -50,12 +50,12 @@ import PrivacyPolicy from "./components/PrivateComponents/PrivacyPolicy";
 import TermsOfService from "./components/PrivateComponents/TermsOfService";
 import ChatRoom from "./components/globals/CHAT/ChatRoom";
 import ChatList from "./components/globals/CHAT/ChatList";
-import MyListings from "./components/globals/market crud/MyListings";
-import CreateListing from "./components/globals/market crud/CreateListing";
-import EditListing from "./components/globals/market crud/EditListing";
-import ViewListing from "./components/globals/market crud/ViewListing";
+import MyListings from "./components/globals/global markets/market crud/MyListings";
+import CreateListing from "./components/globals/global markets/market crud/CreateListing";
+import EditListing from "./components/globals/global markets/market crud/EditListing";
+import ViewListing from "./components/globals/global markets/market crud/ViewListing";
 // import MarketplacePage from "./components/globals/MarketplacePage";
-import MarketPage from "./components/globals/MarketplacePage";
+import MarketPage from "./components/globals/global markets/MarketplacePage";
 // import MarketView from "./components/globals/MarketView";
 import Notifications from "./components/globals/Notification";
 import FarmerRegister from "./components/globals/logins/Registerfarmer";
@@ -63,10 +63,11 @@ import LandingPage from "./components/pages/landingPages -- HOMEPAGE/LandingPage
 import SellerRegister from "./components/globals/logins/SellerRegister";
 import SellerRequest from "./components/Sellers/seller Request approval/SellerRequest";
 import AdminSellerRequests from "./components/SUPERaDMIN/AdminSellerRequests";
-import MarketView from "./components/market homepage/MarketView";
+// import MarketView from "./components/globals/global markets/market view/MarketView";
 import InseminationRecordsList from "./components/farmer/CRUD/InseminationRecordsList";
 import AnimalDashboard from "./components/farmer/animals/AnimalDashboard";
 import FarmerHome from "./components/farmer/farmhome/FarmerHome";
+import MarketView from "./components/globals/global markets/MarketView";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -187,6 +188,8 @@ function App() {
               <Route path="inseminationcard" element={<InseminationCard />} />
               <Route path="insemination-record" element={<InseminationRecordsList />} />
               <Route path="farmerdash" element={<EnhancedFarmDashboard />} />
+              <Route path="/chatroom" element={<ChatRoom />} />
+              <Route path="/recents" element={<ChatList />} />
             </Route>
 
 
@@ -217,6 +220,7 @@ function App() {
               <Route path="inseminationcard" element={<InseminationCard />} />
               <Route path="insemination-record" element={<InseminationRecordsList />} />
               <Route path="farmerdash" element={<EnhancedFarmDashboard />} />
+
             </Route>
 
 
@@ -240,6 +244,8 @@ function App() {
               <Route path="/seller-approval" element={<SellerRequest />} />
               <Route path="/market" element={<MarketPage />} />
               <Route path="/view-market" element={<MarketView />} />
+              <Route path="/chatroom" element={<ChatRoom />} />
+              <Route path="/recents" element={<ChatList />} />
             </Route>
 
             {/* buyer  Routes */}
@@ -259,6 +265,8 @@ function App() {
               <Route path="/seller-approval" element={<SellerRequest />} />
               <Route path="/market" element={<MarketPage />} />
               <Route path="/view-market" element={<MarketView />} />
+              <Route path="/chatroom" element={<ChatRoom />} />
+              <Route path="/recents" element={<ChatList />} />
             </Route>
 
             {/* 404 Page */}

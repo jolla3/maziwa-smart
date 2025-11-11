@@ -46,7 +46,7 @@ const CowFamilyTree = () => {
     
     if (!cowId) {
       console.error("No cow found in navigation state. Redirecting to cow list.");
-      navigate('/farmerdashboard/cows'); 
+      navigate('/fmr.drb/cows'); 
       return;
     }
 

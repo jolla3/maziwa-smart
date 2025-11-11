@@ -14,7 +14,7 @@ import {
   Loader,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AuthContext } from "../../PrivateComponents/AuthContext";
+import { AuthContext } from "../../../PrivateComponents/AuthContext";
 
 const API_BASE = "https://maziwasmart.onrender.com/api";
 

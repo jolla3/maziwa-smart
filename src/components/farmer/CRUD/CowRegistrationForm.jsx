@@ -384,7 +384,7 @@ const AnimalRegistration = () => {
           mb: 3
         }}
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate("/farmerdashboard/animals")}
+        onClick={() => navigate("/fmr.drb/animals")}
       >
         Back
       </Button>

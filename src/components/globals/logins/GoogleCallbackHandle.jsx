@@ -33,12 +33,12 @@ const GoogleCallbackHandler = () => {
       const roleRoutes = {
         admin: '/admindashboard',
         superadmin: '/superadmindashboard',
-        seller: '/sellerdashboard',
-        buyer: '/buyerdashboard',
-        farmer: '/farmerdashboard',
+        seller: '/slr.drb',
+        buyer: '/byr.drb',
+        farmer: '/fmr.drb',
         porter: '/porterdashboard',
         broker: '/brokerdashboard',
-        manager: '/managerdashboard',
+        manager: '/man.drb',
       };
 
       return navigate(roleRoutes[role] || '/dashboard', { replace: true });
