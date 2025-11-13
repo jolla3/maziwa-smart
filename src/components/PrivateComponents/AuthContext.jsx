@@ -1,6 +1,6 @@
 // src/context/AuthContext.js
 import { createContext, useCallback, useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';  // ✅ Fixed
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
@@ -13,7 +13,6 @@ const AuthProvider = ({ children }) => {
     JSON.parse(localStorage.getItem('user') || 'null')
   );
 
-  // Logout function
   const logout = useCallback(() => {
     localStorage.clear();
     setToken('');
@@ -21,18 +20,24 @@ const AuthProvider = ({ children }) => {
     navigate('/login');
   }, [navigate]);
 
-  // Check token expiry on app load
   useEffect(() => {
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const isExpired = decoded.exp * 1000 < Date.now();
-        if (isExpired) {
-          logout();
-        }
-      } catch (error) {
-        logout(); // Invalid token
+    if (!token) return;
+
+    try {
+      const decoded = jwtDecode(token);
+      const isExpired = decoded.exp * 1000 < Date.now();
+
+      if (isExpired) {
+        logout();
+        return;
       }
+
+      setUser(decoded);
+      localStorage.setItem('user', JSON.stringify(decoded));
+
+    } catch (err) {
+      console.warn("Token decode failed during Google redirect, ignoring.");
+      // No logout here
     }
   }, [token, logout]);
 

@@ -1,9 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { AuthContext } from '../../PrivateComponents/AuthContext';
+import { jwtDecode } from 'jwt-decode';
 
 const GoogleCallbackHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setToken, setUser } = useContext(AuthContext);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -12,24 +15,34 @@ const GoogleCallbackHandler = () => {
     const name = params.get('name');
     const error = params.get('error');
 
-    // 1️⃣ Backend error
     if (error) {
       console.error('Google login error:', decodeURIComponent(error));
       return navigate('/login', { replace: true });
     }
 
-    // 2️⃣ First-time Google user → set password
+    // First-time Google user
     if (token && !role) {
       return navigate(`/set-password?token=${token}`, { replace: true });
     }
 
-    // 3️⃣ Existing Google user
+    // Existing user
     if (token && role) {
-      localStorage.setItem('token', token); 
-      localStorage.setItem('role', role);
-      if (name) localStorage.setItem('userName', decodeURIComponent(name));
+      // Update Global Auth Context
+      try {
+        const decoded = jwtDecode(token);
 
-      // Redirect by role
+        setToken(token);
+        setUser(decoded);
+
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(decoded));
+        localStorage.setItem('role', role);
+        if (name) localStorage.setItem('userName', decodeURIComponent(name));
+
+      } catch (err) {
+        console.error("Token decode failed:", err);
+      }
+
       const roleRoutes = {
         admin: '/admindashboard',
         superadmin: '/superadmindashboard',
@@ -44,12 +57,10 @@ const GoogleCallbackHandler = () => {
       return navigate(roleRoutes[role] || '/dashboard', { replace: true });
     }
 
-    // 4️⃣ Catch-all fallback
     navigate('/login', { replace: true });
 
-  }, [location, navigate]);
+  }, [location, navigate, setToken, setUser]);
 
-  // Optionally render a tiny loader while redirecting
   return (
     <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <p>Redirecting...</p>
