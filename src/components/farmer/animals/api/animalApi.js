@@ -35,7 +35,7 @@ const animalApi = {
   },
 
   updateAnimal: async (token, id, formData) => {
-    const response = await axios.put(`${BASE_URL}/${id}`, formData, {
+    const response = await axios.patch(`${BASE_URL}/${id}`, formData, {
       headers: {
         ...getAuthHeaders(token),
         'Content-Type': 'multipart/form-data',

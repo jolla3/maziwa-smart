@@ -77,7 +77,7 @@ const WelcomeHero = ({ farmerName }) => {
             <Button
               variant="outlined"
               size="large"
-              onClick={() => navigate('/fmr.drb/animals')}
+              onClick={() => navigate('/fmr.drb/cows')}
               startIcon={<Beef size={20} />}
               sx={{
                 color: COLORS.green.main,
