@@ -44,7 +44,6 @@ import AddCalfForm from "./components/farmer/CRUD/AddCalfForm";
 import MilkRecording from "./components/farmer/CRUD/MilkRecording";
 import DairySummaries from "./components/farmer/CRUD/DairySummaries";
 import InseminationCard from "./components/farmer/CRUD/InseminationCard";
-import EnhancedFarmDashboard from "./components/farmer/FarmDashboard";
 import GoogleCallbackHandler from "./components/globals/logins/GoogleCallbackHandle";
 import PrivacyPolicy from "./components/PrivateComponents/PrivacyPolicy";
 import TermsOfService from "./components/PrivateComponents/TermsOfService";
@@ -190,7 +189,6 @@ function App() {
               <Route path="dairysummaries" element={<DairySummaries />} />
               <Route path="inseminationcard" element={<InseminationCard />} />
               <Route path="insemination-record" element={<InseminationRecordsList />} />
-              <Route path="farmerdash" element={<EnhancedFarmDashboard />} />
               <Route path="chatroom" element={<ChatRoom />} />
               <Route path="recents" element={<ChatList />} />
             </Route>
@@ -222,7 +220,6 @@ function App() {
               <Route path="dairysummaries" element={<DairySummaries />} />
               <Route path="inseminationcard" element={<InseminationCard />} />
               <Route path="insemination-record" element={<InseminationRecordsList />} />
-              <Route path="farmerdash" element={<EnhancedFarmDashboard />} />
 
             </Route>
 
