@@ -78,7 +78,7 @@ const SellerRegister = () => {
     setAlert({ type: '', message: '' });
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/userAuth/register/seller`, {
+      const response = await axios.post(`${API_BASE_URL}/userAuth/register/seller`, {
         username: formData.username,
         email: formData.email,
         password: formData.password,
@@ -113,7 +113,7 @@ const SellerRegister = () => {
   const handleGoogleSignup = () => {
     setGoogleLoading(true);
     // Redirect to backend Google OAuth route with role=seller parameter
-    window.location.href = `${API_BASE_URL}/api/userAuth/google?role=seller`;
+    window.location.href = `${API_BASE_URL}/userAuth/google?role=seller`;
   };
 
   return (

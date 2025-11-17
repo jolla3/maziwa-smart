@@ -108,7 +108,7 @@ const SetPassword = () => {
         if (formData.phone) payload.phone = formData.phone;
       }
 
-      const res = await axios.post(`${API_BASE_URL}/api/userAuth/set-password`, payload);
+      const res = await axios.post(`${API_BASE_URL}/userAuth/set-password`, payload);
 
       setAlert({
         type: "success",

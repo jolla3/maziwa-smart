@@ -155,7 +155,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/api/userAuth/login`,
+        `${API_BASE_URL}/userAuth/login`,
         formData,
         {
           timeout: 15000, // 15 second timeout
@@ -254,7 +254,7 @@ const Login = () => {
 
     setGoogleLoading(true);
     // Redirect to backend Google OAuth route
-    window.location.href = `${API_BASE_URL}/api/userAuth/google`;
+    window.location.href = `${API_BASE_URL}/userAuth/google`;
   };
 
   return (
