@@ -37,8 +37,7 @@ const Register = () => {
   const navigate = useNavigate();
 
   // API Base URL
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://maziwasmart.onrender.com';
-
+  const API_BASE_URL = process.env.REACT_APP_API_BASE
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };

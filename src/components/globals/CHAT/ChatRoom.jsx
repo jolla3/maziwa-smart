@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 
-const API_BASE = "https://maziwasmart.onrender.com/api";
-const SOCKET_URL = "https://maziwasmart.onrender.com";
+const API_BASE =     process.env.REACT_APP_API_BASE
+const SOCKET_URL =     process.env.API_BASE
 const MESSAGE_CACHE_PREFIX = "chat_messages_";
 
 // NEW CODE:

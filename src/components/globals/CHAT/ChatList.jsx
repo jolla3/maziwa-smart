@@ -13,7 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const API_BASE = "https://maziwasmart.onrender.com/api";
+const API_BASE =     process.env.REACT_APP_API_BASE
 const CACHE_KEY = "chatlist_cache";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 

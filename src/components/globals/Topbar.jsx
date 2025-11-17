@@ -43,7 +43,7 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const API_URL =  'https://maziwasmart.onrender.com/api';
+  const API_URL =      process.env.REACT_APP_API_BASE
 
   // Fetch only unread count and recent 5 notifications for preview
   const fetchNotifications = async () => {

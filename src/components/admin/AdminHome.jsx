@@ -57,6 +57,9 @@ const AdminHome = () => {
   const [error, setError] = useState(null);
   const [animationDelay, setAnimationDelay] = useState(0);
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
@@ -64,7 +67,7 @@ const AdminHome = () => {
       try {
         const token = localStorage.getItem("token");
         const { data } = await axios.get(
-          "https://maziwasmart.onrender.com/api/admin/",
+          `${Base_API}/admin`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setStats({

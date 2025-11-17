@@ -40,6 +40,9 @@ const MilkRecording = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  const Base_API = process.env.REACT_APP_API_BASE
+
+
   const fetchCows = async () => {
     if (!token) {
       setError('Authentication token not found. Please log in.');
@@ -49,7 +52,7 @@ const MilkRecording = () => {
     setFetchCowsLoading(true);
     setError(null);
     try {
-      const response = await axios.get('https://maziwasmart.onrender.com/api/cow', {
+      const response = await axios.get(`${Base_API}/cow`, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           gender: 'female',
@@ -90,7 +93,7 @@ const MilkRecording = () => {
       };
 
       const response = await axios.post(
-        `https://maziwasmart.onrender.com/api/cow/${formData.cowId}`,
+        `${Base_API}/cow/${formData.cowId}`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },

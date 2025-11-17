@@ -49,7 +49,6 @@ const CowFamilyTree = () => {
       navigate('/fmr.drb/cows'); 
       return;
     }
-
     try {
       const response = await axios.get(
         `https://maziwasmart.onrender.com/api/calf/${cowId}`,

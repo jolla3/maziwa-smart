@@ -24,11 +24,14 @@ export default function AdminMilkSummary() {
 
   const [year, monthNum] = month.split("-")
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
    const fetchSummary = async () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `https://maziwasmart.onrender.com/api/summary/monthly?year=${year}&month=${monthNum}`,
+        `${Base_API}/summary/monthly?year=${year}&month=${monthNum}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }

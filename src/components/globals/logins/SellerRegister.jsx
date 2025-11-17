@@ -37,7 +37,7 @@ const SellerRegister = () => {
   const { setToken, setUser } = useContext(AuthContext);
 
   // API Base URL
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://maziwasmart.onrender.com';
+  const API_BASE_URL = process.env.REACT_APP_API_BASE
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -112,8 +112,8 @@ const SellerRegister = () => {
 
   const handleGoogleSignup = () => {
     setGoogleLoading(true);
-    // Redirect to backend Google OAuth route
-    window.location.href = `${API_BASE_URL}/api/userAuth/google`;
+    // Redirect to backend Google OAuth route with role=seller parameter
+    window.location.href = `${API_BASE_URL}/api/userAuth/google?role=seller`;
   };
 
   return (
@@ -471,7 +471,7 @@ const SellerRegister = () => {
                         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                       />
                     </svg>
-                    <span>Sign up with Google</span>
+                    <span>Sign up with Google as Seller</span>
                   </>
                 )}
               </Button>

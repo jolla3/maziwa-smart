@@ -84,6 +84,9 @@ export default function PorterMyRecords() {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   const fetchRecords = useCallback(
     async (isRefresh = false) => {
       // Check for cached data first
@@ -107,7 +110,7 @@ export default function PorterMyRecords() {
       
       try {
         const res = await fetch(
-          "https://maziwasmart.onrender.com/api/milk/myrecords",
+         `${Base_API}/milk/myrecords`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

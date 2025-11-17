@@ -19,8 +19,7 @@ const Notifications = () => {
   const [toastType, setToastType] = useState('success');
   const [highlightId, setHighlightId] = useState(null);
 
-  const API_URL =  'https://maziwasmart.onrender.com/api';
-
+  const API_URL =      process.env.REACT_APP_API_BASE
   const showToastMessage = (message, type = 'success') => {
     setToastMessage(message);
     setToastType(type);

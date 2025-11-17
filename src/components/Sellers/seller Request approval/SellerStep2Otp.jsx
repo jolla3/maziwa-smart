@@ -7,6 +7,8 @@ const SellerStep2Otp = ({ next, prev, formData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resending, setResending] = useState(false);
+   const Base_API = process.env.REACT_APP_API_BASE
+
 
   const handleVerify = async (e) => {
     e.preventDefault();
@@ -14,7 +16,7 @@ const SellerStep2Otp = ({ next, prev, formData }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('https://maziwasmart.onrender.com/api/seller-request/verify-otp', {
+      const response = await fetch(`${Base_API}seller-request/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, otp })

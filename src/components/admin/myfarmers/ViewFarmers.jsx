@@ -27,6 +27,9 @@ const ViewFarmers = () => {
   const [page, setPage] = useState(0); // zero-based for DataGrid
   const [pageSize, setPageSize] = useState(10);
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   const authHeader = {
     headers: { Authorization: `Bearer ${token}` },
   }
@@ -39,7 +42,7 @@ const ViewFarmers = () => {
         console.log('Fetching farmers:', { pageNumber: pageNumber + 1, size, search }); // Debug log
         
         const { data } = await axios.get(
-          `https://maziwasmart.onrender.com/api/farmers?page=${pageNumber + 1}&limit=${size}&search=${encodeURIComponent(search)}`,
+          `${Base_API}/farmers?page=${pageNumber + 1}&limit=${size}&search=${encodeURIComponent(search)}`,
           authHeader
         );
 

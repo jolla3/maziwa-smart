@@ -40,7 +40,7 @@ const FarmerRegister = () => {
     const { setToken, setUser } = useContext(AuthContext);
 
     // API Base URL
-    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://maziwasmart.onrender.com';
+    const API_BASE_URL = process.env.REACT_APP_API_BASE
 
     const handleChange = (e) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -123,6 +123,7 @@ const FarmerRegister = () => {
             setLoading(false);
         }
     };
+
 
     const handleGoogleSignup = () => {
         setGoogleLoading(true);

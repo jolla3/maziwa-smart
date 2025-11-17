@@ -6,6 +6,8 @@ const SellerStep1Country = ({ next }) => {
   const [formData, setFormData] = useState({ email: '', country: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+   const Base_API = process.env.REACT_APP_API_BASE
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -13,7 +15,7 @@ const SellerStep1Country = ({ next }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('https://maziwasmart.onrender.com/api/seller-request/request-approval', {
+      const response = await fetch(`${Base_API}/seller-request/request-approval`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

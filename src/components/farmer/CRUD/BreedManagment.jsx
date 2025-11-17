@@ -41,6 +41,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import CloseIcon from '@mui/icons-material/Close';
 
+
 // --- BREED MANAGEMENT COMPONENT ---
 const BreedManagement = () => {
   const theme = useTheme();
@@ -71,6 +72,10 @@ const BreedManagement = () => {
   });
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
+
+   const Base_API = process.env.REACT_APP_API_BASE
+
 
   // --- Constants and Utility Functions ---
 
@@ -133,7 +138,7 @@ const BreedManagement = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.get('https://maziwasmart.onrender.com/api/breed', {
+      const response = await axios.get(`${Base_API}/breed`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Ensure we use the API's response data structure
@@ -189,7 +194,7 @@ const BreedManagement = () => {
     }
 
     try {
-      const response = await axios.post('https://maziwasmart.onrender.com/api/breed', payload, {
+      const response = await axios.post(`${Base_API}/breed`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -243,7 +248,7 @@ const BreedManagement = () => {
 
     try {
       const response = await axios.put(
-        `https://maziwasmart.onrender.com/api/breed/${editBreed._id}`,
+        `${Base_API}/breed/${editBreed._id}`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -272,7 +277,7 @@ const BreedManagement = () => {
 
     try {
       const response = await axios.delete(
-        `https://maziwasmart.onrender.com/api/breed/${deleteBreed._id}`,
+        `${Base_API}/breed/${deleteBreed._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

@@ -24,6 +24,9 @@ const MonthlyPorterSummary = () => {
   const [error, setError] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   useEffect(() => {
     const fetchSummary = async () => {
       try {
@@ -36,7 +39,7 @@ const MonthlyPorterSummary = () => {
         const monthParam = `${year}-${month}`;
 
         const res = await fetch(
-          `https://maziwasmart.onrender.com/api/summary/monthlyPorterSummary?month=${monthParam}`,
+          `${Base_API}/summary/monthlyPorterSummary?month=${monthParam}`,
           {
             headers: {
               "Content-Type": "application/json",

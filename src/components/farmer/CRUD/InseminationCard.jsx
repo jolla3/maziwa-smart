@@ -55,7 +55,7 @@ const InseminationCard = () => {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-    const API_BASE_URL = 'https://maziwasmart.onrender.com/api/insemination';
+    const API_BASE_URL =     process.env.REACT_APP_API_BASE
     const COW_API_URL = 'https://maziwasmart.onrender.com/api/cow';
 
     // 🐄 Fetch only female cows and heifers for insemination
@@ -70,7 +70,7 @@ const InseminationCard = () => {
 
         setFetchAnimalsLoading(true);
         try {
-            const response = await axios.get(COW_API_URL, {
+            const response = await axios.get(`${API_BASE_URL}/animals`, {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { gender: 'female', stage: ['cow', 'heifer'] }
             });
@@ -130,7 +130,7 @@ const InseminationCard = () => {
                 notes: formData.notes,
             };
 
-            await axios.post(API_BASE_URL, payload, {
+            await axios.post(`${API_BASE_URL}/insemination`, payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setSnackbarMessage('✅ Insemination record added successfully!');
@@ -168,7 +168,7 @@ const InseminationCard = () => {
         formData.append('photo', imageFile);
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/upload-card`, formData, {
+            const response = await axios.post(`${API_BASE_URL}/insemination/upload-card`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${token}`,

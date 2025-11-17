@@ -44,7 +44,7 @@ const DairySummaries = () => {
   const [view, setView] = useState("table"); // table or chart
   const [mode, setMode] = useState("daily"); // daily | weekly | monthly
 
-  const API_BASE_URL = "https://maziwasmart.onrender.com/api/cow";
+  const API_BASE_URL =     process.env.REACT_APP_API_BASE
 
   const fetchSummary = useCallback(async () => {
     if (!cowId) return;
@@ -52,10 +52,10 @@ const DairySummaries = () => {
     try {
       const url =
         mode === "daily"
-          ? `${API_BASE_URL}/daily/${cowId}`
+          ? `${API_BASE_URL}/cows/daily/${cowId}`
           : mode === "weekly"
-            ? `${API_BASE_URL}/weekly/${cowId}`
-            : `${API_BASE_URL}/monthly/${cowId}`;
+            ? `${API_BASE_URL}/cows/weekly/${cowId}`
+            : `${API_BASE_URL}/cows/monthly/${cowId}`;
 
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
 

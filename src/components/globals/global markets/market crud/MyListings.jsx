@@ -7,7 +7,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const API_BASE = "https://maziwasmart.onrender.com/api";
+const API_BASE =     process.env.REACT_APP_API_BASE
 const CARD_BG = "linear-gradient(135deg,#f0fbff,#e6f7ff)";
 
 const Toast = ({ id, message, type = "info", onClose }) => {

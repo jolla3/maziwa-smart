@@ -12,7 +12,7 @@ import {
     ShoppingBag,
     Sparkles,
     Calendar,
-    Tag,
+    
     Award,
     AlertCircle,
     Image as ImageIcon,
@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../PrivateComponents/AuthContext";
 
 const API_BASE =
-    process.env.REACT_APP_API_BASE || "https://maziwasmart.onrender.com/api";
+    process.env.REACT_APP_API_BASE 
 
 export default function MarketPage() {
     const { token } = useContext(AuthContext);
@@ -577,7 +577,7 @@ export default function MarketPage() {
 
             {/* 📋 Main Listings Grid */}
             <div className="mb-3 d-flex justify-content-between align-items-center">
-                <h5 className="fw-bold mb-0">
+                <h5 className="fw-bold mb-0 text-dark" >
                     {filteredListings.length} Available Listing
                     {filteredListings.length !== 1 ? "s" : ""}
                 </h5>

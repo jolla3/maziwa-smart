@@ -39,11 +39,11 @@ import { AuthContext } from '../../PrivateComponents/AuthContext';
 import Header from '../../scenes/Header';
 
 // API endpoints
-const API_BASE = 'https://maziwasmart.onrender.com/api';
+const API_BASE =     process.env.REACT_APP_API_BASE
 
 const API_ENDPOINTS = {
   MILK_SUMMARY: `${API_BASE}/summary/records`,
-  COWS_LIST: `${API_BASE}/cows`,
+  COWS_LIST: `${API_BASE}/animals`,
   COW_WEEKLY_TREND: `${API_BASE}/cows`,
   COW_MONTHLY_SUMMARY: `${API_BASE}/cows`,
   COW_LITRES_SUMMARY: `${API_BASE}/cows`,

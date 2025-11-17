@@ -52,6 +52,9 @@ const PorterHome = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
@@ -65,7 +68,7 @@ const PorterHome = () => {
         }
 
         const { data } = await axios.get(
-          "https://maziwasmart.onrender.com/api/porterstats",
+         `${Base_API}porterstats`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setStats({

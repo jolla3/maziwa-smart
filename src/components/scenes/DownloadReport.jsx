@@ -1,18 +1,22 @@
 // src/components/admin/downloads/DownloadMonthlyReport.jsx
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Box, Button, TextField } from "@mui/material";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import { AuthContext } from "../PrivateComponents/AuthContext";
 
 const DownloadMonthlyReport = () => {
   const [month, setMonth] = useState("");
+   const Base_API = process.env.REACT_APP_API_BASE
+   const { token } = useContext(AuthContext);
+
 
   const handleDownload = async () => {
     try {
       const url = month
-        ? `https://maziwasmart.onrender.com/api/summary/farmerSummary?month=${month}`
-        : "https://maziwasmart.onrender.com/api/summary/farmerSummary";
+        ? `${Base_API}/summary/farmerSummary?month=${month}`
+        : `${Base_API}/summary/farmerSummary`;
 
-      const token = localStorage.getItem("token");
+      // const token = localStorage.getItem("token");
 
       const response = await fetch(url, {
         headers: {

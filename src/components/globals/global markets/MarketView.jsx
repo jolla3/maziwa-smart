@@ -12,7 +12,7 @@ import ChatModal from "./market view/ChatModal";
 import ContactModal from "./market view/ContactModal";
 
 const API_BASE =
-  process.env.REACT_APP_API_BASE || "https://maziwasmart.onrender.com/api";
+  process.env.REACT_APP_API_BASE 
 
 const MarketView = () => {
   const location = useLocation();

@@ -50,6 +50,9 @@ const Records = () => {
   const [searchText, setSearchText] = useState("");
   const [openPorters, setOpenPorters] = useState({});
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   // ✅ FIXED: Move all useMemo hooks before any conditional returns
   const filteredRecords = useMemo(() => {
     if (!selectedPorter && !searchText) return records;
@@ -123,7 +126,7 @@ const Records = () => {
       
       // ✅ FIXED: Proper token usage with error handling
       const res = await axios.get(
-        `https://maziwasmart.onrender.com/api/recordstats?date=${formattedDate}`,
+        `${Base_API}/recordstats?date=${formattedDate}`,
         { 
           headers: { 
             Authorization: `Bearer ${token}`,

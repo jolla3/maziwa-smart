@@ -14,27 +14,33 @@ import {
   IconButton,
   useTheme,
 } from "@mui/material";
-import { Lock, Eye, EyeOff } from "lucide-react";
+import { Lock, Eye, EyeOff, User, Phone, MapPin, Hash } from "lucide-react";
 
 const SetPassword = () => {
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const [formData, setFormData] = useState({
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    location: "",
+    farmer_code: ""
+  });
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState({ type: "", message: "" });
   const [token, setToken] = useState("");
+  const [userRole, setUserRole] = useState("");
+  const [userName, setUserName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
   const API_BASE_URL =
-    process.env.REACT_APP_API_URL || "https://maziwasmart.onrender.com";
+    process.env.REACT_APP_API_BASE
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const t = params.get("token");
 
-    // If token missing → redirect to login automatically
     if (!t) {
       setAlert({
         type: "error",
@@ -43,33 +49,70 @@ const SetPassword = () => {
       setTimeout(() => navigate("/login", { replace: true }), 2500);
     } else {
       setToken(t);
+      // Decode token to get role (basic decode, not verification)
+      try {
+        const payload = JSON.parse(atob(t.split('.')[1]));
+        setUserRole(payload.role || "");
+        setUserName(payload.name || "");
+      } catch (e) {
+        console.error("Could not decode token", e);
+      }
     }
   }, [location, navigate]);
 
+  const handleChange = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirm) {
+    
+    // Password validation
+    if (formData.password !== formData.confirmPassword) {
       return setAlert({ type: "error", message: "Passwords do not match." });
     }
-    if (password.length < 6) {
+    if (formData.password.length < 6) {
       return setAlert({
         type: "error",
         message: "Password must be at least 6 characters long.",
       });
     }
 
+    // Role-specific validation
+    if (userRole === "farmer") {
+      if (!formData.phone) {
+        return setAlert({ type: "error", message: "Phone number is required for farmers." });
+      }
+      if (!formData.farmer_code) {
+        return setAlert({ type: "error", message: "Farmer code is required." });
+      }
+    }
+
     try {
       setLoading(true);
       setAlert({ type: "", message: "" });
 
-      const res = await axios.post(`${API_BASE_URL}/api/userAuth/set-password`, {
+      // Prepare payload based on role
+      const payload = {
         token,
-        password,
-      });
+        password: formData.password,
+      };
+
+      // Add role-specific fields
+      if (userRole === "farmer") {
+        payload.phone = formData.phone;
+        payload.farmer_code = formData.farmer_code;
+        if (formData.location) payload.location = formData.location;
+      } else {
+        // For User collection (buyer, seller, etc.)
+        if (formData.phone) payload.phone = formData.phone;
+      }
+
+      const res = await axios.post(`${API_BASE_URL}/api/userAuth/set-password`, payload);
 
       setAlert({
         type: "success",
-        message: res.data.message || "Password set successfully!",
+        message: res.data.message || "Registration completed successfully!",
       });
 
       // Redirect to login after success
@@ -77,7 +120,7 @@ const SetPassword = () => {
     } catch (err) {
       const msg =
         err.response?.data?.message ||
-        "Failed to set password. Please try again.";
+        "Failed to complete registration. Please try again.";
       setAlert({ type: "error", message: msg });
     } finally {
       setLoading(false);
@@ -113,19 +156,23 @@ const SetPassword = () => {
             align="center"
             sx={{ fontWeight: 600, mb: 2 }}
           >
-            Set Your Password
+            Complete Your Registration
           </Typography>
           <Typography
             variant="body2"
             align="center"
             sx={{ mb: 3, color: "text.secondary" }}
           >
-            You signed up using Google. Please set a password to complete
-            registration.
+            {userName && `Welcome ${userName}! `}
+            Please set your password and provide additional details to complete registration.
           </Typography>
 
           {alert.message && (
-            <Alert severity={alert.type} sx={{ mb: 3 }}>
+            <Alert 
+              severity={alert.type} 
+              sx={{ mb: 3 }}
+              onClose={() => setAlert({ type: "", message: "" })}
+            >
               {alert.message}
             </Alert>
           )}
@@ -135,16 +182,17 @@ const SetPassword = () => {
               <TextField
                 fullWidth
                 label="New Password"
+                name="password"
                 type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleChange}
                 required
                 margin="normal"
                 variant="outlined"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Lock size={20} />
+                      <Lock size={20} color={theme.palette.text.secondary} />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -158,18 +206,118 @@ const SetPassword = () => {
                     </InputAdornment>
                   ),
                 }}
+                sx={{ mb: 2 }}
               />
 
               <TextField
                 fullWidth
                 label="Confirm Password"
+                name="confirmPassword"
                 type={showPassword ? "text" : "password"}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
+                value={formData.confirmPassword}
+                onChange={handleChange}
                 required
                 margin="normal"
                 variant="outlined"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock size={20} color={theme.palette.text.secondary} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
               />
+
+              {/* Farmer-specific fields */}
+              {userRole === "farmer" && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Phone Number"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    margin="normal"
+                    variant="outlined"
+                    placeholder="Enter your phone number"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Phone size={20} color={theme.palette.text.secondary} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ mb: 2 }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Farmer Code"
+                    name="farmer_code"
+                    type="number"
+                    value={formData.farmer_code}
+                    onChange={handleChange}
+                    required
+                    margin="normal"
+                    variant="outlined"
+                    placeholder="Enter your farmer code"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Hash size={20} color={theme.palette.text.secondary} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ mb: 2 }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Location (Optional)"
+                    name="location"
+                    type="text"
+                    value={formData.location}
+                    onChange={handleChange}
+                    margin="normal"
+                    variant="outlined"
+                    placeholder="Enter your location"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <MapPin size={20} color={theme.palette.text.secondary} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ mb: 2 }}
+                  />
+                </>
+              )}
+
+              {/* Optional phone for non-farmers */}
+              {userRole !== "farmer" && (
+                <TextField
+                  fullWidth
+                  label="Phone Number (Optional)"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  margin="normal"
+                  variant="outlined"
+                  placeholder="Enter your phone number"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone size={20} color={theme.palette.text.secondary} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mb: 2 }}
+                />
+              )}
 
               <Button
                 type="submit"
@@ -180,17 +328,24 @@ const SetPassword = () => {
                   mt: 3,
                   py: 1.5,
                   fontWeight: 600,
-                  bgcolor: theme.palette.primary.main,
+                  bgcolor: userRole === "farmer" ? "success.main" : theme.palette.primary.main,
                   "&:hover": {
-                    bgcolor: theme.palette.primary.dark,
+                    bgcolor: userRole === "farmer" ? "success.dark" : theme.palette.primary.dark,
                     transform: "translateY(-2px)",
                   },
+                  "&:disabled": {
+                    bgcolor: theme.palette.action.disabled,
+                  },
+                  transition: "all 0.3s ease",
                 }}
               >
                 {loading ? (
-                  <CircularProgress size={24} color="inherit" />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CircularProgress size={24} color="inherit" />
+                    <span>Completing Registration...</span>
+                  </Box>
                 ) : (
-                  "Set Password"
+                  "Complete Registration"
                 )}
               </Button>
             </Box>

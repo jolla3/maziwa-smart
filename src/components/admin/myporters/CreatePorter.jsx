@@ -22,6 +22,9 @@ const CreatePorter = () => {
   const colors = tokens(theme.palette.mode);
   const navigate = useNavigate();
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   const initialValues = {
     name: "",
     phone: "",
@@ -65,7 +68,7 @@ const CreatePorter = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "https://maziwasmart.onrender.com/api/porters",
+        `${Base_API}/porters`,
         values,
         { headers: { Authorization: `Bearer ${token}` } }
       );

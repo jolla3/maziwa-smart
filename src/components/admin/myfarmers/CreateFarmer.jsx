@@ -31,6 +31,9 @@ const CreateFarmer = () => {
     location_description: "",
   };
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   const phoneRegExp =
     /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
 
@@ -79,7 +82,7 @@ const CreateFarmer = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "https://maziwasmart.onrender.com/api/farmers",
+        `${Base_API}/farmers`,
         submitValues,
         { headers: { Authorization: `Bearer ${token}` } }
       );

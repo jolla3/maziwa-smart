@@ -39,6 +39,9 @@ const AnimalRegistration = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   const species = [
     { name: 'cow', label: 'Cow', icon: <AgricultureIcon sx={{ fontSize: 40 }} /> },
     { name: 'goat', label: 'Goat', icon: <PetsIcon sx={{ fontSize: 40 }} /> },
@@ -51,7 +54,7 @@ const AnimalRegistration = () => {
     const fetchBreeds = async () => {
       setBreedsLoading(true);
       try {
-        const response = await axios.get('https://maziwasmart.onrender.com/api/breed', {
+        const response = await axios.get(`${Base_API}/breed`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setBreeds(response.data.breeds || []);
@@ -152,7 +155,7 @@ const AnimalRegistration = () => {
       }
 
       const response = await axios.post(
-        'https://maziwasmart.onrender.com/api/animals',
+        `${Base_API}/animals`,
         payload,
         {
           headers: {

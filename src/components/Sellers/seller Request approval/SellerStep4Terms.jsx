@@ -7,6 +7,8 @@ const SellerStep4Terms = ({ prev, formData }) => {
   const [scrolledToBottom, setScrolledToBottom] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+   const Base_API = process.env.REACT_APP_API_BASE
+
 
   const handleScroll = (e) => {
     const bottom = e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 10;
@@ -18,7 +20,7 @@ const SellerStep4Terms = ({ prev, formData }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('https://maziwasmart.onrender.com/api/seller-request/complete-setup', {
+      const response = await fetch(`${Base_API}/seller-request/complete-setup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

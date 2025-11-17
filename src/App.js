@@ -2,14 +2,13 @@
 import { Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-import "./admin.css";
 import "./theme";
 
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 import { AuthProvider } from "./components/PrivateComponents/AuthContext";
 import Topbar from "./components/globals/Topbar";
-import Homepage from "./components/globals/Homepage";
+// import Homepage from "./components/globals/Homepage";
 import Login from "./components/globals/logins/Login";
 import AdminRegister from "./components/globals/logins/RegisterAdmin";
 import PrivateRoute from "./components/PrivateComponents/PrivateRoute";
@@ -38,7 +37,7 @@ import DailyMilkSummary from "./components/farmer/CRUD/DailyMilkSummary";
 import BreedManagement from "./components/farmer/CRUD/BreedManagment";
 // import CowManagement from "./components/farmer/CowManagement";
 // import AddCalf from "./components/farmer/AddCalf";
-import CowFamilyTree from "./components/farmer/CowFamilyTree";
+// import CowFamilyTree from "./components/farmer/CowFamilyTree";
 import CowRegistrationForm from "./components/farmer/CRUD/CowRegistrationForm";
 import AddCalfForm from "./components/farmer/CRUD/AddCalfForm";
 import MilkRecording from "./components/farmer/CRUD/MilkRecording";
@@ -182,7 +181,7 @@ function App() {
               <Route path="cows" element={<AnimalDashboard />} />
               <Route path="calf" element={<AddCalfForm />} />
 
-              <Route path="familytree" element={<CowFamilyTree />} />
+             
               <Route path="register-cow" element={<CowRegistrationForm />} />
               <Route path="register-calf" element={<AddCalfForm />} />
               <Route path="milkrecording" element={<MilkRecording />} />
@@ -212,8 +211,6 @@ function App() {
               <Route path="breeds" element={<BreedManagement />} />
               <Route path="cows" element={<AnimalDashboard />} />
               <Route path="calf" element={<AddCalfForm />} />
-
-              <Route path="familytree" element={<CowFamilyTree />} />
               <Route path="register-cow" element={<CowRegistrationForm />} />
               <Route path="register-calf" element={<AddCalfForm />} />
               <Route path="milkrecording" element={<MilkRecording />} />

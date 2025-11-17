@@ -1,6 +1,6 @@
 // farmhome/utils/constants.js
 
-export const API_BASE_URL = 'https://maziwasmart.onrender.com/api';
+export const API_BASE_URL =     process.env.REACT_APP_API_BASE
 export const REFRESH_INTERVAL = 300000; // 5 minutes
 export const CACHE_KEY = 'farmerDashboardData';
 

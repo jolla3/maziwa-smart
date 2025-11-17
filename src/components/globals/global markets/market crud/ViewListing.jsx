@@ -18,7 +18,7 @@ import { AuthContext } from "../../../PrivateComponents/AuthContext";
 import { FaCow } from "react-icons/fa6";
 
 const API_BASE =
-  process.env.REACT_APP_API_BASE || "https://maziwasmart.onrender.com/api";
+  process.env.REACT_APP_API_BASE 
 
 // 🧮 Helper: calculate age from birth_date
 const calculateAge = (birthDate) => {

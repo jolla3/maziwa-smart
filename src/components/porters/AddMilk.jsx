@@ -30,6 +30,9 @@ const AddMilk = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false)
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   // Get current time slot for display
   const getCurrentTimeSlot = () => {
     const hour = new Date().getHours();
@@ -60,7 +63,7 @@ const AddMilk = () => {
 
     try {
       const res = await axios.post(
-        "https://maziwasmart.onrender.com/api/milk/add",
+        `${Base_API}/api/milk/add`,
         {
           farmer_code: farmerCode.trim(),
           litres: parseFloat(litres),

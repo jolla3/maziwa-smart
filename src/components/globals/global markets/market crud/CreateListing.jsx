@@ -6,7 +6,7 @@ import { Save, ArrowLeft, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const API_BASE = "https://maziwasmart.onrender.com/api";
+const API_BASE = process.env.REACT_APP_API_BASE
 // ✅ Image URL fixer (Cloudinary already returns full URLs)
 const getImageUrl = (url) => {
   if (!url) return "https://placehold.co/600x400?text=No+Image";
@@ -592,10 +592,10 @@ const CreateListing = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={`position-fixed top-0 end-0 mt-4 me-4 px-4 py-3 rounded text-white shadow ${toast.type === "success"
-                ? "bg-success"
-                : toast.type === "error"
-                  ? "bg-danger"
-                  : "bg-info"
+              ? "bg-success"
+              : toast.type === "error"
+                ? "bg-danger"
+                : "bg-info"
               }`}
             style={{ zIndex: 9999 }}
           >

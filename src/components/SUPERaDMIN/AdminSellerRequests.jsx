@@ -22,6 +22,9 @@ const AdminSellerRequests = () => {
   const [error, setError] = useState('');
   const [processingId, setProcessingId] = useState(null);
   const [filter, setFilter] = useState('pending');
+  
+   const Base_API = process.env.REACT_APP_API_BASE
+
 
   // Check if user is authorized
   useEffect(() => {
@@ -41,12 +44,12 @@ const AdminSellerRequests = () => {
 
     setLoading(true);
     setError('');
-
+   
     try {
       // Build URL with status query parameter
       const url = status === 'all'
-        ? 'https://maziwasmart.onrender.com/api/approval/seller-requests'
-        : `https://maziwasmart.onrender.com/api/approval/seller-requests?status=${status}`;
+        ? `${Base_API}/approval/seller-requests`
+        : `${Base_API}/approval/seller-requests?status=${status}`;
 
       console.log('🔍 Fetching:', url);
 
@@ -89,7 +92,7 @@ const AdminSellerRequests = () => {
     setProcessingId(requestId);
 
     try {
-      const response = await fetch(`https://maziwasmart.onrender.com/api/approval/seller-requests/${requestId}`, {
+      const response = await fetch(`${Base_API}/approval/seller-requests/${requestId}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

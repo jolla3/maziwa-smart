@@ -47,7 +47,7 @@ import DownloadMonthlyReport from "../scenes/DownloadReport";
 import { AuthContext } from "../../components/PrivateComponents/AuthContext";
 
 // Constants
-const API_BASE_URL = "https://maziwasmart.onrender.com/api";
+const API_BASE_URL = process.env.REACT_APP_API_BASE
 const SLOT_COLORS = ["#4ade80", "#3b82f6", "#ef4444", "#f59e0b"];
 const CHART_HEIGHT = 400;
 const REFRESH_INTERVAL = 300000; // 5 minutes

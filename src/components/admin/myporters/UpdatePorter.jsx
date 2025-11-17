@@ -18,6 +18,9 @@ const UpdatePorterForm = ({ porterData, onCancel, onUpdateSuccess }) => {
     assigned_route: "",
   });
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   useEffect(() => {
     if (porterData) {
       setFormData({
@@ -47,7 +50,7 @@ const UpdatePorterForm = ({ porterData, onCancel, onUpdateSuccess }) => {
       toast.info("Updating porter...");
 
       const response = await axios.put(
-        `https://maziwasmart.onrender.com/api/porters/${porterData._id}`,
+        `${Base_API}/porters/${porterData._id}`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },

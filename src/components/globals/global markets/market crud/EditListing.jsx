@@ -16,8 +16,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../../PrivateComponents/AuthContext";
 
-const API_BASE = "https://maziwasmart.onrender.com/api";
-
+const API_BASE = process.env.REACT_APP_API_BASE
 export default function EditListing() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -611,10 +610,10 @@ export default function EditListing() {
         {toast.show && (
           <motion.div
             className={`position-fixed bottom-0 end-0 m-3 p-3 rounded shadow-lg ${toast.type === "success"
-                ? "bg-success"
-                : toast.type === "warning"
-                  ? "bg-warning"
-                  : "bg-danger"
+              ? "bg-success"
+              : toast.type === "warning"
+                ? "bg-warning"
+                : "bg-danger"
               } text-white`}
             initial={{ opacity: 0, y: 50, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

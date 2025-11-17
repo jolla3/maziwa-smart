@@ -128,6 +128,9 @@ const AddCalf = () => {
   const [filteredMothers, setFilteredMothers] = useState([]);
   const [selectedSpecies, setSelectedSpecies] = useState('cow');
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   const speciesConfig = {
     cow: {
       icon: GiCow,
@@ -173,7 +176,7 @@ const AddCalf = () => {
 
   const fetchAnimals = async () => {
     try {
-      const response = await axios.get('https://maziwasmart.onrender.com/api/animals', {
+      const response = await axios.get(`${Base_API}/animals`, {
         params: { gender: 'female', limit: 1000, page: 1 },
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -191,7 +194,7 @@ const AddCalf = () => {
 
   const fetchPregnancies = async () => {
     try {
-      const response = await axios.get('https://maziwasmart.onrender.com/api/insemination', {
+      const response = await axios.get(`${Base_API}/insemination`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
@@ -205,7 +208,7 @@ const AddCalf = () => {
 
   const fetchBreeds = async () => {
     try {
-      const response = await axios.get('https://maziwasmart.onrender.com/api/breed', {
+      const response = await axios.get(`${Base_API}/breed`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.breeds) {
@@ -244,7 +247,7 @@ const AddCalf = () => {
       };
 
       const response = await axios.post(
-        'https://maziwasmart.onrender.com/api/calf',
+        `${Base_API}/calf`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -272,7 +275,7 @@ const AddCalf = () => {
 
     try {
       const response = await axios.post(
-        'https://maziwasmart.onrender.com/api/calf/fromPregnancy',
+        `${Base_API}/calf/fromPregnancy`,
         pregnancyForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );

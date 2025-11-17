@@ -18,6 +18,7 @@ import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Users, Pencil, Trash2, RefreshCcw, Search } from "lucide-react";
 
+
 const ViewPorters = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -33,6 +34,9 @@ const ViewPorters = () => {
   const [page, setPage] = useState(0); // zero-based page index for DataGrid
   const [pageSize, setPageSize] = useState(10);
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   const authHeader = {
     headers: { Authorization: `Bearer ${token}` },
   };
@@ -43,7 +47,7 @@ const ViewPorters = () => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          `https://maziwasmart.onrender.com/api/porters?page=${pageNumber + 1}&limit=${size}&search=${encodeURIComponent(search)}`,
+          `${Base_API}/porters?page=${pageNumber + 1}&limit=${size}&search=${encodeURIComponent(search)}`,
           authHeader
         );
 
@@ -95,7 +99,7 @@ const ViewPorters = () => {
               toast.dismiss(confirmToastId);
               try {
                 await axios.delete(
-                  `https://maziwasmart.onrender.com/api/porters/${porterId}`,
+                  `${Base_API}/porters/${porterId}`,
                   authHeader
                 );
                 fetchPorters(page, pageSize, searchTerm); // refresh current page

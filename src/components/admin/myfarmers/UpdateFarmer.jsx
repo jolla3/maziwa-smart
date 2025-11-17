@@ -18,6 +18,9 @@ const UpdateFarmer = ({ farmerData, onCancel, onUpdateSuccess }) => {
     location: "",
   });
 
+   const Base_API = process.env.REACT_APP_API_BASE
+
+
   useEffect(() => {
     if (farmerData) {
       setFormData({
@@ -47,7 +50,7 @@ const UpdateFarmer = ({ farmerData, onCancel, onUpdateSuccess }) => {
       toast.info("Updating farmer...");
 
       const response = await axios.put(
-        `https://maziwasmart.onrender.com/api/farmers/${farmerData._id}`,
+        `${Base_API}/farmers/${farmerData._id}`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
