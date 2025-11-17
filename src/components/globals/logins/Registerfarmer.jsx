@@ -94,7 +94,7 @@ const FarmerRegister = () => {
             if (formData.photo) payload.photo = formData.photo;
             if (formData.farmer_code) payload.farmer_code = formData.farmer_code;
 
-            const response = await axios.post(`${API_BASE_URL}/api/userAuth/register/farmer`, payload);
+            const response = await axios.post(`${API_BASE_URL}userAuth/register/farmer`, payload);
 
             setAlert({
                 type: 'success',
@@ -128,7 +128,7 @@ const FarmerRegister = () => {
     const handleGoogleSignup = () => {
         setGoogleLoading(true);
         // Redirect to backend Google OAuth route with role=farmer parameter
-        window.location.href = `${API_BASE_URL}/api/userAuth/google?role=farmer`;
+        window.location.href = `${API_BASE_URL}/userAuth/google?role=farmer`;
     };
 
     return (
