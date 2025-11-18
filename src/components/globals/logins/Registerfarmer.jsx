@@ -94,7 +94,7 @@ const FarmerRegister = () => {
             if (formData.photo) payload.photo = formData.photo;
             if (formData.farmer_code) payload.farmer_code = formData.farmer_code;
 
-            const response = await axios.post(`${API_BASE_URL}userAuth/register/farmer`, payload);
+            const response = await axios.post(`${API_BASE_URL}/userAuth/register/farmer`, payload);
 
             setAlert({
                 type: 'success',
@@ -577,7 +577,7 @@ const FarmerRegister = () => {
                                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                     Want to register as a seller?{' '}
                                     <Link
-                                        href="/register/seller"
+                                        href="/register_seller"
                                         sx={{
                                             color: theme.palette.primary.main,
                                             textDecoration: 'none',

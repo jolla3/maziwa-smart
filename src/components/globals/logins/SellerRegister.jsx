@@ -499,7 +499,7 @@ const SellerRegister = () => {
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                   Want to register as a farmer?{' '}
                   <Link
-                    href="/register/farmer"
+                    href="/register_farmer"
                     sx={{
                       color: theme.palette.primary.main,
                       textDecoration: 'none',
