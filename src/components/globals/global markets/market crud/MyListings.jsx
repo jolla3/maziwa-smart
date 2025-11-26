@@ -235,7 +235,7 @@ const MyListings = () => {
               background: "linear-gradient(90deg,#00d4ff,#00bcd4)",
               boxShadow: "0 8px 24px rgba(0,188,212,0.16)",
             }}
-            onClick={() => navigate("/create")}
+            onClick={() => navigate("/fmr.drb/create")}
             aria-label="Create new listing"
           >
             <Plus size={18} className="me-2" />
@@ -268,7 +268,7 @@ const MyListings = () => {
                 whileTap={{ scale: 0.97 }}
                 className="btn btn-primary"
                 style={{ background: "#00bcd4", borderColor: "#00bcd4" }}
-                onClick={() => navigate("/create")}
+                onClick={() => navigate("/fmr.drb/create")}
               >
                 Create listing
               </motion.button>
@@ -330,7 +330,7 @@ const MyListings = () => {
                         background: "rgba(255,255,255,0.9)",
                         boxShadow: "0 4px 10px rgba(0,0,0,0.04)"
                       }}
-                      onClick={() => navigate("/view", { state: { listing: item } })}
+                      onClick={() => navigate("/fmr.drb/view", { state: { listing: item } })}
                       aria-label={`View ${item.title}`}
                       title="View"
                     >
@@ -344,7 +344,7 @@ const MyListings = () => {
                         background: "rgba(255,255,255,0.9)",
                         boxShadow: "0 4px 10px rgba(0,0,0,0.04)"
                       }}
-                      onClick={() => navigate("/edit", { state: { listing: item } })}
+                      onClick={() => navigate("/fmr.drb/edit", { state: { listing: item } })}
                       aria-label={`Edit ${item.title}`}
                       title="Edit"
                     >

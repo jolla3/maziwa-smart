@@ -60,7 +60,7 @@ export default function EditListing() {
       prefill(listingData);
     } else {
       showToast("error", "No listing data provided");
-      setTimeout(() => navigate("/my-listings"), 2000);
+      setTimeout(() => navigate("/fmr.drb/my-listings"), 2000);
     }
   }, []);
 
@@ -274,7 +274,7 @@ export default function EditListing() {
         setPreviews([]);
 
         setTimeout(() => {
-          navigate("/my-listings");
+          navigate("/fmr.drb/my-listings");
         }, 1500);
       } else {
         showToast("error", res.data.message || "Failed to update listing");
@@ -325,7 +325,7 @@ export default function EditListing() {
           <div className="d-flex align-items-center mb-4">
             <button
               className="btn btn-outline-secondary me-3"
-              onClick={() => navigate("/my-listings")}
+              onClick={() => navigate("/fmr.drb/my-listings")}
             >
               <ArrowLeft size={18} /> Back
             </button>
@@ -578,7 +578,7 @@ export default function EditListing() {
               <div className="d-flex gap-2 mt-3">
                 <button
                   className="btn btn-outline-secondary w-50"
-                  onClick={() => navigate("/my-listings")}
+                  onClick={() => navigate("/fmr.drb/my-listings")}
                   disabled={saving}
                 >
                   <ArrowLeft size={16} className="me-1" /> Cancel

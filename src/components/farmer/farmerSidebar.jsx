@@ -77,7 +77,7 @@ const sidebarItems = [
         to: "/fmr.drb/calendar",
         icon: <CalendarTodayOutlinedIcon />,
       },
-      { title: "FAQ Page", to: "/fmr.drb/farmerdash", icon: <HelpOutlineOutlinedIcon /> },
+      { title: "My Seller Dash", to: "/fmr.drb/my-listings", icon: <HelpOutlineOutlinedIcon /> },
     ],
   },
   {

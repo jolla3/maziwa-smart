@@ -67,6 +67,9 @@ import AnimalDashboard from "./components/farmer/animals/AnimalDashboard";
 import FarmerHome from "./components/farmer/farmhome/FarmerHome";
 import MarketView from "./components/globals/global markets/MarketView";
 import SetPassword from "./components/globals/logins/SetPassword";
+// import DashboardHome from "./components/SUPERaDMIN/DashboardHome";
+import { SuperAdminLayout } from "./components/SUPERaDMIN/layouts/SuperAdminLayout";
+import SuperAdminRoutes from "./components/SUPERaDMIN/superadmin-routes";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -96,7 +99,7 @@ function App() {
             <Route path="register_farmer" element={<FarmerRegister />} />
             <Route path="register_seller" element={<SellerRegister />} />
             <Route path="/set-password" element={<SetPassword />} />
-
+            
 
             {/* <Route path="/google-login" element={<GoogleLogin />} /> */}
             <Route path="/google-callback" element={<GoogleCallbackHandler />} />
@@ -115,6 +118,20 @@ function App() {
             <Route path="/admin-approval" element={<AdminSellerRequests />} />
 
 
+
+            {/* superadmin Routes */}
+            {/* // CORRECT - SuperAdminRoutes handles its own internal routing */}
+<Route
+  path="/spr.dmn/*"
+  element={
+    <PrivateRoute role="superadmin">
+      <SuperAdminRoutes />
+    </PrivateRoute>
+  }
+>
+              {/* Default dashboard landing page */}
+              {/* <Route index element={<AdminHome />} /> */}
+            </Route>
 
             {/* Admin Routes */}
             <Route
@@ -190,6 +207,12 @@ function App() {
               <Route path="insemination-record" element={<InseminationRecordsList />} />
               <Route path="chatroom" element={<ChatRoom />} />
               <Route path="recents" element={<ChatList />} />
+              <Route path="my-listings" element={<MyListings />} />
+              <Route path="create" element={<CreateListing />} />
+            <Route path="edit" element={<EditListing />} />
+            <Route path="view" element={<ViewListing />} />
+            <Route path="market" element={<MarketPage />} />
+            <Route path="view-market" element={<MarketView />} />
             </Route>
 
 

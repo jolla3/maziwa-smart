@@ -216,7 +216,7 @@ const CreateListing = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               className="btn btn-outline-secondary rounded-pill"
-              onClick={() => navigate("/my-listings")}
+              onClick={() => navigate("/fmr.drb/my-listings")}
               type="button"
             >
               <ArrowLeft size={16} className="me-1" /> Back

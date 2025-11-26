@@ -112,7 +112,7 @@ const Login = () => {
   const navigateByRole = (role) => {
     const roleRoutes = {
       admin: '/admindashboard',
-      superadmin: '/superadmindashboard',
+      superadmin: '/spr.dmn',
       seller: '/slr.drb',
       buyer: '/byr.drb',
       farmer: '/fmr.drb',

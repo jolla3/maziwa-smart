@@ -11,8 +11,7 @@ import ActionButtons from "./market view/ActionButtons";
 import ChatModal from "./market view/ChatModal";
 import ContactModal from "./market view/ContactModal";
 
-const API_BASE =
-  process.env.REACT_APP_API_BASE 
+const API_BASE = process.env.REACT_APP_API_BASE;
 
 const MarketView = () => {
   const location = useLocation();
@@ -44,11 +43,11 @@ const MarketView = () => {
   const getDisplayImages = (listing) => {
     if (!listing) return [];
     const images = listing.images || listing.photos || listing.animal?.photos || [];
-    return images.length > 0 ? images : [DEFAULT_IMAGE];
+    return images.length > 0 ? images.map(imgUrl) : [DEFAULT_IMAGE];
   };
 
-  // Fetch listing by ID
-  const fetchListingById = async (id) => {
+  // Fetch listing by ID with retry logic for bulletproof
+  const fetchListingById = async (id, retryCount = 0) => {
     setLoading(true);
     setError("");
     try {
@@ -57,6 +56,8 @@ const MarketView = () => {
       });
       if (res.data.success && res.data.listing) {
         const fetchedListing = res.data.listing;
+        console.log("Fetched full listing:", fetchedListing);
+        console.log("Animal data:", fetchedListing.animal);
         setListing(fetchedListing);
         const images = getDisplayImages(fetchedListing);
         setMainPhoto(images[0] || DEFAULT_IMAGE);
@@ -65,27 +66,28 @@ const MarketView = () => {
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      setError("Server error while loading listing");
+      if (retryCount < 1) {
+        console.log("Retrying fetch...");
+        fetchListingById(id, retryCount + 1);
+      } else {
+        setError(err.response?.data?.message || "Server error—check token/ID/DB");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Initialize listing on mount
+  // Initialize listing on mount—always fetch full by ID
   useEffect(() => {
     const stateData = location.state;
-    if (stateData?.listing) {
-      setListing(stateData.listing);
-      const images = getDisplayImages(stateData.listing);
-      setMainPhoto(images[0] || DEFAULT_IMAGE);
-      setLoading(false);
-    } else if (stateData?.id) {
-      fetchListingById(stateData.id);
+    const id = stateData?.id || stateData?.listing?._id;
+    if (id) {
+      fetchListingById(id);
     } else {
-      setError("No listing data provided");
+      setError("No listing ID provided—fix your navigation");
       setLoading(false);
     }
-  }, []);
+  }, [location.state]);
 
   // Update favorites when listing changes
   useEffect(() => {
@@ -109,7 +111,7 @@ const MarketView = () => {
   };
 
   const handleShare = () => {
-    const species = listing?.animal?.species;
+    const species = listing?.animal?.species || "Livestock";
     const formattedPrice = new Intl.NumberFormat("en-KE", {
       style: "currency",
       currency: "KES",
@@ -130,9 +132,7 @@ const MarketView = () => {
 
   const handleOpenChat = () => {
     if (!listing?.seller?._id) {
-
-      navigate("/chatroom", { state: { receiverId: listing.sellerData, receiver: "" } });
-      alert("Seller information not available")
+      alert("Seller information not available");
       return;
     }
     setShowChatModal(true);
@@ -247,7 +247,7 @@ const MarketView = () => {
                 <span className="badge bg-white text-primary">
                   {animal?.species || "Livestock"}
                 </span>
-                {animal?.status === "pregnant" && (
+                {animal?.pregnancy?.is_pregnant && (
                   <span className="badge bg-warning text-dark">
                     Pregnant
                   </span>
@@ -263,7 +263,7 @@ const MarketView = () => {
             </div>
           </motion.div>
 
-          <AnimalDetailsCard animal={animal} />
+          <AnimalDetailsCard animalDetails={animal || {}} />
 
           <ActionButtons
             seller={seller}

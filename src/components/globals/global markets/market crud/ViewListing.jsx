@@ -75,8 +75,8 @@ export default function ViewListing() {
       maximumFractionDigits: 0,
     }).format(val || 0);
 
-  const handleBack = () => navigate("/my-listings");
-  const handleEdit = () => navigate("/edit", { state: { listing } });
+  const handleBack = () => navigate("/fmr.drb/my-listings");
+  const handleEdit = () => navigate("/fmr.drb/edit", { state: { listing } });
 
   const imgUrl = (path) =>
     path?.startsWith("/uploads/listings")
