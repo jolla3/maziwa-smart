@@ -59,7 +59,7 @@ import Notifications from "./components/globals/Notification";
 import FarmerRegister from "./components/globals/logins/Registerfarmer";
 import LandingPage from "./components/pages/landingPages -- HOMEPAGE/LandingPage";
 import SellerRegister from "./components/globals/logins/SellerRegister";
-import SellerRequest from "./components/Sellers/seller Request approval/SellerRequest";
+import SellerRequest from "./components/Sellers/pages/seller Request approval/SellerRequest";
 import AdminSellerRequests from "./components/SUPERaDMIN/AdminSellerRequests";
 // import MarketView from "./components/globals/global markets/market view/MarketView";
 import InseminationRecordsList from "./components/farmer/CRUD/InseminationRecordsList";
@@ -70,6 +70,7 @@ import SetPassword from "./components/globals/logins/SetPassword";
 // import DashboardHome from "./components/SUPERaDMIN/DashboardHome";
 import { SuperAdminLayout } from "./components/SUPERaDMIN/layouts/SuperAdminLayout";
 import SuperAdminRoutes from "./components/SUPERaDMIN/superadmin-routes";
+import SellerDashboard from "./components/Sellers/SellerDashboard";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -99,7 +100,7 @@ function App() {
             <Route path="register_farmer" element={<FarmerRegister />} />
             <Route path="register_seller" element={<SellerRegister />} />
             <Route path="/set-password" element={<SetPassword />} />
-            
+
 
             {/* <Route path="/google-login" element={<GoogleLogin />} /> */}
             <Route path="/google-callback" element={<GoogleCallbackHandler />} />
@@ -107,10 +108,10 @@ function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/chatroom" element={<ChatRoom />} />
             <Route path="/recents" element={<ChatList />} />
-            <Route path="/my-listings" element={<MyListings />} />
+            {/* <Route path="/my-listings" element={<MyListings />} />
             <Route path="/create" element={<CreateListing />} />
             <Route path="/edit" element={<EditListing />} />
-            <Route path="/view" element={<ViewListing />} />
+            <Route path="/view" element={<ViewListing />} /> */}
             <Route path="/market" element={<MarketPage />} />
             <Route path="/view-market" element={<MarketView />} />
             <Route path="/notifications" element={<Notifications />} />
@@ -121,14 +122,14 @@ function App() {
 
             {/* superadmin Routes */}
             {/* // CORRECT - SuperAdminRoutes handles its own internal routing */}
-<Route
-  path="/spr.dmn/*"
-  element={
-    <PrivateRoute role="superadmin">
-      <SuperAdminRoutes />
-    </PrivateRoute>
-  }
->
+            <Route
+              path="/spr.dmn/*"
+              element={
+                <PrivateRoute role="superadmin">
+                  <SuperAdminRoutes />
+                </PrivateRoute>
+              }
+            >
               {/* Default dashboard landing page */}
               {/* <Route index element={<AdminHome />} /> */}
             </Route>
@@ -198,7 +199,7 @@ function App() {
               <Route path="cows" element={<AnimalDashboard />} />
               <Route path="calf" element={<AddCalfForm />} />
 
-             
+
               <Route path="register-cow" element={<CowRegistrationForm />} />
               <Route path="register-calf" element={<AddCalfForm />} />
               <Route path="milkrecording" element={<MilkRecording />} />
@@ -209,10 +210,10 @@ function App() {
               <Route path="recents" element={<ChatList />} />
               <Route path="my-listings" element={<MyListings />} />
               <Route path="create" element={<CreateListing />} />
-            <Route path="edit" element={<EditListing />} />
-            <Route path="view" element={<ViewListing />} />
-            <Route path="market" element={<MarketPage />} />
-            <Route path="view-market" element={<MarketView />} />
+              <Route path="edit" element={<EditListing />} />
+              <Route path="view" element={<ViewListing />} />
+              <Route path="market" element={<MarketPage />} />
+              <Route path="view-market" element={<MarketView />} />
             </Route>
 
 
@@ -246,27 +247,13 @@ function App() {
 
             {/* sellers  Routes */}
             <Route
-              path="/slr.drb"
+              path="/slr.drb/*"
               element={
                 <PrivateRoute role="seller">
-                  <FarmerLayout />
+                  <SellerDashboard />
                 </PrivateRoute>
               }
-            >
-              {/* Default dashboard landing page */}
-              <Route index element={< FarmerHome />} />
-              {/* Other porter pages */}
-
-              <Route path="my-listings" element={<MyListings />} />
-              <Route path="create" element={<CreateListing />} />
-              <Route path="edit" element={<EditListing />} />
-              <Route path="view" element={<ViewListing />} />
-              <Route path="seller-approval" element={<SellerRequest />} />
-              <Route path="market" element={<MarketPage />} />
-              <Route path="view-market" element={<MarketView />} />
-              <Route path="chatroom" element={<ChatRoom />} />
-              <Route path="recents" element={<ChatList />} />
-            </Route>
+            />
 
             {/* buyer  Routes */}
             <Route

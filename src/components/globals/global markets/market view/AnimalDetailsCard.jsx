@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ChevronDown, Info, Heart, Droplet } from "lucide-react";
 
 const AnimalDetailsCard = ({ animalDetails }) => {
-  console.log("AnimalDetailsCard received:", animalDetails);
+  
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
     breeding: true,

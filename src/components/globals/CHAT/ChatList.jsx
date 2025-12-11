@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
 
 const API_BASE =     process.env.REACT_APP_API_BASE
 const CACHE_KEY = "chatlist_cache";
@@ -19,6 +20,8 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export default function ChatList() {
   const navigate = useNavigate();
+    const { token } = useContext(AuthContext);
+  
   const [recentChats, setRecentChats] = useState([]);
   const [filteredChats, setFilteredChats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +73,7 @@ export default function ChatList() {
 
   // Fetch chats
   const fetchChats = useCallback(async (showRefreshing = false) => {
-    const token = localStorage.getItem("token");
+    
     if (!token) {
       setLoading(false);
       return;

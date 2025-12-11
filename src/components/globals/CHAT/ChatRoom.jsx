@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useContext } from "react";
 import axios from "axios";
 import io from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,7 @@ import {
   X, Download, Circle
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
 
 const API_BASE =     process.env.REACT_APP_API_BASE
 const SOCKET_URL =     process.env.API_BASE
@@ -24,6 +25,8 @@ export default function ChatRoom({
 } = {}) {
   const { state } = useLocation();
   const navigate = useNavigate();
+    const { token } = useContext(AuthContext);
+  
   
   // Use props if provided, otherwise fall back to location state
   const receiverId = propReceiverId || state?.receiverId;
@@ -85,7 +88,7 @@ const fileInputRef = useRef(null);
 
   // Setup axios
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    
     if (token) {
       axios.defaults.baseURL = API_BASE;
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;

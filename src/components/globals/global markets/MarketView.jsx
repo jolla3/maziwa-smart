@@ -56,8 +56,7 @@ const MarketView = () => {
       });
       if (res.data.success && res.data.listing) {
         const fetchedListing = res.data.listing;
-        console.log("Fetched full listing:", fetchedListing);
-        console.log("Animal data:", fetchedListing.animal);
+       
         setListing(fetchedListing);
         const images = getDisplayImages(fetchedListing);
         setMainPhoto(images[0] || DEFAULT_IMAGE);
@@ -70,7 +69,7 @@ const MarketView = () => {
         console.log("Retrying fetch...");
         fetchListingById(id, retryCount + 1);
       } else {
-        setError(err.response?.data?.message || "Server error—check token/ID/DB");
+        setError(err.response?.data?.message );
       }
     } finally {
       setLoading(false);
