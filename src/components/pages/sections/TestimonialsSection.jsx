@@ -33,7 +33,7 @@ const TestimonialsSection = () => {
       avatar: "PO",
       image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop"
     }
-  ];
+  ]
 
   return (
     <Box ref={ref} sx={{ py: 8, bgcolor: 'white' }}>

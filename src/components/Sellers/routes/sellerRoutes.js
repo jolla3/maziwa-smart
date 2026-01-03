@@ -30,19 +30,13 @@ export const sellerRoutes = [
     path: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    element: DashboardPage ? <DashboardPage /> : null
+    element: <DashboardPage />
   },
   {
     path: "my-listings",
     label: "My Listings",
     icon: List,
-    element: <MyListings />, // parent can render an index/listing page
-    children: [
-      {
-        path: "", // /seller/my-listings  -> index (MyListings)
-        label: "List",
-        element: <MyListings />
-      } ]
+    element: <MyListings />
   },
   {
     path: "seller-approval",

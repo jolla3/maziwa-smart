@@ -247,13 +247,13 @@ function App() {
 
             {/* sellers  Routes */}
             <Route
-              path="/slr.drb/*"
-              element={
-                <PrivateRoute role="seller">
-                  <SellerDashboard />
-                </PrivateRoute>
-              }
-            />
+  path="/slr.drb/*"
+  element={
+    <PrivateRoute role="seller">
+      <SellerDashboard />
+    </PrivateRoute>
+  }
+/>
 
             {/* buyer  Routes */}
             <Route
