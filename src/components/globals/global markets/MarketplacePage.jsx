@@ -126,7 +126,7 @@ export default function MarketPage() {
         } catch (err) {
             console.error("❌ Trending fetch error:", err);
         }
-    }, [token]);
+    }, [token])
 
     useEffect(() => {
         fetchTrending();

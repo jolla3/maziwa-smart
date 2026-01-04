@@ -19,7 +19,7 @@ const QuickLinks = () => {
       title: 'My Animals',
       icon: <Beef size={32} />,
       color: COLORS.green.main,
-      route: '/fmr.drb/animals',
+      route: '/fmr.drb/cows',
     },
     {
       title: 'Inseminations',
