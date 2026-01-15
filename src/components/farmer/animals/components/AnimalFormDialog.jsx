@@ -76,11 +76,11 @@ const SPECIES_CONFIG = {
 const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) => {
   const [formData, setFormData] = useState({
     cow_name: '',
-    species: 'cow',
+    species: '',
     breed: '',
-    gender: 'female',
+    gender: '',
     birth_date: '',
-    stage: 'calf',
+    stage: '',
     bull_code: '',
     bull_name: '',
     origin_farm: '',
@@ -98,7 +98,7 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
       const config = SPECIES_CONFIG[species];
       
       setFormData({
-        cow_name: initialData.name || '',
+        cow_name: initialData.cow_name || '',  // Fix: Use initialData.cow_name
         species: species,
         breed: initialData.breed || '',
         gender: config?.forceGender || initialData.gender || 'female',
@@ -131,7 +131,6 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
     }
     setErrors({});
   }, [initialData, open]);
-
   const handleChange = (field, value) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };

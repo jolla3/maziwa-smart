@@ -189,7 +189,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
             {/* Name */}
             <Box textAlign="center" mb={2}>
               <Typography variant="h6" fontWeight="900" color="#000000">
-                {animal.name}
+                {animal.cow_name}
               </Typography>
               <Typography variant="body2" color="#666666" fontWeight={500}>
                 {animal.breed || 'Unknown breed'}
