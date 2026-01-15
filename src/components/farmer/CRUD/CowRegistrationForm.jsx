@@ -39,7 +39,7 @@ const AnimalRegistration = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-   const Base_API = process.env.REACT_APP_API_BASE
+  const Base_API = process.env.REACT_APP_API_BASE
 
 
   const species = [
@@ -154,7 +154,7 @@ const AnimalRegistration = () => {
         delete payload.mother_id;
       }
 
-      const response = await axios.post(
+      await axios.post(
         `${Base_API}/animals`,
         payload,
         {

@@ -31,7 +31,7 @@ const QuickLinks = () => {
       title: 'Marketplace',
       icon: <ShoppingCart size={32} />,
       color: COLORS.orange.main,
-      route: '/fmr.drb/marketplace',
+      route: '/fmr.drb/market',
     },
     {
       title: 'Notifications',

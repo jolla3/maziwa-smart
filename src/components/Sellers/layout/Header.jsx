@@ -4,7 +4,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, Bell } from 'lucide-react';
-import { sellerRoutes } from '../routes/sellerRoutes';
+import  sellerRoutes  from '../routes/sellerRoutes';
 
 const Header = ({ onToggleSidebar }) => {
   const location = useLocation();

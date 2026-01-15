@@ -4,7 +4,7 @@
 // ============================================================================
 import React from 'react';
 import { X } from 'lucide-react';
-import { sellerRoutes } from '../routes/sellerRoutes';
+import  sellerRoutes  from '../routes/sellerRoutes';
 import MenuItem from '../ui/MenuItem';
 import SidebarFooter from './SidebarFooter';
 

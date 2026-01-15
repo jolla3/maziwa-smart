@@ -71,6 +71,7 @@ import SetPassword from "./components/globals/logins/SetPassword";
 import { SuperAdminLayout } from "./components/SUPERaDMIN/layouts/SuperAdminLayout";
 import SuperAdminRoutes from "./components/SUPERaDMIN/superadmin-routes";
 import SellerDashboard from "./components/Sellers/SellerDashboard";
+import DashboardHomePage from "./components/Sellers/pages/DashboardHomePage";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -247,13 +248,25 @@ function App() {
 
             {/* sellers  Routes */}
             <Route
-  path="/slr.drb/*"
+  path="/slr.drb"
   element={
     <PrivateRoute role="seller">
       <SellerDashboard />
     </PrivateRoute>
   }
-/>
+>
+  <Route index element={< SellerDashboard/>} />
+
+  <Route path="dashboard" element={<DashboardHomePage />} />
+  <Route path="my-listings" element={<MyListings />} />
+  <Route path="seller-approval" element={<SellerRequest />} />
+  <Route path="market" element={<MarketPage />} />
+  <Route path="view-market" element={<MarketView />} />
+  <Route path="chatroom" element={<ChatRoom />} />
+  <Route path="recents" element={<ChatList />} />
+
+</Route>
+
 
             {/* buyer  Routes */}
             <Route

@@ -1,71 +1,50 @@
-// ============================================================================
-// FILE: /src/components/sellerdashboard/routes/sellerRoutes.js
-// ============================================================================
+// /src/components/Sellers/routes/sellerRoutes.js
 import {
   LayoutDashboard,
   List,
-  PlusCircle,
-  Edit,
-  Eye,
   ClipboardCheck,
   Store,
+  Eye,
   MessageCircle,
   Clock
 } from "lucide-react";
 
-// Your real page imports
-import DashboardPage from "../pages/DashboardHomePage";
-import MyListings from "../pages/market crud/MyListings";
-// import CreateListing from "../../../pages/seller/CreateListing";
-// import EditListing from "../../../pages/seller/EditListing";
-// import ViewListing from "../pages/market crud/ViewListing";
-import SellerRequest from "../pages/seller Request approval/SellerRequest";
-import MarketPage from "../../globals/global markets/MarketplacePage";
-import MarketView from "../../globals/global markets/MarketView";
-import ChatRoom from "../../globals/CHAT/ChatRoom";
-import ChatList from "../../globals/CHAT/ChatList";
-
-export const sellerRoutes = [
+const sellerRoutes = [
   {
-    path: "dashboard",
+    path: "/slr.drb/dashboard",
     label: "Dashboard",
-    icon: LayoutDashboard,
-    element: <DashboardPage />
+    icon: LayoutDashboard
   },
   {
-    path: "my-listings",
+    path: "/slr.drb/my-listings",
     label: "My Listings",
-    icon: List,
-    element: <MyListings />
+    icon: List
   },
   {
-    path: "seller-approval",
+    path: "/slr.drb/seller-approval",
     label: "Approval",
-    icon: ClipboardCheck,
-    element: <SellerRequest />
+    icon: ClipboardCheck
   },
   {
-    path: "market",
+    path: "/slr.drb/market",
     label: "Market",
-    icon: Store,
-    element: <MarketPage />
+    icon: Store
   },
   {
-    path: "view-market",
+    path: "/slr.drb/view-market",
     label: "Market View",
-    icon: Eye,
-    element: <MarketView />
+    icon: Eye
   },
   {
-    path: "chatroom",
+    path: "/slr.drb/chatroom",
     label: "Chat Room",
-    icon: MessageCircle,
-    element: <ChatRoom />
+    icon: MessageCircle
   },
   {
-    path: "recents",
+    path: "/slr.drb/recents",
     label: "Recent Chats",
-    icon: Clock,
-    element: <ChatList />
+    icon: Clock
   }
 ];
+
+export default sellerRoutes;

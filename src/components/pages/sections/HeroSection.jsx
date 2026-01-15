@@ -225,6 +225,53 @@ const HeroSection = ({ navigate }) => {
                   </Button>
                 </motion.div>
               </Box>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 4 }}>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => navigate('/register_seller')}
+                    endIcon={<ArrowRight size={20} />}
+                    sx={{
+                      px: 4,
+                      py: 1.8,
+                      fontSize: '1.1rem',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: 'white',
+                      boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                        boxShadow: '0 15px 35px rgba(16, 185, 129, 0.4)',
+                      },
+                    }}
+                  >
+                    Join as a Farmer
+                  </Button>
+                </motion.div>
+
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    onClick={() => navigate('/market')}
+                    endIcon={<ShoppingCart size={20} />}
+                    sx={{
+                      px: 4,
+                      py: 1.8,
+                      fontSize: '1.1rem',
+                      borderColor: 'secondary.main',
+                      borderWidth: 2,
+                      color: 'secondary.main',
+                      '&:hover': {
+                        borderWidth: 2,
+                        bgcolor: 'rgba(59, 130, 246, 0.05)',
+                      },
+                    }}
+                  >
+                    Explore the Market
+                  </Button>
+                </motion.div>
+              </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                 {['Free to join', 'Verified marketplace', '24/7 AI support'].map((text, i) => (
