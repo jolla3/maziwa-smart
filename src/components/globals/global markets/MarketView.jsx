@@ -265,9 +265,9 @@ const MarketView = () => {
           <AnimalDetailsCard animalDetails={animal || {}} />
 
           <ActionButtons
-            seller={seller}
-            handleOpenChat={handleOpenChat}
-            setShowContactModal={setShowContactModal}
+            onChatClick={handleOpenChat}
+            onContactClick={() => setShowContactModal(true)}
+            sellerAvailable={!!seller?._id}
           />
         </div>
       </div>
