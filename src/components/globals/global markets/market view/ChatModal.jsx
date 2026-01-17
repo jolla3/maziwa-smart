@@ -7,29 +7,20 @@ const ChatModal = ({ showChatModal, setShowChatModal, seller, listing }) => {
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
-    const sellerId = seller?._id || seller?.id;
-    if (!sellerId) return;
+  if (!showChatModal) return;
 
-    if (showChatModal) {
-      const senderId = user?.id;
-      const senderType = user?.role; // Lowercase per schema
-      const receiverId = sellerId;
-      const receiverType = seller?.role || (seller?.farmer_code ? "farmer" : "user"); // Infer
-      const listingId = listing?._id || null;
-      const message = ""; // Stubbed initial message
+  const receiverId = seller?._id;
+  if (!receiverId || !user?.id) return;
 
-      navigate("/chatroom", {
-        state: {
-          sender: { id: senderId, type: senderType },
-          receiver: { id: receiverId, type: receiverType },
-          listing: listingId,
-          message: message.trim(),
-          receiver: seller // Fallback for ChatRoom
-        }
-      });
-      setShowChatModal(false);
+  navigate("/chatroom", {
+    state: {
+      receiverId,
+      listingId: listing?._id || null,
     }
-  }, [showChatModal, navigate, user, seller, listing, setShowChatModal]);
+  });
+
+  setShowChatModal(false);
+}, [showChatModal]);
 
   return null;
 };

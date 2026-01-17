@@ -27,7 +27,11 @@ export default function ChatRoom({
   const { token } = useContext(AuthContext);
 
   // Robust receiverId extraction: prop > state.receiver.id > state.receiverId
-  const receiverId = propReceiverId || state?.receiver?.id || state?.receiverId;
+const receiverId =
+  propReceiverId ||
+  state?.receiverId ||
+  state?.receiver?._id;
+
   const receiver = propReceiver || state?.receiver;
 
   const [messages, setMessages] = useState([]);
@@ -46,6 +50,14 @@ export default function ChatRoom({
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // const { state } = useLocation();
+
+const listingId =
+  state?.listing ||
+  state?.listingId ||
+  null;
+
 
   const theme = {
     bg: "linear-gradient(to bottom, #f8fafc 0%, #e0e7ff 100%)",
@@ -236,7 +248,12 @@ const useCallHandler = (socketRef, receiverId, type = "voice") => {
     setMessage("");
 
     try {
-      const res = await axios.post("/chat", { receiverId, message: text });
+      const res = await axios.post("/chat", {
+  receiverId,
+  message: text,
+  listingId
+});
+
       
       // Replace temp message with real one
       setMessages((prev) =>
