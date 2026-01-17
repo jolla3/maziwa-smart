@@ -35,3 +35,4 @@ const ActionButtons = ({ onChatClick, onContactClick, sellerAvailable }) => {
 };
 
 export default ActionButtons;
+  
