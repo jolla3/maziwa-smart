@@ -68,7 +68,6 @@ import FarmerHome from "./components/farmer/farmhome/FarmerHome";
 import MarketView from "./components/globals/global markets/MarketView";
 import SetPassword from "./components/globals/logins/SetPassword";
 // import DashboardHome from "./components/SUPERaDMIN/DashboardHome";
-import { SuperAdminLayout } from "./components/SUPERaDMIN/layouts/SuperAdminLayout";
 import SuperAdminRoutes from "./components/SUPERaDMIN/superadmin-routes";
 import SellerDashboard from "./components/Sellers/SellerDashboard";
 import DashboardHomePage from "./components/Sellers/pages/DashboardHomePage";
