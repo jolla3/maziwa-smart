@@ -3,8 +3,10 @@ import axios from "axios";
 import io from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js";
+import "bootstrap/dist/css/bootstrap.min.css"
+
+import  { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js"
+
 import {
   Send, Check, CheckCheck, Paperclip, Smile, ArrowLeft, 
   User, MoreVertical, Phone, Video,
