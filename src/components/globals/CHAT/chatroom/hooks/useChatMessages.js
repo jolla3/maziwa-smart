@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 const MESSAGE_CACHE_PREFIX = "chat_messages_";
+const CACHE_EXPIRY_MS = 3600000; // 1 hour
 
 export const useChatMessages = (receiverId, listingId) => {
   const [messages, setMessages] = useState([]);
@@ -10,11 +11,18 @@ export const useChatMessages = (receiverId, listingId) => {
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState(null);
 
-  // Cache helpers
+  // Cache helpers with expiration
   const getCachedMessages = useCallback(() => {
     try {
       const cached = localStorage.getItem(`${MESSAGE_CACHE_PREFIX}${receiverId}`);
-      return cached ? JSON.parse(cached) : null;
+      if (!cached) return null;
+      const parsed = JSON.parse(cached);
+      const now = Date.now();
+      if (parsed.timestamp && (now - parsed.timestamp) > CACHE_EXPIRY_MS) {
+        localStorage.removeItem(`${MESSAGE_CACHE_PREFIX}${receiverId}`);
+        return null;
+      }
+      return parsed.messages;
     } catch (err) {
       console.error("Error reading cached messages:", err);
       return null;
@@ -23,7 +31,10 @@ export const useChatMessages = (receiverId, listingId) => {
 
   const setCachedMessages = useCallback((msgs) => {
     try {
-      localStorage.setItem(`${MESSAGE_CACHE_PREFIX}${receiverId}`, JSON.stringify(msgs));
+      localStorage.setItem(`${MESSAGE_CACHE_PREFIX}${receiverId}`, JSON.stringify({
+        messages: msgs,
+        timestamp: Date.now()
+      }));
     } catch (err) {
       console.error("Error caching messages:", err);
     }
@@ -42,6 +53,7 @@ export const useChatMessages = (receiverId, listingId) => {
 
     const fetchChat = async () => {
       try {
+        // FIXED: Use "/chat" since axios.baseURL already includes "/api"
         const res = await axios.get(`/chat/${receiverId}`);
         if (res.data.success) {
           const msgs = res.data.messages || [];
@@ -50,8 +62,9 @@ export const useChatMessages = (receiverId, listingId) => {
           
           if (res.data.counterpart) {
             setCounterpart(res.data.counterpart);
-            setIsOnline(res.data.counterpart.is_online || false);
-            setLastSeen(res.data.counterpart.last_seen || null);
+            // Removed: isOnline and lastSeen as backend doesn't provide them yet
+            // setIsOnline(res.data.counterpart.is_online || false);
+            // setLastSeen(res.data.counterpart.last_seen || null);
           }
         }
       } catch (err) {
@@ -63,19 +76,24 @@ export const useChatMessages = (receiverId, listingId) => {
     fetchChat();
   }, [receiverId, getCachedMessages, setCachedMessages]);
 
-  // Send message
+  // Send message - FIXED: Immediately show message locally, with validation
   const sendMessage = useCallback(async (text) => {
-    if (!text.trim()) return;
+    if (!text.trim() || text.length > 2000) return; // Added: Length validation to match backend
     
     const tempId = `temp_${Date.now()}`;
+    const userId = localStorage.getItem("userId");
+    
     const temp = {
+      _id: tempId, // Standardized: Use _id as primary
       id: tempId,
       from: "me",
+      senderId: userId,
       text,
       createdAt: new Date().toISOString(),
       isSending: true,
     };
     
+    // IMMEDIATELY add to messages array so user sees it
     setMessages((prev) => {
       const updated = [...prev, temp];
       setCachedMessages(updated);
@@ -83,30 +101,45 @@ export const useChatMessages = (receiverId, listingId) => {
     });
 
     try {
+      // FIXED: Use "/chat" since axios.baseURL already includes "/api"
       const res = await axios.post("/chat", {
         receiverId,
         message: text,
         listingId
       });
       
-      // Replace temp message with real one
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === tempId ? { ...res.data.message, from: "me" } : m
-        )
-      );
+      // Replace temp message with real one from server
+      setMessages((prev) => {
+        const updated = prev.map((m) =>
+          m._id === tempId // Standardized: Check _id primarily
+            ? { ...res.data.message, _id: res.data.message._id || res.data.message.id, from: "me", senderId: userId }
+            : m
+        );
+        setCachedMessages(updated);
+        return updated;
+      });
     } catch (err) {
       console.error("Send error:", err);
-      // Mark message as failed
-      setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...m, isSending: false, failed: true } : m))
-      );
+      // Mark message as failed but keep it visible
+      setMessages((prev) => {
+        const updated = prev.map((m) =>
+          m._id === tempId // Standardized: Check _id primarily
+            ? { ...m, isSending: false, failed: true }
+            : m
+        );
+        setCachedMessages(updated);
+        return updated;
+      });
     }
   }, [receiverId, listingId, setCachedMessages]);
 
   // Add new incoming message
   const addIncomingMessage = useCallback((newMsg) => {
     setMessages((prev) => {
+      // Avoid duplicates
+      const exists = prev.some(m => m._id === newMsg._id || m.id === newMsg.id);
+      if (exists) return prev;
+      
       const updated = [...prev, { ...newMsg, from: "them" }];
       setCachedMessages(updated);
       return updated;

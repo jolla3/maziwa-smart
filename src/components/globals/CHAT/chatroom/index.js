@@ -8,6 +8,7 @@ export { MessageList } from './components/MessageList';
 export { InputArea } from './components/InputArea';
 export { EmojiPickerWrapper } from './components/EmojiPickerWrapper';
 export { UserProfileModal } from './components/UserProfileModal';
+export { ConnectionModal } from './components/ConnectionModal';
 
 // Export hooks if needed elsewhere
 export { useChatMessages } from './hooks/useChatMessages';

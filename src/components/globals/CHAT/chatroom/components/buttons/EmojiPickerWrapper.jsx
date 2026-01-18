@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import EmojiPicker from "emoji-picker-react";
 
 export const EmojiPickerWrapper = ({ show, onClose, onEmojiClick, theme }) => {
+  // Detect mobile device
+  const isMobile = window.innerWidth <= 768;
+  
   return (
     <AnimatePresence>
       {show && (
@@ -19,21 +22,29 @@ export const EmojiPickerWrapper = ({ show, onClose, onEmojiClick, theme }) => {
             initial={{ opacity: 0, y: 40, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.9 }}
-            className="position-absolute"
+            className="position-fixed"
             style={{
-              bottom: 90,
-              left: "50%",
+              bottom: isMobile ? 80 : 90,
+              left: isMobile ? "50%" : "50%",
               transform: "translateX(-50%)",
               zIndex: 1000,
               boxShadow: theme.shadowLg,
               borderRadius: 16,
               overflow: "hidden",
+              width: isMobile ? "95vw" : "auto",
+              maxWidth: isMobile ? "95vw" : "420px",
             }}
           >
             <EmojiPicker
               onEmojiClick={onEmojiClick}
               theme="light"
-              height={400}
+              height={isMobile ? 350 : 400}
+              width={isMobile ? "100%" : 420}
+              searchDisabled={isMobile}
+              skinTonesDisabled={isMobile}
+              previewConfig={{
+                showPreview: !isMobile
+              }}
             />
           </motion.div>
         </>
