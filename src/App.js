@@ -46,7 +46,7 @@ import InseminationCard from "./components/farmer/CRUD/InseminationCard";
 import GoogleCallbackHandler from "./components/globals/logins/GoogleCallbackHandle";
 import PrivacyPolicy from "./components/PrivateComponents/PrivacyPolicy";
 import TermsOfService from "./components/PrivateComponents/TermsOfService";
-import ChatRoom from "./components/globals/CHAT/ChatRoom";
+import ChatRoom from "./components/globals/CHAT/chatroom/ChatRoom";
 import ChatList from "./components/globals/CHAT/ChatList";
 import MyListings from "./components/globals/global markets/market crud/MyListings";
 import CreateListing from "./components/globals/global markets/market crud/CreateListing";
