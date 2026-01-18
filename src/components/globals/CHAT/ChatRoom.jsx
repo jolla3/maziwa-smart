@@ -338,6 +338,30 @@ const sanitizePhone = (phone) => {
   return str.length >= 7 ? str : null;
 };
 
+const normalizePhoneE164 = (rawPhone) => {
+  if (!rawPhone) return null;
+
+  try {
+    // Try parsing as-is first (best case)
+    let phone = parsePhoneNumberFromString(String(rawPhone));
+
+    // Fallback: infer country from browser ONLY if needed
+    if (!phone || !phone.isValid()) {
+      const locale = Intl.DateTimeFormat().resolvedOptions().locale; // e.g. en-KE
+      const region = locale.split("-")[1] || "KE";
+
+      phone = parsePhoneNumberFromString(String(rawPhone), region);
+    }
+
+    if (!phone || !phone.isValid()) return null;
+
+    return phone.number; // ✅ E.164 format (+2547...)
+  } catch {
+    return null;
+  }
+};
+
+
 // ✅ Helper: Get browser’s country (automatically detects region)
 const getBrowserCountryCode = () => {
   try {
@@ -356,34 +380,27 @@ const isMobileDevice = () =>
 
 // ☎️ Voice Call
 const handleVoiceCall = () => {
-  const phone = sanitizePhone(counterpart?.phone);
+  const phone = normalizePhoneE164(counterpart?.phone);
   if (!phone) return alert("Phone number not available for this user.");
+
   window.open(`tel:${phone}`);
 };
 
+
 // 💬 WhatsApp Chat
 const handleWhatsAppChat = () => {
-  let phone = sanitizePhone(counterpart?.phone);
+  const phone = normalizePhoneE164(counterpart?.phone);
   if (!phone) return alert("WhatsApp number not available for this user.");
 
-  // Add leading zero if 9 digits (common Kenya style)
-  if (phone.length === 9) phone = `0${phone}`;
-
-  // Determine proper international code dynamically
-  const code = getBrowserCountryCode();
-
-  // If number missing code, prepend it
-  if (!phone.startsWith(code) && !phone.startsWith(`+${code}`)) {
-    if (phone.startsWith("0")) phone = phone.substring(1);
-    phone = `${code}${phone}`;
-  }
+  const waNumber = phone.replace("+", ""); // wa.me requires no +
 
   const waURL = isMobileDevice()
-    ? `whatsapp://send?phone=${phone}`
-    : `https://wa.me/${phone}`;
+    ? `whatsapp://send?phone=${waNumber}`
+    : `https://wa.me/${waNumber}`;
 
   window.open(waURL, "_blank");
 };
+
   return (
     <div
       className="d-flex flex-column vh-100 position-relative"

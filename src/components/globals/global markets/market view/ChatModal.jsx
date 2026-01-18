@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from "react";
+import  { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../PrivateComponents/AuthContext";
 
@@ -20,7 +20,7 @@ const ChatModal = ({ showChatModal, setShowChatModal, seller, listing }) => {
   });
 
   setShowChatModal(false);
-}, [showChatModal]);
+}, [showChatModal, navigate, seller?._id, user?.id, listing?._id, setShowChatModal]);
 
   return null;
 };
