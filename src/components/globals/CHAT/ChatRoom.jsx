@@ -357,21 +357,25 @@ const getUserPhone = (user) => {
 const normalizePhoneE164 = (rawPhone) => {
   if (!rawPhone) return null;
 
+  const digits = String(rawPhone).replace(/\D/g, "");
+
   try {
-    // Try parsing as-is first (best case)
-    let phone = parsePhoneNumberFromString(String(rawPhone));
+    let phone;
 
-    // Fallback: infer country from browser ONLY if needed
-    if (!phone || !phone.isValid()) {
-      const locale = Intl.DateTimeFormat().resolvedOptions().locale; // e.g. en-KE
-      const region = locale.split("-")[1] || "KE";
-
-      phone = parsePhoneNumberFromString(String(rawPhone), region);
+    // 🇰🇪 Explicit Kenya handling (THIS IS THE FIX)
+    if (
+      digits.length === 9 && digits.startsWith("7") ||
+      digits.length === 10 && digits.startsWith("0")
+    ) {
+      phone = parsePhoneNumberFromString(digits, "KE");
+    } else {
+      // Full international or already prefixed
+      phone = parsePhoneNumberFromString(rawPhone);
     }
 
     if (!phone || !phone.isValid()) return null;
 
-    return phone.number; // ✅ E.164 format (+2547...)
+    return phone.number; // +2547...
   } catch {
     return null;
   }
