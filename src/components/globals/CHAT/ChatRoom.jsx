@@ -338,6 +338,22 @@ const sanitizePhone = (phone) => {
   return str.length >= 7 ? str : null;
 };
 
+// helpers (top of ChatRoom.jsx, after imports)
+
+const getUserPhone = (user) => {
+  if (!user) return null;
+
+  return (
+    user.phone ||
+    user.whatsapp ||
+    user.mobile ||
+    user.contact?.phone ||
+    user.contact?.whatsapp ||
+    null
+  );
+};
+
+
 const normalizePhoneE164 = (rawPhone) => {
   if (!rawPhone) return null;
 
@@ -380,25 +396,32 @@ const isMobileDevice = () =>
 
 // ☎️ Voice Call
 const handleVoiceCall = () => {
-  const phone = normalizePhoneE164(counterpart?.phone);
-  if (!phone) return alert("Phone number not available for this user.");
+  const rawPhone = getUserPhone(counterpart);
+  const phone = normalizePhoneE164(rawPhone);
+
+  if (!phone) {
+    alert("Phone number not available for this user.");
+    return;
+  }
 
   window.open(`tel:${phone}`);
 };
 
-
-// 💬 WhatsApp Chat
 const handleWhatsAppChat = () => {
-  const phone = normalizePhoneE164(counterpart?.phone);
-  if (!phone) return alert("WhatsApp number not available for this user.");
+  const rawPhone = getUserPhone(counterpart);
+  const phone = normalizePhoneE164(rawPhone);
 
-  const waNumber = phone.replace("+", ""); // wa.me requires no +
+  if (!phone) {
+    alert("WhatsApp number not available for this user.");
+    return;
+  }
 
-  const waURL = isMobileDevice()
+  const waNumber = phone.replace("+", "");
+  const url = isMobileDevice()
     ? `whatsapp://send?phone=${waNumber}`
     : `https://wa.me/${waNumber}`;
 
-  window.open(waURL, "_blank");
+  window.open(url, "_blank");
 };
 
   return (
