@@ -1,8 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 
-// FIXED: Fallback to default if env var is missing
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:5001";
+// CRITICAL FIX: Remove /api for Socket.IO, but keep it for axios
+const getSocketURL = () => {
+  const apiBase = process.env.REACT_APP_API_BASE;
+  if (!apiBase) {
+    console.warn("⚠️ REACT_APP_API_BASE not found, using fallback");
+    return "http://localhost:5000";
+  }
+  
+  // Remove /api suffix for Socket.IO (socket connects to root)
+  return apiBase.replace(/\/api$/, '');
+};
+
+const SOCKET_URL = getSocketURL();
 
 export const useSocket = (receiverId, onNewMessage) => {
   const [socketConnected, setSocketConnected] = useState(false);
@@ -11,11 +22,8 @@ export const useSocket = (receiverId, onNewMessage) => {
   const socketRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
- useEffect(() => {
-  // ADD: Debug log to check env var
-  console.log("🔧 SOCKET_URL from env:", process.env.REACT_APP_SOCKET_URL);
-  
-  const token = localStorage.getItem("token");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
     
     if (!token) {
       console.log("❌ No token found - skipping socket connection");
@@ -28,52 +36,54 @@ export const useSocket = (receiverId, onNewMessage) => {
       return;
     }
 
-    // Log connection attempt
-    console.log("🔌 Attempting to connect to:", SOCKET_URL);
-    console.log("📍 Receiver ID:", receiverId);
-    console.log("🔑 Token exists:", !!token);
+    console.log("🔌 Connecting to Socket.IO:", SOCKET_URL);
+    console.log("📍 For receiver:", receiverId);
 
-    // Initialize socket - matching your backend setup
+    // Initialize socket with your backend's exact setup
     socketRef.current = io(SOCKET_URL, {
       auth: { token },
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      timeout: 10000,
+      timeout: 20000,
       autoConnect: true,
     });
 
     const socket = socketRef.current;
 
     socket.on("connect", () => {
-      console.log("✅ Socket connected successfully:", socket.id);
+      console.log("✅ Socket connected:", socket.id);
       setSocketConnected(true);
       setConnectionError(null);
       
-      // FIXED: Backend handles room joining automatically on connect (socket.join(userId))
-      // No need to emit "join_room" - remove to avoid mismatch
+      // Your backend joins socket.join(userId) automatically
+      // No need to emit join_chat - backend does it on connection
+      console.log("📡 Socket ready for messages");
     });
 
-    // Listen for incoming messages (your backend emits "new_message")
-    socket.on("new_message", (doc) => {
-      console.log("📩 Incoming raw message:", doc);
-
-      const normalized = {
-        _id: doc._id, // Standardized: Use _id as primary
-        id: doc._id,
-        from: "them",
-        text: doc.message,
-        isRead: doc.isRead,
-        createdAt: doc.created_at,
-        listing: doc.listing || null,
+    // Listen for new messages (your backend emits to receiver's room)
+    socket.on("new_message", (data) => {
+      console.log("📩 New message received:", data);
+      
+      // Transform backend message format to frontend format
+      const transformedMessage = {
+        _id: data._id || data.id,
+        id: data._id || data.id,
+        text: data.message,
+        senderId: data.sender?.id,
+        receiverId: data.receiver?.id,
+        from: "them", // incoming message
+        createdAt: data.created_at || data.createdAt || new Date().toISOString(),
+        isRead: data.isRead || false,
+        listing: data.listing
       };
-
-      onNewMessage(normalized);
+      
+      onNewMessage(transformedMessage);
     });
 
     socket.on("typing_start", (data) => {
-      console.log("⌨️ User is typing:", data);
+      console.log("⌨️ User typing:", data);
       setIsTyping(true);
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
@@ -90,7 +100,6 @@ export const useSocket = (receiverId, onNewMessage) => {
       setSocketConnected(false);
       
       if (reason === "io server disconnect") {
-        // Server initiated disconnect, try to reconnect
         socket.connect();
       }
     });
@@ -107,7 +116,7 @@ export const useSocket = (receiverId, onNewMessage) => {
     });
 
     return () => {
-      console.log("🔌 Cleaning up socket connection");
+      console.log("🔌 Cleaning up socket");
       socket.off("new_message");
       socket.off("typing_start");
       socket.off("typing_stop");

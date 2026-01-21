@@ -8,23 +8,26 @@ import {
   Search, 
   RefreshCw,
   ChevronRight,
-  Inbox
+  Inbox,
+  Mail,
+  Phone as PhoneIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { AuthContext } from "../../PrivateComponents/AuthContext";
 
-const API_BASE =     process.env.REACT_APP_API_BASE
+const API_BASE = process.env.REACT_APP_API_BASE;
 const CACHE_KEY = "chatlist_cache";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export default function ChatList() {
   const navigate = useNavigate();
-    const { token } = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
   
   const [recentChats, setRecentChats] = useState([]);
   const [filteredChats, setFilteredChats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Added error state
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -41,6 +44,7 @@ export default function ChatList() {
     shadow: "0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)",
     shadowHover: "0 10px 25px rgba(99,102,241,0.15), 0 4px 10px rgba(0,0,0,0.08)",
     success: "#10b981",
+    error: "#ef4444", // Added for error UI
   };
 
   // Get cached data
@@ -73,19 +77,16 @@ export default function ChatList() {
 
   // Fetch chats
   const fetchChats = useCallback(async (showRefreshing = false) => {
-    
     if (!token) {
       setLoading(false);
       return;
     }
-
     if (showRefreshing) setRefreshing(true);
-
+    setError(null); // Clear error
     try {
       const res = await axios.get(`${API_BASE}/chat/recent`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
       if (res.data.success && res.data.recent) {
         setRecentChats(res.data.recent);
         setFilteredChats(res.data.recent);
@@ -93,11 +94,12 @@ export default function ChatList() {
       }
     } catch (err) {
       console.error("Error loading chats:", err);
+      setError("Failed to load chats—check connection or try refresh.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [setCachedData]);
+  }, [setCachedData, token]);
 
   // Initial load with cache
   useEffect(() => {
@@ -119,7 +121,6 @@ export default function ChatList() {
       setFilteredChats(recentChats);
       return;
     }
-
     const filtered = recentChats.filter((chat) =>
       chat.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       chat.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -128,7 +129,7 @@ export default function ChatList() {
   }, [searchQuery, recentChats]);
 
   const handleChatOpen = useCallback((chat) => {
-    navigate("/chatroom", { state: { receiverId: chat._id, receiver: chat } });
+    navigate("/chatroom", { state: { receiverId: chat.id, receiver: chat } });
   }, [navigate]);
 
   const handleRefresh = () => {
@@ -143,13 +144,12 @@ export default function ChatList() {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-
     if (diffMins < 1) return "now";
     if (diffMins < 60) return `${diffMins}m`;
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d`;
-    
+   
     return msgDate.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -322,6 +322,31 @@ export default function ChatList() {
             </div>
             <p style={{ color: colors.textMuted }}>Loading conversations...</p>
           </motion.div>
+        ) : error ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center mt-5 p-5 rounded-4"
+            style={{ 
+              background: "white",
+              boxShadow: colors.shadow,
+              border: `1px solid ${colors.error}`,
+            }}
+          >
+            <Inbox size={36} style={{ color: colors.error }} />
+            <h5 className="mb-2" style={{ color: colors.error }}>
+              Error Loading Chats
+            </h5>
+            <p className="mb-2" style={{ color: colors.textMuted }}>
+              {error}
+            </p>
+            <button
+              onClick={handleRefresh}
+              className="btn btn-sm btn-outline-primary rounded-pill"
+            >
+              Retry
+            </button>
+          </motion.div>
         ) : filteredChats.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -357,7 +382,7 @@ export default function ChatList() {
           <AnimatePresence mode="popLayout">
             {filteredChats.map((chat, index) => (
               <motion.div
-                key={chat._id}
+                key={chat.id} // Changed to chat.id from enriched
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -50 }}
@@ -400,7 +425,7 @@ export default function ChatList() {
                     >
                       {chat.name?.[0]?.toUpperCase() || "U"}
                     </div>
-                    {index < 3 && (
+                    {index < 3 && ( // Example online indicator; replace with real if available
                       <span
                         className="position-absolute rounded-circle border border-3 border-white"
                         style={{
@@ -415,11 +440,19 @@ export default function ChatList() {
                     )}
                   </div>
                   <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                    <div className="fw-bold mb-1" style={{ color: colors.text, fontSize: "16px" }}>
-                      {chat.name}
+                    <div className="d-flex align-items-center gap-2 mb-1">
+                      <div className="fw-bold" style={{ color: colors.text, fontSize: "16px" }}>
+                        {chat.name}
+                      </div>
+                      {chat.phone && (
+                        <small style={{ color: colors.textMuted, fontSize: "12px" }}>
+                          <PhoneIcon size={12} className="me-1" />
+                          {chat.phone}
+                        </small>
+                      )}
                     </div>
                     <div 
-                      className="text-truncate" 
+                      className="text-truncate d-flex align-items-center gap-2" 
                       style={{ 
                         color: colors.textMuted, 
                         fontSize: "14px",
@@ -427,6 +460,11 @@ export default function ChatList() {
                       }}
                     >
                       {chat.lastMessage || "No messages yet"}
+                      {chat.email && (
+                        <small>
+                          <Mail size={12} className="ms-2" />
+                        </small>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -438,7 +476,8 @@ export default function ChatList() {
                     style={{ color: colors.textMuted, fontSize: "12px" }}
                   >
                     <Clock size={12} />
-                    {formatTime(chat.lastActive)}
+                    {formatTime(chat.lastAt)} 
+                    
                   </small>
                   <motion.div
                     whileHover={{ x: 3 }}

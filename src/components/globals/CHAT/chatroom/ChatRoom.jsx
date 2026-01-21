@@ -19,8 +19,9 @@ import { useTyping } from "./hooks/useTyping";
 import { useUserStatus } from "./hooks/useUserStatus";
 import { useCallHandler } from "./hooks/useCallHandler";
 
-// FIXED: Fallback if env var is missing
-const API_BASE = process.env.REACT_APP_API_BASE 
+// API_BASE keeps /api for HTTP requests (axios)
+// Socket URL is handled in useSocket (removes /api)
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
 
 export default function ChatRoom({ 
   receiverId: propReceiverId, 
@@ -40,7 +41,8 @@ export default function ChatRoom({
   // Debug logging
   useEffect(() => {
     console.log("🔍 ChatRoom Debug:");
-    console.log("- API_BASE:", API_BASE);
+    console.log("- HTTP API Base:", API_BASE);
+    console.log("- Socket URL:", process.env.REACT_APP_API_BASE?.replace(/\/api$/, ''));
     console.log("- receiverId:", receiverId);
     console.log("- token exists:", !!token);
     console.log("- listingId:", listingId);
@@ -62,7 +64,7 @@ export default function ChatRoom({
     shadowLg: "0 10px 25px rgba(99,102,241,0.2)",
   };
 
-  // Setup axios
+  // Setup axios (uses /api endpoint)
   useEffect(() => {
     if (token) {
       axios.defaults.baseURL = API_BASE;
@@ -103,9 +105,8 @@ export default function ChatRoom({
 
   // Handle message send
   const handleSendMessage = (text, image) => {
-    // Check if socket is connected before sending
     if (!socketConnected) {
-      console.warn("⚠️ Socket not connected - message will only be sent via HTTP");
+      console.warn("⚠️ Socket not connected - message sent via HTTP only");
     }
     
     if (image) {
@@ -170,7 +171,7 @@ export default function ChatRoom({
         theme={theme}
       />
 
-      {/* Connection Status Modal - Only shows when there's an issue */}
+      {/* Connection Status Modal */}
       <ConnectionModal
         socketConnected={socketConnected}
         connectionError={connectionError}
