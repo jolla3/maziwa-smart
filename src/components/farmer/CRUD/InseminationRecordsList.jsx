@@ -77,7 +77,7 @@ const InseminationRecordsList = () => {
     const fetchRecords = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(API_BASE_URL, {
+            const response = await axios.get(`${API_BASE_URL}/insemination`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setRecords(response.data.records);
@@ -158,7 +158,7 @@ const InseminationRecordsList = () => {
     const handleEditSubmit = async () => {
         setEditLoading(true);
         try {
-            await axios.put(`${API_BASE_URL}/${selectedRecord.id}`, editFormData, {
+            await axios.put(`${API_BASE_URL}/insemination/${selectedRecord.id}`, editFormData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             showSnackbar('Record updated successfully', 'success');
@@ -175,7 +175,7 @@ const InseminationRecordsList = () => {
     const handleDelete = async () => {
         setDeleteLoading(true);
         try {
-            await axios.delete(`${API_BASE_URL}/${selectedRecord.id}`, {
+            await axios.delete(`${API_BASE_URL}/insemination/${selectedRecord.id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             showSnackbar('Record deleted successfully', 'success');

@@ -1,5 +1,5 @@
 // pages/DairySummaries.jsx
-import React, { useState, useEffect, useCallback, useMemo, useContext } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import {
   Box,
   Typography,
@@ -7,44 +7,54 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Grid,
   Snackbar,
   Alert,
   Stack,
-  IconButton,
   Table,
   TableHead,
   TableRow,
   TableCell,
   TableBody,
+  TableSortLabel,
 } from "@mui/material";
-import { BarChart2, List } from "lucide-react";
+import { useTheme } from "@mui/material/styles";
 import { AuthContext } from "../../PrivateComponents/AuthContext";
 import axios from "axios";
-import { COLORS } from "../farmhome/utils/constants";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
 import { useLocation } from "react-router-dom";
 
 const DairySummaries = () => {
   const { token } = useContext(AuthContext);
   const location = useLocation();
   const cowId = location.state?.cowId;
+  const theme = useTheme();
 
   const [summaryData, setSummaryData] = useState([]);
+  const [cowName, setCowName] = useState("");
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
-  const [view, setView] = useState("table"); // table or chart
   const [mode, setMode] = useState("daily"); // daily | weekly | monthly
+  const [orderBy, setOrderBy] = useState("label");
+  const [order, setOrder] = useState("asc");
 
-  const API_BASE_URL =     process.env.REACT_APP_API_BASE
+  const API_BASE_URL = process.env.REACT_APP_API_BASE;
+
+  const timeSlotOrder = [
+    "early_morning",
+    "morning",
+    "midday",
+    "afternoon",
+    "evening",
+    "night",
+  ];
+
+  const slotDisplay = {
+    early_morning: "Early Morning",
+    morning: "Morning",
+    midday: "Midday",
+    afternoon: "Afternoon",
+    evening: "Evening",
+    night: "Night",
+  };
 
   const fetchSummary = useCallback(async () => {
     if (!cowId) return;
@@ -52,153 +62,241 @@ const DairySummaries = () => {
     try {
       const url =
         mode === "daily"
-          ? `${API_BASE_URL}/cows/daily/${cowId}`
+          ? `${API_BASE_URL}/cow/daily/${cowId}`
           : mode === "weekly"
-            ? `${API_BASE_URL}/cows/weekly/${cowId}`
-            : `${API_BASE_URL}/cows/monthly/${cowId}`;
+          ? `${API_BASE_URL}/cow/weekly/${cowId}`
+          : `${API_BASE_URL}/cow/monthly/${cowId}`;
 
-      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      let formatted = [];
-      if (mode === "daily") {
-        formatted = Object.entries(res.data.summary).map(([date, slots]) => ({
-          date,
-          slots, // array of { time_slot, litres }
-          total_litres: Object.values(slots).reduce((a, b) => a + b, 0),
-        }));
-      } else if (mode === "weekly") {
-        formatted = res.data.weekly_trend || [];
-      } else if (mode === "monthly") {
-        formatted = res.data.monthly_summary || [];
+      if (!cowName && res.data.cow_name) {
+        setCowName(res.data.cow_name);
       }
 
-      setSummaryData(formatted);
+      let rawData = [];
+      if (mode === "daily") rawData = res.data.summary || [];
+      else if (mode === "weekly") rawData = res.data.weekly_summary || [];
+      else if (mode === "monthly") rawData = res.data.monthly_summary || [];
+
+      const transformed = rawData.map((item) => {
+        const slotLitres = {};
+        timeSlotOrder.forEach((slot) => (slotLitres[slot] = 0));
+
+        if (Array.isArray(item.slots)) {
+          item.slots.forEach((s) => {
+            if (timeSlotOrder.includes(s.time_slot)) {
+              slotLitres[s.time_slot] += s.litres || 0;
+            }
+          });
+        }
+
+        const total_litres = timeSlotOrder.reduce(
+          (sum, slot) => sum + slotLitres[slot],
+          0
+        );
+
+        // Display label with day name where applicable
+        let label = item.date || item.week;
+        let day = '';
+        if (item.date && (mode === "daily" || mode === "weekly")) {
+          day = new Date(item.date).toLocaleString('en-US', { weekday: 'long' });
+          label = `${item.date} (${day})`;
+        } else if (mode === "weekly" && item.day) {
+          label = `${item.date} (${item.day})`;
+        } else if (mode === "monthly") {
+          label = item.week;
+        }
+
+        // Sort value (numeric)
+        let sortValue;
+        if (mode === "monthly") {
+          sortValue = parseInt(item.week?.replace(/Week\s*/i, "") || "0", 10);
+        } else {
+          const dateStr = item.date || item.label;
+          sortValue = dateStr ? new Date(dateStr).getTime() : 0;
+        }
+
+        return {
+          label,
+          sortValue,
+          ...slotLitres,
+          total_litres,
+        };
+      });
+
+      setSummaryData(transformed);
     } catch (err) {
       console.error(err);
       setSnackbar({ open: true, message: "Failed to fetch summary", severity: "error" });
     } finally {
       setLoading(false);
     }
-  }, [cowId, mode, token]);
+  }, [cowId, mode, token, cowName]);
 
   useEffect(() => {
     fetchSummary();
   }, [fetchSummary]);
 
-  const chartData = useMemo(
-    () =>
-      summaryData.map((item) => ({
-        label: item.date || item.label || item.day || item.week,
-        litres: item.total_litres || item.litres || 0,
-      })),
-    [summaryData]
-  );
+  const periodHeader = mode === "monthly" ? "Week" : "Date";
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  const sortedData = [...summaryData].sort((a, b) => {
+    let valA, valB;
+    if (orderBy === "label") {
+      valA = a.sortValue;
+      valB = b.sortValue;
+    } else if (orderBy === "total_litres") {
+      valA = a.total_litres || 0;
+      valB = b.total_litres || 0;
+    } else {
+      // slot column
+      valA = a[orderBy] ?? 0;
+      valB = b[orderBy] ?? 0;
+    }
+
+    if (valA < valB) return order === "asc" ? -1 : 1;
+    if (valA > valB) return order === "asc" ? 1 : -1;
+    return 0;
+  });
 
   const handleSnackbarClose = () => setSnackbar({ ...snackbar, open: false });
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: "#ffffff", minHeight: "100vh" }}>
-      <Typography variant="h4" fontWeight={900} color="#000" mb={3}>
-        🐄 Dairy Summaries
+      <Typography
+        variant="h4"
+        fontWeight={700}
+        color={theme.palette.primary.main}
+        mb={3}
+      >
+        🐄 {cowName || "Cow"} Dairy Summaries
       </Typography>
 
-      {/* Toggle Mode Buttons */}
-      <Stack direction="row" spacing={1} mb={3}>
+      <Stack direction="row" spacing={1} mb={3} flexWrap="wrap" gap={1}>
         {["daily", "weekly", "monthly"].map((m) => (
           <Button
             key={m}
             variant={mode === m ? "contained" : "outlined"}
+            color="primary"
             onClick={() => setMode(m)}
-            sx={{
-              backgroundColor: mode === m ? COLORS.aqua.main : "#fff",
-              color: mode === m ? "#fff" : COLORS.aqua.main,
-              border: `2px solid ${COLORS.aqua.main}`,
-              fontWeight: 700,
-              "&:hover": {
-                backgroundColor: COLORS.aqua.dark,
-                color: "#fff",
-              },
-            }}
+            sx={{ fontWeight: 700, textTransform: "capitalize" }}
           >
-            {m.charAt(0).toUpperCase() + m.slice(1)}
+            {m}
           </Button>
         ))}
-        <IconButton
-          onClick={() => setView(view === "table" ? "chart" : "table")}
-          sx={{
-            backgroundColor: "#fff",
-            border: `2px solid ${COLORS.aqua.main}`,
-            color: COLORS.aqua.main,
-            "&:hover": {
-              backgroundColor: COLORS.aqua.main,
-              color: "#fff",
-            },
-          }}
-        >
-          {view === "table" ? <BarChart2 size={22} /> : <List size={22} />}
-        </IconButton>
       </Stack>
 
-      {/* Content */}
-      <Card sx={{ backgroundColor: "#fff", borderRadius: "16px", border: `2px solid ${COLORS.aqua.main}30`, p: 2 }}>
+      <Card sx={{ backgroundColor: "#ffffff" }}>
         <CardContent>
           {loading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-              <CircularProgress sx={{ color: COLORS.aqua.main }} />
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              minHeight="200px"
+            >
+              <CircularProgress color="primary" />
             </Box>
           ) : !summaryData.length ? (
-            <Typography textAlign="center" color="#000" fontStyle="italic">
+            <Typography
+              textAlign="center"
+              color={theme.palette.primary.main}
+              fontStyle="italic"
+            >
               No data available
             </Typography>
-          ) : view === "table" ? (
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 900, color: "#000" }}>Date</TableCell>
-                  <TableCell sx={{ fontWeight: 900, color: "#000" }}>Time Slot(s)</TableCell>
-                  <TableCell sx={{ fontWeight: 900, color: "#000" }}>Litres</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {summaryData.map((item, i) => (
-                  <TableRow key={i}>
-                    <TableCell sx={{ color: "#000" }}>{item.date}</TableCell>
-                    <TableCell sx={{ color: "#000" }}>
-                      {Array.isArray(item.slots)
-                        ? item.slots.map((s) => `${s.time_slot} (${s.litres} L)`).join(", ")
-                        : "-"}
-                    </TableCell>
-                    <TableCell sx={{ color: "#000" }}>{item.total_litres || 0} L</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           ) : (
-            <Box height={400}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" stroke="#000" />
-                  <YAxis stroke="#000" />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#fff", border: `1px solid ${COLORS.aqua.main}` }}
-                  />
-                  <Line type="monotone" dataKey="litres" stroke={COLORS.aqua.main} strokeWidth={3} dot />
-                </LineChart>
-              </ResponsiveContainer>
+            <Box sx={{ overflowX: "auto" }}>
+              <Table sx={{ minWidth: 950 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+                      <TableSortLabel
+                        active={orderBy === "label"}
+                        direction={orderBy === "label" ? order : "asc"}
+                        onClick={() => handleRequestSort("label")}
+                      >
+                        {periodHeader}
+                      </TableSortLabel>
+                    </TableCell>
+
+                    {timeSlotOrder.map((slot) => (
+                      <TableCell
+                        key={slot}
+                        align="right"
+                        sx={{ fontWeight: 700, color: theme.palette.primary.main }}
+                      >
+                        <TableSortLabel
+                          active={orderBy === slot}
+                          direction={orderBy === slot ? order : "asc"}
+                          onClick={() => handleRequestSort(slot)}
+                        >
+                          {slotDisplay[slot]}
+                        </TableSortLabel>
+                      </TableCell>
+                    ))}
+
+                    <TableCell
+                      align="right"
+                      sx={{ fontWeight: 700, color: theme.palette.primary.main }}
+                    >
+                      <TableSortLabel
+                        active={orderBy === "total_litres"}
+                        direction={orderBy === "total_litres" ? order : "asc"}
+                        onClick={() => handleRequestSort("total_litres")}
+                      >
+                        Total Litres
+                      </TableSortLabel>
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {sortedData.map((item, i) => (
+                    <TableRow
+                      key={i}
+                      sx={{
+                        backgroundColor: i % 2 === 0 ? "#ffffff" : theme.palette.primary.light + "20", // Pale green tint, hex with alpha
+                      }}
+                    >
+                      <TableCell sx={{ color: "#000000" }}>
+                        {item.label}
+                      </TableCell>
+
+                      {timeSlotOrder.map((slot) => (
+                        <TableCell key={slot} align="right" sx={{ color: "#000000" }}>
+                          {item[slot] ?? 0}
+                        </TableCell>
+                      ))}
+
+                      <TableCell
+                        align="right"
+                        sx={{ color: theme.palette.secondary.main, fontWeight: 600 }}
+                      >
+                        {item.total_litres} L
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </Box>
           )}
         </CardContent>
       </Card>
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert severity={snackbar.severity} onClose={handleSnackbarClose} sx={{ color: "#000" }}>
+        <Alert severity={snackbar.severity} onClose={handleSnackbarClose}>
           {snackbar.message}
         </Alert>
       </Snackbar>

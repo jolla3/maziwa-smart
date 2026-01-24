@@ -81,9 +81,9 @@ const sidebarItems = [
     ],
   },
   {
-    section: "Charts",
+    section: "Chats",
     items: [
-      { title: "Bar Chart", to: "/bar", icon: <BarChartOutlinedIcon /> },
+      { title: "My Chats", to: "/fmr.drb/recents", icon: <BarChartOutlinedIcon /> },
       { title: "Pie Chart", to: "/pie", icon: <PieChartOutlineOutlinedIcon /> },
       { title: "Line Chart", to: "/line", icon: <TimelineOutlinedIcon /> },
       { title: "Geography Chart", to: "/geography", icon: <MapOutlinedIcon /> },

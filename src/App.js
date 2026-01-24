@@ -36,7 +36,6 @@ import FarmerLayout from "./components/farmer/farmerLayout";
 import DailyMilkSummary from "./components/farmer/CRUD/DailyMilkSummary";
 import BreedManagement from "./components/farmer/CRUD/BreedManagment";
 // import CowManagement from "./components/farmer/CowManagement";
-// import AddCalf from "./components/farmer/AddCalf";
 // import CowFamilyTree from "./components/farmer/CowFamilyTree";
 import CowRegistrationForm from "./components/farmer/CRUD/CowRegistrationForm";
 import AddCalfForm from "./components/farmer/CRUD/AddCalfForm";
@@ -53,7 +52,7 @@ import CreateListing from "./components/globals/global markets/market crud/Creat
 import EditListing from "./components/globals/global markets/market crud/EditListing";
 import ViewListing from "./components/globals/global markets/market crud/ViewListing";
 // import MarketplacePage from "./components/globals/MarketplacePage";
-import MarketPage from "./components/globals/global markets/MarketplacePage";
+import MarketPage from "./components/globals/global markets/marketviewpage/MarketplacePage";
 // import MarketView from "./components/globals/MarketView";
 import Notifications from "./components/globals/Notification";
 import FarmerRegister from "./components/globals/logins/Registerfarmer";
@@ -71,6 +70,7 @@ import SetPassword from "./components/globals/logins/SetPassword";
 import SuperAdminRoutes from "./components/SUPERaDMIN/superadmin-routes";
 import SellerDashboard from "./components/Sellers/SellerDashboard";
 import DashboardHomePage from "./components/Sellers/pages/DashboardHomePage";
+import MilkIntelligenceDashboard from "./components/farmer/CRUD/MilkAnimalSummary";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -112,8 +112,9 @@ function App() {
             <Route path="/create" element={<CreateListing />} />
             <Route path="/edit" element={<EditListing />} />
             <Route path="/view" element={<ViewListing />} /> */}
-            <Route path="/market" element={<MarketPage />} />
+            <Route path="/market/*" element={<MarketPage />} />
             <Route path="/view-market" element={<MarketView />} />
+            <Route path="/animal-milk-summary" element={<MilkIntelligenceDashboard />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/seller-approval" element={<SellerRequest />} />
             <Route path="/admin-approval" element={<AdminSellerRequests />} />
@@ -212,7 +213,7 @@ function App() {
               <Route path="create" element={<CreateListing />} />
               <Route path="edit" element={<EditListing />} />
               <Route path="view" element={<ViewListing />} />
-              <Route path="market" element={<MarketPage />} />
+              <Route path="market/*" element={<MarketPage />} />
               <Route path="view-market" element={<MarketView />} />
             </Route>
 
