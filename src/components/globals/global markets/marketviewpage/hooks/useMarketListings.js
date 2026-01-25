@@ -1,5 +1,5 @@
 // marketviewpage/hooks/useMarketListings.js
-import { useState, useEffect, useCallback, useContext } from "react";
+import { useState, useEffect, useCallback, useContext, useMemo } from "react";
 import { AuthContext } from "../../../../PrivateComponents/AuthContext";
 import { marketApi } from "../api/market.api";
 
@@ -7,7 +7,6 @@ const INITIAL_FILTERS = {
   species: "",
   gender: "",
   stage: "",
-  breed: "",
   pregnant: "",
   minPrice: "",
   maxPrice: "",
@@ -16,62 +15,114 @@ const INITIAL_FILTERS = {
 
 export default function useMarketListings() {
   const { token } = useContext(AuthContext);
-  const [listings, setListings] = useState([]);
+  const [allListings, setAllListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
-  const [showFilters, setShowFilters] = useState(false);
-
-  const fetchListings = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = { ...filters };
-      if (searchQuery) params.search = searchQuery;
-
-      const data = await marketApi.fetchListings(params, token);
-
-      if (data.success) {
-        setListings(data.listings);
-        localStorage.setItem("cachedListings", JSON.stringify(data.listings));
-      }
-    } catch (err) {
-      console.error("❌ Fetch market error:", err);
-      const cached = localStorage.getItem("cachedListings");
-      if (cached) setListings(JSON.parse(cached));
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, token, searchQuery]);
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchListings();
-    }, 300);
-    return () => clearTimeout(delay);
-  }, [fetchListings]);
+    const fetchListings = async () => {
+      setLoading(true);
+      try {
+        const data = await marketApi.fetchListings({}, token);
+        if (data.success) {
+          // Remove duplicates AND filter out invalid listings
+          const validListings = data.listings.filter(item => 
+            item._id && 
+            item.title && 
+            item.price > 0
+          );
+          
+          const uniqueListings = Array.from(
+            new Map(validListings.map(item => [item._id, item])).values()
+          );
+          
+          setAllListings(uniqueListings);
+        }
+      } catch (err) {
+        console.error("Fetch listings error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListings();
+  }, [token]);
+
+  const filteredListings = useMemo(() => {
+    let list = [...allListings];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (l) =>
+          l.title?.toLowerCase().includes(q) ||
+          l.location?.toLowerCase().includes(q) ||
+          l.animal_id?.species?.toLowerCase().includes(q) ||
+          l.animal_id?.breed?.toLowerCase().includes(q)
+      );
+    }
+
+    if (filters.species) {
+      list = list.filter((l) => l.animal_id?.species === filters.species);
+    }
+
+    if (filters.gender) {
+      list = list.filter((l) => l.animal_id?.gender === filters.gender);
+    }
+
+    if (filters.stage) {
+      list = list.filter((l) => l.animal_id?.stage === filters.stage);
+    }
+
+    if (filters.pregnant) {
+      const isPregnant = filters.pregnant === "true";
+      list = list.filter(
+        (l) => (l.animal_id?.status === "pregnant") === isPregnant
+      );
+    }
+
+    if (filters.minPrice) {
+      list = list.filter((l) => l.price >= Number(filters.minPrice));
+    }
+
+    if (filters.maxPrice) {
+      list = list.filter((l) => l.price <= Number(filters.maxPrice));
+    }
+
+    switch (filters.sort) {
+      case "price_asc":
+        list.sort((a, b) => a.price - b.price);
+        break;
+      case "price_desc":
+        list.sort((a, b) => b.price - a.price);
+        break;
+      case "views_desc":
+        list.sort((a, b) => (b.views || 0) - (a.views || 0));
+        break;
+      default:
+        list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    return list;
+  }, [allListings, searchQuery, filters]);
 
   const updateFilter = useCallback((key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters(INITIAL_FILTERS);
     setSearchQuery("");
-  }, []);
-
-  const toggleFilters = useCallback(() => {
-    setShowFilters((prev) => !prev);
+    setFilters(INITIAL_FILTERS);
   }, []);
 
   return {
-    listings,
+    listings: filteredListings,
     loading,
     searchQuery,
     setSearchQuery,
     filters,
     updateFilter,
     clearFilters,
-    showFilters,
-    toggleFilters,
   };
 }

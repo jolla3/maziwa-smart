@@ -71,6 +71,9 @@ import SuperAdminRoutes from "./components/SUPERaDMIN/superadmin-routes";
 import SellerDashboard from "./components/Sellers/SellerDashboard";
 import DashboardHomePage from "./components/Sellers/pages/DashboardHomePage";
 import MilkIntelligenceDashboard from "./components/farmer/CRUD/MilkAnimalSummary";
+import PurchaseHistoryPage from "./components/globals/global markets/marketviewpage/pages/PurchaseHistoryPage";
+import BasketPage from "./components/globals/global markets/marketviewpage/pages/BasketPage";
+import WishlistPage from "./components/globals/global markets/marketviewpage/pages/WishlistPage";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -215,6 +218,12 @@ function App() {
               <Route path="view" element={<ViewListing />} />
               <Route path="market/*" element={<MarketPage />} />
               <Route path="view-market" element={<MarketView />} />
+              <Route path="animal-milk-summary" element={<MilkIntelligenceDashboard />} />
+              {/* <Route index element={<MainMarketView />} /> */}
+                    <Route path="wishlist" element={<WishlistPage />} />
+                    <Route path="basket" element={<BasketPage />} />
+                    <Route path="purchases" element={<PurchaseHistoryPage />} />
+
             </Route>
 
 

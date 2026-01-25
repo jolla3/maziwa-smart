@@ -60,7 +60,7 @@ export default function EditListing() {
       prefill(listingData);
     } else {
       showToast("error", "No listing data provided");
-      setTimeout(() => navigate("/slr.drb/my-listings"), 2000);
+      setTimeout(() => navigate("/slr.drb/my-listings"), 2000) || navigate("/fmr.drb/my-listings");
     }
   }, []);
 
@@ -274,7 +274,7 @@ export default function EditListing() {
         setPreviews([]);
 
         setTimeout(() => {
-          navigate("/slr.drb/my-listings");
+          navigate("/slr.drb/my-listings") || navigate("/frmr.drb/my-listings");
         }, 1500);
       } else {
         showToast("error", res.data.message || "Failed to update listing");
@@ -306,6 +306,14 @@ export default function EditListing() {
     return photo;
   };
 
+  const handleNavigateBack = () => {
+    if (user?.role === "farmer") {
+      navigate("/frmr.drb/my-listings");
+    } else {
+      navigate("/slr.drb/my-listings");
+    }
+  };
+
   return (
     <div className="container-fluid px-3 py-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
       {loading ? (
@@ -325,7 +333,7 @@ export default function EditListing() {
           <div className="d-flex align-items-center mb-4">
             <button
               className="btn btn-outline-secondary me-3"
-              onClick={() => navigate("/slr.drb/my-listings")}
+              onClick={handleNavigateBack}
             >
               <ArrowLeft size={18} /> Back
             </button>
@@ -491,7 +499,7 @@ export default function EditListing() {
                             >
                               <img
                                 src={getImageUrl(p)}
-                                alt={`Photo ${i + 1}`}
+                                alt={`${i + 1}`}
                                 className="rounded w-100 h-100"
                                 style={{ objectFit: "cover" }}
                                 onError={(e) => {
@@ -535,7 +543,7 @@ export default function EditListing() {
                             >
                               <img
                                 src={p}
-                                alt={`New photo ${i + 1}`}
+                                alt={`Listing preview ${i + 1}`}
                                 className="rounded w-100 h-100"
                                 style={{ objectFit: "cover" }}
                               />
@@ -578,7 +586,7 @@ export default function EditListing() {
               <div className="d-flex gap-2 mt-3">
                 <button
                   className="btn btn-outline-secondary w-50"
-                  onClick={() => navigate("/slr.drb/my-listings")}
+                  onClick={handleNavigateBack}
                   disabled={saving}
                 >
                   <ArrowLeft size={16} className="me-1" /> Cancel

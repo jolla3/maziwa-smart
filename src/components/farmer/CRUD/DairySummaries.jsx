@@ -36,7 +36,11 @@ const DairySummaries = () => {
   const [orderBy, setOrderBy] = useState("label");
   const [order, setOrder] = useState("asc");
 
+  
+
   const API_BASE_URL = process.env.REACT_APP_API_BASE;
+
+  
 
   const timeSlotOrder = [
     "early_morning",

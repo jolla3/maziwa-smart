@@ -75,8 +75,21 @@ export default function ViewListing() {
       maximumFractionDigits: 0,
     }).format(val || 0);
 
-  const handleBack = () => navigate("/slr.drb/my-listings");
-  const handleEdit = () => navigate("/slr.drb/edit", { state: { listing } });
+  const handleBack  = () => {
+    if (user?.role === "farmer") {
+      navigate("/frmr.drb/my-listings");
+    } else {
+      navigate("/slr.drb/my-listings");
+    }
+  };
+  
+  const handleEdit = () =>{
+     if (user?.role === "farmer") {
+     navigate("/slr.drb/edit", { state: { listing } });
+     }
+     else{
+      navigate("/frmr.drb/edit", { state: { listing } });}
+     }
 
   const imgUrl = (path) =>
     path?.startsWith("/uploads/listings")

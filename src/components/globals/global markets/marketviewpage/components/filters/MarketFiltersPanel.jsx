@@ -1,218 +1,166 @@
 // marketviewpage/components/filters/MarketFiltersPanel.jsx
 import React from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  IconButton,
-  TextField,
-  MenuItem,
-  Button,
-  Collapse,
-} from "@mui/material";
-import { X, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Filter, X } from "lucide-react";
 
-const filterOptions = {
-  species: [
-    { value: "", label: "All Species" },
-    { value: "cow", label: "🐄 Cow" },
-    { value: "goat", label: "🐐 Goat" },
-    { value: "sheep", label: "🐑 Sheep" },
-    { value: "pig", label: "🐖 Pig" },
-  ],
-  gender: [
-    { value: "", label: "All Genders" },
-    { value: "female", label: "♀ Female" },
-    { value: "male", label: "♂ Male" },
-  ],
-  stage: [
-    { value: "", label: "All Stages" },
-    { value: "calf", label: "Calf" },
-    { value: "weaner", label: "Weaner" },
-    { value: "mature", label: "Mature" },
-  ],
-  pregnant: [
-    { value: "", label: "All" },
-    { value: "true", label: "Yes" },
-    { value: "false", label: "No" },
-  ],
-  sort: [
-    { value: "createdAt", label: "Newest First" },
-    { value: "price_asc", label: "Price: Low → High" },
-    { value: "price_desc", label: "Price: High → Low" },
-    { value: "views_desc", label: "Most Viewed" },
-  ],
-};
+export default function MarketFiltersPanel({ open, filters, onChange, onClear, onClose }) {
+  const handleChange = (field, value) => {
+    onChange(field, value);
+  };
 
-export default function MarketFiltersPanel({
-  show,
-  filters,
-  onFilterChange,
-  onClearFilters,
-  onClose,
-}) {
   return (
     <AnimatePresence>
-      {show && (
-        <Collapse in={show}>
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            <Card
-              elevation={0}
-              sx={{
-                borderRadius: 4,
-                mb: 3,
-                boxShadow: 1,
-              }}
-            >
-              <CardContent sx={{ p: 4 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 3,
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4"
+        >
+          <div className="card-body p-4">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h5 className="fw-bold mb-0 d-flex align-items-center" style={{ color: "#0f172a" }}>
+                <Filter className="me-2" size={20} style={{ color: "#10b981" }} />
+                Filter Your Search
+              </h5>
+              <button 
+                className="btn btn-sm btn-light rounded-circle" 
+                onClick={onClose}
+                style={{ border: "none" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="row g-3">
+              <div className="col-md-3">
+                <label className="form-label fw-semibold" style={{ color: "#0f172a" }}>
+                  Species
+                </label>
+                <select
+                  className="form-select"
+                  value={filters.species}
+                  onChange={(e) => handleChange("species", e.target.value)}
+                  style={{ color: "#0f172a" }}
+                >
+                  <option value="">All Species</option>
+                  <option value="cow">Cow 🐄</option>
+                  <option value="goat">Goat 🐐</option>
+                  <option value="sheep">Sheep 🐑</option>
+                  <option value="pig">Pig 🐖</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label fw-semibold" style={{ color: "#0f172a" }}>
+                  Gender
+                </label>
+                <select
+                  className="form-select"
+                  value={filters.gender}
+                  onChange={(e) => handleChange("gender", e.target.value)}
+                  style={{ color: "#0f172a" }}
+                >
+                  <option value="">All Genders</option>
+                  <option value="female">Female ♀</option>
+                  <option value="male">Male ♂</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label fw-semibold" style={{ color: "#0f172a" }}>
+                  Stage
+                </label>
+                <select
+                  className="form-select"
+                  value={filters.stage}
+                  onChange={(e) => handleChange("stage", e.target.value)}
+                  style={{ color: "#0f172a" }}
+                >
+                  <option value="">All Stages</option>
+                  <option value="calf">Calf</option>
+                  <option value="weaner">Weaner</option>
+                  <option value="mature">Mature</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label fw-semibold" style={{ color: "#0f172a" }}>
+                  Pregnant
+                </label>
+                <select
+                  className="form-select"
+                  value={filters.pregnant}
+                  onChange={(e) => handleChange("pregnant", e.target.value)}
+                  style={{ color: "#0f172a" }}
+                >
+                  <option value="">All</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label fw-semibold" style={{ color: "#0f172a" }}>
+                  Min Price (KES)
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="0"
+                  value={filters.minPrice}
+                  onChange={(e) => handleChange("minPrice", e.target.value)}
+                  style={{ color: "#0f172a" }}
+                />
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label fw-semibold" style={{ color: "#0f172a" }}>
+                  Max Price (KES)
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="100000"
+                  value={filters.maxPrice}
+                  onChange={(e) => handleChange("maxPrice", e.target.value)}
+                  style={{ color: "#0f172a" }}
+                />
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label fw-semibold" style={{ color: "#0f172a" }}>
+                  Sort By
+                </label>
+                <select
+                  className="form-select"
+                  value={filters.sort}
+                  onChange={(e) => handleChange("sort", e.target.value)}
+                  style={{ color: "#0f172a" }}
+                >
+                  <option value="createdAt">Newest First</option>
+                  <option value="price_asc">Price: Low → High</option>
+                  <option value="price_desc">Price: High → Low</option>
+                  <option value="views_desc">Most Viewed</option>
+                </select>
+              </div>
+
+              <div className="col-md-12">
+                <button
+                  className="btn rounded-3"
+                  onClick={onClear}
+                  style={{
+                    backgroundColor: "#10b981",
+                    color: "white",
+                    border: "none",
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Filter size={20} color="#667eea" style={{ marginRight: 8 }} />
-                    <Typography variant="h6" fontWeight="bold">
-                      Filter Your Search
-                    </Typography>
-                  </Box>
-                  <IconButton size="small" onClick={onClose}>
-                    <X size={18} />
-                  </IconButton>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "1fr",
-                      sm: "repeat(2, 1fr)",
-                      md: "repeat(4, 1fr)",
-                    },
-                    gap: 2,
-                  }}
-                >
-                  <TextField
-                    select
-                    fullWidth
-                    label="Species"
-                    value={filters.species}
-                    onChange={(e) => onFilterChange("species", e.target.value)}
-                    size="small"
-                  >
-                    {filterOptions.species.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-
-                  <TextField
-                    select
-                    fullWidth
-                    label="Gender"
-                    value={filters.gender}
-                    onChange={(e) => onFilterChange("gender", e.target.value)}
-                    size="small"
-                  >
-                    {filterOptions.gender.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-
-                  <TextField
-                    select
-                    fullWidth
-                    label="Stage"
-                    value={filters.stage}
-                    onChange={(e) => onFilterChange("stage", e.target.value)}
-                    size="small"
-                  >
-                    {filterOptions.stage.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-
-                  <TextField
-                    select
-                    fullWidth
-                    label="Pregnant"
-                    value={filters.pregnant}
-                    onChange={(e) => onFilterChange("pregnant", e.target.value)}
-                    size="small"
-                  >
-                    {filterOptions.pregnant.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-
-                  <TextField
-                    fullWidth
-                    type="number"
-                    label="Min Price (KES)"
-                    placeholder="0"
-                    value={filters.minPrice}
-                    onChange={(e) => onFilterChange("minPrice", e.target.value)}
-                    size="small"
-                  />
-
-                  <TextField
-                    fullWidth
-                    type="number"
-                    label="Max Price (KES)"
-                    placeholder="100000"
-                    value={filters.maxPrice}
-                    onChange={(e) => onFilterChange("maxPrice", e.target.value)}
-                    size="small"
-                  />
-
-                  <TextField
-                    select
-                    fullWidth
-                    label="Sort By"
-                    value={filters.sort}
-                    onChange={(e) => onFilterChange("sort", e.target.value)}
-                    size="small"
-                    sx={{ gridColumn: { md: "span 2" } }}
-                  >
-                    {filterOptions.sort.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-
-                  <Button
-                    variant="outlined"
-                    onClick={onClearFilters}
-                    sx={{
-                      gridColumn: { xs: "1", md: "span 2" },
-                      borderRadius: 2,
-                      textTransform: "none",
-                    }}
-                  >
-                    Clear All Filters
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </Collapse>
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

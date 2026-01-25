@@ -1,176 +1,187 @@
 // marketviewpage/components/listings/ListingCard.jsx
-import React from "react";
-import { Card, CardMedia, CardContent, Typography, Box, Chip } from "@mui/material";
-import { MapPin, Eye, Calendar, Award, Image as ImageIcon } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { MapPin, Eye, Heart, ShoppingCart, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import ImageWithFallback from "../shared/ImageWithFallback";
-import PriceTag from "../shared/PriceTag";
-import TimeAgo from "../shared/TimeAgo";
-import ListingBadges from "./ListingBadges";
-import ListingActions from "./ListingActions";
-import { getFirstImage, imgUrl } from "../../utils/image.utils";
+import { imgUrl, getFirstImage } from "../../utils/image.utils";
+import { formatCurrency, timeAgo } from "../../utils/currency.utils";
 
-export default function ListingCard({ listing, isTrending }) {
+const speciesConfig = {
+  cow: { color: "#10b981", emoji: "🐄" },
+  goat: { color: "#059669", emoji: "🐐" },
+  sheep: { color: "#f59e0b", emoji: "🐑" },
+  pig: { color: "#ef4444", emoji: "🐖" },
+};
+
+export default function ListingCard({ listing }) {
   const navigate = useNavigate();
-  const isSold = listing.status === "sold";
+  const [inWishlist, setInWishlist] = useState(false);
+  const [inBasket, setInBasket] = useState(false);
+
+  useEffect(() => {
+    const checkStatus = () => {
+      const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+      const basket = JSON.parse(localStorage.getItem("basket") || "[]");
+      setInWishlist(favorites.includes(listing._id));
+      setInBasket(basket.some(item => item._id === listing._id));
+    };
+
+    checkStatus();
+
+    const interval = setInterval(checkStatus, 500);
+    return () => clearInterval(interval);
+  }, [listing._id]);
 
   const handleView = () => {
     navigate("/view-market", { state: { listing } });
   };
 
-  const imageCount = listing.photos?.length || listing.images?.length || 0;
+  const toggleWishlist = (e) => {
+    e.stopPropagation();
+    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+    
+    let newFavorites;
+    if (favorites.includes(listing._id)) {
+      newFavorites = favorites.filter(id => id !== listing._id);
+      setInWishlist(false);
+    } else {
+      newFavorites = [...favorites, listing._id];
+      setInWishlist(true);
+    }
+    
+    localStorage.setItem("favorites", JSON.stringify(newFavorites));
+    window.dispatchEvent(new Event("storage"));
+  };
+
+  const toggleBasket = (e) => {
+    e.stopPropagation();
+    if (listing.status === "sold") return;
+
+    const basket = JSON.parse(localStorage.getItem("basket") || "[]");
+    
+    let newBasket;
+    if (basket.some(item => item._id === listing._id)) {
+      newBasket = basket.filter(item => item._id !== listing._id);
+      setInBasket(false);
+    } else {
+      newBasket = [...basket, { ...listing, addedAt: new Date().toISOString() }];
+      setInBasket(true);
+    }
+    
+    localStorage.setItem("basket", JSON.stringify(newBasket));
+    window.dispatchEvent(new Event("storage"));
+  };
+
+  const species = listing.animal_id?.species || "livestock";
+  const speciesColor = speciesConfig[species]?.color || "#10b981";
+  const speciesEmoji = speciesConfig[species]?.emoji || "📦";
 
   return (
-    <motion.div whileHover={{ y: -10 }}>
-      <Card
-        elevation={0}
-        sx={{
-          borderRadius: 4,
-          overflow: "hidden",
-          height: "100%",
-          cursor: "pointer",
-          border: "1px solid transparent",
-          transition: "all 0.3s ease",
-          opacity: isSold ? 0.6 : 1,
-          "&:hover": {
-            boxShadow: 4,
-            borderColor: "rgba(102, 126, 234, 0.3)",
-          },
-        }}
-      >
-        <Box sx={{ position: "relative" }} onClick={handleView}>
-          <CardMedia
-            sx={{
-              height: 200,
-              position: "relative",
-              overflow: "hidden",
-              backgroundColor: "#f5f5f5",
+    <motion.div
+      whileHover={{ y: -10 }}
+      className="card border-0 shadow-sm rounded-4 overflow-hidden h-100"
+      style={{ cursor: "pointer" }}
+    >
+      <div className="position-relative" onClick={handleView}>
+        <div className="ratio ratio-4x3 bg-light overflow-hidden">
+          <img
+            src={imgUrl(getFirstImage(listing))}
+            alt={listing.title}
+            style={{ 
+              objectFit: "cover",
+              transition: "transform 0.4s ease"
             }}
+            className="card-zoom-img"
+          />
+        </div>
+
+        <div className="position-absolute top-0 start-0 m-2 d-flex gap-1">
+          <button
+            className={`btn btn-sm shadow ${inWishlist ? "btn-danger" : "btn-light"}`}
+            onClick={toggleWishlist}
+            style={{ border: "none" }}
           >
-            <ImageWithFallback
-              src={imgUrl(getFirstImage(listing))}
-              alt={listing.title}
+            <Heart 
+              size={16} 
+              fill={inWishlist ? "white" : "none"}
+              color={inWishlist ? "white" : "#0f172a"}
             />
+          </button>
 
-            {imageCount > 1 && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)",
-                  color: "white",
-                  px: 1,
-                  py: 0.5,
-                  fontSize: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <ImageIcon size={14} style={{ marginRight: 4 }} />
-                {imageCount} photos
-              </Box>
-            )}
-          </CardMedia>
-
-          <ListingActions listing={listing} isSold={isSold} />
-
-          <Box sx={{ position: "absolute", bottom: 8, left: 8 }}>
-            <Chip
-              label={`${listing.animal_id?.species || "Livestock"}`}
-              size="small"
-              sx={{
-                backgroundColor:
-                  listing.animal_id?.species === "cow"
-                    ? "#667eea"
-                    : listing.animal_id?.species === "goat"
-                    ? "#10b981"
-                    : listing.animal_id?.species === "sheep"
-                    ? "#f59e0b"
-                    : listing.animal_id?.species === "pig"
-                    ? "#ef4444"
-                    : "#6b7280",
-                color: "white",
-                fontWeight: "bold",
-              }}
-            />
-          </Box>
-
-          {isTrending && (
-            <Chip
-              icon={<Award size={14} />}
-              label="Trending"
-              color="error"
-              size="small"
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                fontWeight: "bold",
-              }}
-            />
-          )}
-
-          {isSold && (
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                backgroundColor: "rgba(0, 0, 0, 0.8)",
-                color: "white",
-                px: 3,
-                py: 1,
-                borderRadius: 2,
-                fontWeight: "bold",
-                fontSize: "1.2rem",
-              }}
-            >
-              SOLD
-            </Box>
-          )}
-        </Box>
-
-        <CardContent sx={{ p: 2 }} onClick={handleView}>
-          <Typography variant="h6" fontWeight="bold" noWrap gutterBottom>
-            {listing.title}
-          </Typography>
-
-          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <MapPin size={14} color="#9e9e9e" style={{ marginRight: 4 }} />
-            <Typography variant="body2" color="text.secondary" noWrap>
-              {listing.location || "Location N/A"}
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 2,
-            }}
+          <button
+            className={`btn btn-sm shadow ${inBasket ? "btn-success" : "btn-light"}`}
+            onClick={toggleBasket}
+            disabled={listing.status === "sold"}
+            style={{ border: "none" }}
           >
-            <PriceTag value={listing.price} />
-            <Box sx={{ display: "flex", alignItems: "center", color: "text.secondary" }}>
-              <Eye size={14} style={{ marginRight: 4 }} />
-              <Typography variant="body2">{listing.views || 0}</Typography>
-            </Box>
-          </Box>
+            <ShoppingCart 
+              size={16}
+              color={inBasket ? "white" : "#0f172a"}
+            />
+          </button>
+        </div>
 
-          <ListingBadges listing={listing} />
+        <div className="position-absolute bottom-0 start-0 m-2">
+          <span 
+            className="badge text-white"
+            style={{ backgroundColor: speciesColor }}
+          >
+            {speciesEmoji} {species}
+          </span>
+        </div>
+      </div>
 
-          <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
-            <Calendar size={12} color="#9e9e9e" style={{ marginRight: 4 }} />
-            <Typography variant="caption" color="text.secondary">
-              <TimeAgo date={listing.createdAt} />
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
+      <div className="card-body p-3" onClick={handleView}>
+        <h6 className="fw-bold mb-2 text-truncate" style={{ color: "#0f172a" }}>
+          {listing.title}
+        </h6>
+
+        <div className="d-flex align-items-center mb-2">
+          <MapPin size={14} style={{ color: "#10b981" }} className="me-1" />
+          <span className="text-truncate" style={{ color: "#0f172a", fontSize: "0.9rem" }}>
+            {listing.location || "Location not specified"}
+          </span>
+        </div>
+
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <h5 className="fw-bold mb-0" style={{ color: "#10b981" }}>
+            {formatCurrency(listing.price)}
+          </h5>
+          <div className="d-flex align-items-center" style={{ color: "#0f172a" }}>
+            <Eye size={14} className="me-1" />
+            <span style={{ fontSize: "0.9rem" }}>{listing.views || 0}</span>
+          </div>
+        </div>
+
+        <div className="d-flex gap-1 flex-wrap mb-2">
+          {listing.animal_id?.gender && (
+            <span className="badge" style={{ backgroundColor: "#3b82f6", color: "white" }}>
+              {listing.animal_id.gender === "male" ? "♂" : "♀"} {listing.animal_id.gender}
+            </span>
+          )}
+          {listing.animal_id?.stage && (
+            <span className="badge" style={{ backgroundColor: "#8b5cf6", color: "white" }}>
+              {listing.animal_id.stage}
+            </span>
+          )}
+          {listing.animal_id?.status === "pregnant" && (
+            <span className="badge" style={{ backgroundColor: "#f59e0b", color: "white" }}>
+              🤰 Pregnant
+            </span>
+          )}
+        </div>
+
+        <div className="d-flex align-items-center">
+          <Calendar size={12} style={{ color: "#10b981" }} className="me-1" />
+          <small style={{ color: "#0f172a" }}>{timeAgo(listing.createdAt)}</small>
+        </div>
+      </div>
+
+      <style>{`
+        .card:hover .card-zoom-img {
+          transform: scale(1.08);
+        }
+      `}</style>
     </motion.div>
   );
 }

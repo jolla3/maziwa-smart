@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { AppBar, Toolbar, IconButton, Typography, Badge, Box } from "@mui/material";
 import { Menu, Heart, ShoppingCart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export default function TopNavBar({ onMenuClick, onNavigate }) {
+export default function TopNavBar({ onMenuClick }) {
+  const navigate = useNavigate();
   const [wishlistCount, setWishlistCount] = useState(0);
   const [basketCount, setBasketCount] = useState(0);
 
@@ -17,14 +19,11 @@ export default function TopNavBar({ onMenuClick, onNavigate }) {
   useEffect(() => {
     updateCounts();
     
-    // Listen for storage changes
     const handleStorageChange = () => {
       updateCounts();
     };
     
     window.addEventListener('storage', handleStorageChange);
-    
-    // Also check every second for updates
     const interval = setInterval(updateCounts, 1000);
     
     return () => {
@@ -66,7 +65,7 @@ export default function TopNavBar({ onMenuClick, onNavigate }) {
 
         <Box sx={{ display: "flex", gap: 1 }}>
           <IconButton 
-            onClick={() => onNavigate("wishlist")} 
+            onClick={() => navigate("/market/wishlist")}
             sx={{ 
               color: "#0f172a",
               "&:hover": {
@@ -80,7 +79,7 @@ export default function TopNavBar({ onMenuClick, onNavigate }) {
           </IconButton>
 
           <IconButton 
-            onClick={() => onNavigate("basket")} 
+            onClick={() => navigate("/market/basket")}
             sx={{ 
               color: "#0f172a",
               "&:hover": {

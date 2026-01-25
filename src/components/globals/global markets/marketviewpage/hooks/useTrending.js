@@ -11,10 +11,21 @@ export default function useTrending() {
     try {
       const data = await marketApi.fetchTrending(token);
       if (data.success) {
-        setTrendingListings(data.listings);
+        // Remove duplicates AND filter out invalid listings
+        const validListings = data.listings.filter(item => 
+          item._id && 
+          item.title && 
+          item.price > 0
+        );
+        
+        const uniqueListings = Array.from(
+          new Map(validListings.map(item => [item._id, item])).values()
+        );
+        
+        setTrendingListings(uniqueListings);
       }
     } catch (err) {
-      console.error("❌ Trending fetch error:", err);
+      console.error("Fetch trending error:", err);
     }
   }, [token]);
 

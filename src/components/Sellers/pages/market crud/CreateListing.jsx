@@ -128,6 +128,14 @@ const CreateListing = () => {
   }, [images]);
 
   // --- Corrected handleSubmit ---
+  const handleNavigateBack = () => {
+    if (user?.role === "farmer") {
+      navigate("/frmr.drb/my-listings");
+    } else {
+      navigate("/slr.drb/my-listings");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -180,7 +188,7 @@ const CreateListing = () => {
 
       if (res.data.success) {
         showToast("✅ Listing created successfully!", "success");
-        setTimeout(() => navigate("/slr.drb/my-listings"), 1500);
+        setTimeout(() => handleNavigateBack(), 1500);
       } else {
         showToast(res.data.message || "Failed to create listing", "error");
       }
@@ -216,7 +224,7 @@ const CreateListing = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               className="btn btn-outline-secondary rounded-pill"
-              onClick={() => navigate("/slr.drb/my-listings")}
+              onClick={handleNavigateBack}
               type="button"
             >
               <ArrowLeft size={16} className="me-1" /> Back

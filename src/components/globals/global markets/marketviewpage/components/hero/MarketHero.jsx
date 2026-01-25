@@ -1,108 +1,103 @@
-// marketviewpage/components/hero/ModernHero.jsx
+// marketviewpage/components/hero/MarketHero.jsx
 import React from "react";
-import { Box, Container, Typography, InputBase, Paper, IconButton } from "@mui/material";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { motion } from "framer-motion";
+import { Box, InputBase, Paper } from "@mui/material";
+import { Search, Sparkles } from "lucide-react";
 
-export default function ModernHero({ searchQuery, onSearchChange, onFilterClick }) {
+export default function MarketHero({ searchQuery, onSearchChange }) {
   return (
-    <Box
-      sx={{
-        background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-        pt: 6,
-        pb: 8,
-        position: "relative",
-        overflow: "hidden",
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: -30 }}
+      animate={{ opacity: 1, y: 0 }}
     >
-      {/* Decorative circles */}
       <Box
         sx={{
-          position: "absolute",
-          top: -100,
-          right: -100,
-          width: 400,
-          height: 400,
-          borderRadius: "50%",
-          background: "rgba(255,255,255,0.1)",
+          position: "relative",
+          overflow: "hidden",
+          borderRadius: 4,
+          background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+          padding: "3rem 2rem",
+          mb: 4,
+          boxShadow: 3,
         }}
-      />
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: -50,
-          left: -50,
-          width: 300,
-          height: 300,
-          borderRadius: "50%",
-          background: "rgba(255,255,255,0.1)",
-        }}
-      />
-
-      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h2"
-            sx={{
-              color: "white",
-              fontWeight: 800,
-              mb: 2,
-            }}
-          >
-            Premium Livestock Marketplace
-          </Typography>
-          <Typography
-            variant="h5"
-            sx={{
-              color: "rgba(255,255,255,0.9)",
-              fontWeight: 400,
-              maxWidth: 600,
-              mx: "auto",
-            }}
-          >
-            Find quality livestock from verified sellers across Kenya
-          </Typography>
-        </Box>
-
-        <Paper
-          elevation={0}
+      >
+        <Box
           sx={{
-            maxWidth: 700,
-            mx: "auto",
-            borderRadius: 4,
-            overflow: "hidden",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+            position: "absolute",
+            top: 0,
+            right: 0,
+            opacity: 0.25,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", p: 1 }}>
-            <Search size={24} color="#64748b" style={{ margin: "0 12px" }} />
-            <InputBase
-              fullWidth
-              placeholder="Search by species, breed, location..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+          <Sparkles size={200} color="white" />
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", lg: "row" },
+            alignItems: "center",
+            gap: 3,
+            position: "relative",
+          }}
+        >
+          <Box sx={{ flex: 1, color: "white" }}>
+            <Box
+              component="h1"
               sx={{
-                flex: 1,
-                fontSize: "1.1rem",
-                py: 1.5,
-                color: "text.primary",
-              }}
-            />
-            <IconButton
-              onClick={onFilterClick}
-              sx={{
-                backgroundColor: "primary.main",
+                fontSize: { xs: "2rem", md: "3rem" },
+                fontWeight: 800,
+                mb: 2,
                 color: "white",
-                mx: 1,
-                "&:hover": {
-                  backgroundColor: "primary.dark",
-                },
               }}
             >
-              <SlidersHorizontal size={20} />
-            </IconButton>
+              🐄 Premium Livestock Marketplace
+            </Box>
+            <Box
+              component="p"
+              sx={{
+                fontSize: { xs: "1.1rem", md: "1.25rem" },
+                opacity: 0.9,
+                color: "white",
+                mb: 0,
+              }}
+            >
+              Discover quality livestock from verified sellers across Kenya
+            </Box>
           </Box>
-        </Paper>
-      </Container>
-    </Box>
+
+          <Box sx={{ flex: 1, width: "100%" }}>
+            <Paper
+              elevation={0}
+              sx={{
+                borderRadius: 4,
+                p: 0.5,
+                backgroundColor: "white",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", px: 2 }}>
+                <Search size={24} color="#0f172a" />
+                <InputBase
+                  placeholder="Search livestock, breeds, location..."
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  sx={{
+                    ml: 2,
+                    flex: 1,
+                    fontSize: "1.1rem",
+                    py: 1.5,
+                    color: "#0f172a",
+                    "& ::placeholder": {
+                      color: "#0f172a",
+                      opacity: 0.6,
+                    },
+                  }}
+                />
+              </Box>
+            </Paper>
+          </Box>
+        </Box>
+      </Box>
+    </motion.div>
   );
 }

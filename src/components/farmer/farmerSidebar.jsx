@@ -10,24 +10,22 @@ import {
   Avatar,
   Button,
 } from "@mui/material";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined"
-import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined"
-import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined"
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined"
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
-import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
-import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined"
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import LocalDrinkOutlinedIcon from "@mui/icons-material/LocalDrinkOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
-import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined"
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined"
+import PetsOutlinedIcon from "@mui/icons-material/PetsOutlined";
+import GrassOutlinedIcon from "@mui/icons-material/GrassOutlined";
+import EventNoteOutlinedIcon from "@mui/icons-material/EventNoteOutlined";
+import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 
 import { NavLink } from "react-router-dom";
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../theme";
 
-// import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import { AuthContext } from "../PrivateComponents/AuthContext"; // 👈 import context
 
 // Example sidebarItems and Item component
@@ -35,31 +33,35 @@ const sidebarItems = [
   {
     section: "Main",
     items: [
-      { title: "Dashboard", to: "/fmr.drb", icon: <HomeOutlinedIcon /> },
+      {
+        title: "Dashboard",
+        to: "/fmr.drb",
+        icon: <DashboardOutlinedIcon />,
+      },
     ],
   },
   {
     section: "Data",
     items: [
       {
-        title: "My milk summary ",
+        title: "My Milk Summary",
         to: "/fmr.drb/daily",
-        icon: <PeopleOutlinedIcon />,
+        icon: <LocalDrinkOutlinedIcon />, // milk = drink, obvious
       },
       {
-        title: "Insemination Card  ",
+        title: "Insemination Card",
         to: "/fmr.drb/insemination-record",
-        icon: <PersonOutlinedIcon />,
+        icon: <EventNoteOutlinedIcon />, // medical / record card
       },
       {
-        title: "My farm Breeds",
+        title: "My Farm Breeds",
         to: "/fmr.drb/breeds",
-        icon: <ContactsOutlinedIcon />,
+        icon: <GrassOutlinedIcon />, // breeding, genetics, farm
       },
       {
-        title: "My Farm",
+        title: "My Farm (Cows)",
         to: "/fmr.drb/cows",
-        icon: <ReceiptOutlinedIcon />,
+        icon: <PetsOutlinedIcon />, // animals, finally correct
       },
     ],
   },
@@ -69,24 +71,33 @@ const sidebarItems = [
       {
         title: "Milk Recording",
         to: "/fmr.drb/milkrecording",
-        icon: <PersonOutlinedIcon />,
-      }
-      ,
+        icon: <Inventory2OutlinedIcon />, // input / recording / stock
+      },
+      {
+        title: "Cow Production History",
+        to: "/fmr.drb/animal-milk-summary",
+        icon: <TimelineOutlinedIcon />, // historical trend
+      },
       {
         title: "Calendar",
         to: "/fmr.drb/calendar",
-        icon: <CalendarTodayOutlinedIcon />,
+        icon: <CalendarMonthOutlinedIcon />,
       },
-      { title: "My Seller Dash", to: "/fmr.drb/my-listings", icon: <HelpOutlineOutlinedIcon /> },
+      {
+        title: "My Seller Dashboard",
+        to: "/fmr.drb/my-listings",
+        icon: <StorefrontOutlinedIcon />, // selling, not “help”
+      },
     ],
   },
   {
     section: "Chats",
     items: [
-      { title: "My Chats", to: "/fmr.drb/recents", icon: <BarChartOutlinedIcon /> },
-      { title: "Pie Chart", to: "/pie", icon: <PieChartOutlineOutlinedIcon /> },
-      { title: "Line Chart", to: "/line", icon: <TimelineOutlinedIcon /> },
-      { title: "Geography Chart", to: "/geography", icon: <MapOutlinedIcon /> },
+      {
+        title: "My Chats",
+        to: "/fmr.drb/recents",
+        icon: <ChatOutlinedIcon />, // finally honest
+      },
     ],
   },
 ];
@@ -170,7 +181,7 @@ const SidebarComponent = ({ mobileOpen, setMobileOpen }) => {
                 ml="15px"
               >
                 <Typography variant="h3" color={colors.grey[100]}>
-                DASHBOARD
+                  DASHBOARD
                 </Typography>
                 <IconButton
                   onClick={() => {

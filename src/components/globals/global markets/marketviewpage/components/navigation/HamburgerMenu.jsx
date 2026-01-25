@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function HamburgerMenu({ open, onClose, onNavigate }) {
+export default function HamburgerMenu({ open, onClose }) {
   const navigate = useNavigate();
   const [wishlistCount, setWishlistCount] = useState(0);
   const [basketCount, setBasketCount] = useState(0);
@@ -56,37 +56,27 @@ export default function HamburgerMenu({ open, onClose, onNavigate }) {
     {
       text: "Wishlist",
       icon: Heart,
-      page: "wishlist",
+      path: "/market/wishlist",
       badge: wishlistCount,
       color: "#ef4444",
     },
     {
       text: "Basket",
       icon: ShoppingCart,
-      page: "basket",
+      path: "/market/basket",
       badge: basketCount,
       color: "#10b981",
     },
     {
       text: "Previous Purchases",
       icon: ShoppingBag,
-      page: "purchases",
+      path: "/market/purchases",
       color: "#3b82f6",
-    },
-    {
-      text: "Recent Activity",
-      icon: Clock,
-      page: "activity",
-      color: "#8b5cf6",
     },
   ];
 
-  const handleNavigate = (page) => {
-    if (onNavigate) {
-      onNavigate(page);
-    } else {
-      navigate(`/market/${page}`);
-    }
+  const handleNavigate = (path) => {
+    navigate(path);
     onClose();
   };
 
@@ -122,7 +112,7 @@ export default function HamburgerMenu({ open, onClose, onNavigate }) {
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
               <ListItemButton
-                onClick={() => handleNavigate(item.page)}
+                onClick={() => handleNavigate(item.path)}
                 sx={{
                   py: 1.5,
                   "&:hover": {

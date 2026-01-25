@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from "react";
 import {
   Box,
   Typography,
@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Fade,
   Grid,
   Alert,
   Snackbar,
@@ -15,193 +14,160 @@ import {
   InputLabel,
   Select,
   MenuItem,
-} from '@mui/material';
-import { useTheme } from '@mui/material';
-import { tokens } from '../../../theme';
-import axios from 'axios';
-import { AuthContext } from '../../PrivateComponents/AuthContext';
-import Header from '../../scenes/Header';
-import AddIcon from '@mui/icons-material/Add';
-import GrassIcon from '@mui/icons-material/Grass';
+  IconButton,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
+import Header from "../../scenes/Header";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
+import LocalDrinkOutlinedIcon from "@mui/icons-material/LocalDrinkOutlined";
 
 const MilkRecording = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
   const { token } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [cows, setCows] = useState([]);
-  const [formData, setFormData] = useState({
-    cowId: '',
-    litres: '',
-    // ❌ Removed the 'date' field from the state
-  });
+  const [cowId, setCowId] = useState("");
+  const [litres, setLitres] = useState("");
   const [loading, setLoading] = useState(false);
-  const [fetchCowsLoading, setFetchCowsLoading] = useState(true);
+  const [fetching, setFetching] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  const Base_API = process.env.REACT_APP_API_BASE
-
-
-  const fetchCows = async () => {
-    if (!token) {
-      setError('Authentication token not found. Please log in.');
-      setFetchCowsLoading(false);
-      return;
-    }
-    setFetchCowsLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get(`${Base_API}/cow`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
-          gender: 'female',
-          stage: 'cow',
-        },
-      });
-      setCows(response.data.cows);
-    } catch (err) {
-      console.error('Failed to fetch cows:', err.response?.data || err.message);
-      setError('Failed to fetch cows. Please try again later.');
-    } finally {
-      setFetchCowsLoading(false);
-    }
-  };
+  const BASE_API = process.env.REACT_APP_API_BASE;
 
   useEffect(() => {
+    const fetchCows = async () => {
+      try {
+        const res = await axios.get(`${BASE_API}/cow`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { gender: "female", stage: "cow" },
+        });
+        setCows(res.data.cows || []);
+      } catch (err) {
+        setError("Failed to load cows");
+      } finally {
+        setFetching(false);
+      }
+    };
+
     fetchCows();
   }, [token]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleRecordMilk = async (e) => {
+  const submitMilk = async (e) => {
     e.preventDefault();
-    if (!token) {
-      setError('Authentication token not found. Please log in.');
-      return;
-    }
     setLoading(true);
     setError(null);
-    setSuccess(null);
     try {
-      // ✅ Payload now only contains 'litres'
-      const payload = {
-        litres: parseFloat(formData.litres),
-      };
-
-      const response = await axios.post(
-        `${Base_API}/cow/${formData.cowId}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const res = await axios.post(
+        `${BASE_API}/cow/${cowId}`,
+        { litres: Number(litres) },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      setSuccess(response.data.message);
-      setFormData({
-        ...formData,
-        litres: '', // Clear the litres field for a new entry
-      });
+      setSuccess(res.data.message);
+      setLitres("");
     } catch (err) {
-      console.error('Failed to record milk:', err.response?.data || err.message);
-      setError(err.response?.data?.message || 'Failed to record milk.');
+      setError(err.response?.data?.message || "Failed to record milk");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSuccess(null);
-    setError(null);
-  };
-
   return (
-    <Box m="20px">
-      <Header
-        title="MILK RECORDING"
-        subtitle="Add daily milk production records for your cows"
-      />
-      <Snackbar open={!!success || !!error} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        <Alert onClose={handleCloseSnackbar} severity={success ? "success" : "error"} variant="filled" sx={{ width: '100%' }}>
-          {success || error}
-        </Alert>
+    <Box px={2} py={2} maxWidth={420} mx="auto">
+      {/* Header with back button */}
+      <Box display="flex" alignItems="center" mb={1}>
+        <IconButton onClick={() => navigate(-1)}>
+          <ArrowBackIosNewOutlinedIcon sx={{ color: "#0369a1" }} />
+        </IconButton>
+        <Typography variant="h5" fontWeight={800} color="#0f172a">
+          Milk Recording
+        </Typography>
+      </Box>
+
+      <Typography mb={2} color="#075985">
+        Quick daily milk entry per cow
+      </Typography>
+
+      <Snackbar open={!!error || !!success} autoHideDuration={5000}>
+        {error && <Alert severity="error">{error}</Alert>}
+        {success && <Alert severity="success">{success}</Alert>}
       </Snackbar>
 
-      <Grid container spacing={4} mt={2}>
-        {/* Milk Recording Form */}
-        <Grid item xs={12} md={6}>
-          <Fade in timeout={800}>
-            <Card sx={{ background: colors.primary[400], border: `1px solid ${colors.primary[300]}`, borderRadius: '16px', p: 2, height: '100%' }}>
-              <CardContent>
-                <Typography variant="h5" fontWeight="600" color={colors.grey[100]} mb={2}>
-                  Record Milk Production
-                </Typography>
-                <Box component="form" onSubmit={handleRecordMilk}>
-                  {fetchCowsLoading ? (
-                    <Box display="flex" justifyContent="center" p={2}>
-                      <CircularProgress color="success" />
-                    </Box>
-                  ) : (
-                    <FormControl fullWidth variant="filled" sx={{ mb: 2 }} required>
-                      <InputLabel>Select Cow</InputLabel>
-                      <Select
-                        name="cowId"
-                        value={formData.cowId}
-                        onChange={handleInputChange}
-                      >
-                        {cows.length > 0 ? (
-                          cows.map((cow) => (
-                            <MenuItem key={cow._id} value={cow._id}>
-                              {cow.cow_name} ({cow.cow_id})
-                            </MenuItem>
-                          ))
-                        ) : (
-                          <MenuItem disabled>No female cows found in 'cow' stage</MenuItem>
-                        )}
-                      </Select>
-                    </FormControl>
-                  )}
+      <Card
+        sx={{
+          mt: 2,
+          borderRadius: 4,
+          background: "linear-gradient(180deg, #ecfeff, #e0f2fe)",
+          border: "1px solid #bae6fd",
+        }}
+      >
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={1} mb={2}>
+            <LocalDrinkOutlinedIcon sx={{ color: "#0284c7" }} />
+            <Typography variant="h6" fontWeight={700} color="#0f172a">
+              Record Milk
+            </Typography>
+          </Box>
 
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Litres of Milk"
-                    name="litres"
-                    type="number"
-                    value={formData.litres}
-                    onChange={handleInputChange}
-                    sx={{ mb: 2 }}
-                    required
-                    inputProps={{ step: "0.1" }}
-                    placeholder="e.g., 15.5"
-                  />
+          <Box component="form" onSubmit={submitMilk}>
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel sx={{ color: "#0369a1" }}>Select Cow</InputLabel>
+              <Select
+                value={cowId}
+                onChange={(e) => setCowId(e.target.value)}
+                sx={{ backgroundColor: "#ffffff" }}
+              >
+                {fetching ? (
+                  <MenuItem disabled>Loading cows...</MenuItem>
+                ) : cows.length ? (
+                  cows.map((cow) => (
+                    <MenuItem key={cow._id} value={cow._id}>
+                      {cow.cow_name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No cows found</MenuItem>
+                )}
+              </Select>
+            </FormControl>
 
-                  {/* ❌ Removed the date input field */}
+            <TextField
+              label="Litres Collected"
+              type="number"
+              fullWidth
+              value={litres}
+              onChange={(e) => setLitres(e.target.value)}
+              inputProps={{ step: 0.1 }}
+              sx={{
+                mb: 3,
+                backgroundColor: "#ffffff",
+              }}
+            />
 
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      sx={{
-                        backgroundColor: colors.greenAccent[600],
-                        color: colors.grey[100],
-                        '&:hover': { backgroundColor: colors.greenAccent[700] },
-                      }}
-                      disabled={loading || !formData.cowId}
-                      startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
-                    >
-                      {loading ? 'Recording...' : 'Record Milk'}
-                    </Button>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Fade>
-        </Grid>
-      </Grid>
+            <Button
+              fullWidth
+              type="submit"
+              variant="contained"
+              size="large"
+              startIcon={loading ? <CircularProgress size={18} /> : <AddIcon />}
+              disabled={loading || !cowId}
+              sx={{
+                background: "linear-gradient(90deg, #22d3ee, #38bdf8)",
+                color: "#083344",
+                fontWeight: 800,
+                py: 1.4,
+                borderRadius: 3,
+                '&:hover': { background: '#0ea5e9' },
+              }}
+            >
+              {loading ? "Recording…" : "Save Milk Entry"}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
     </Box>
   );
 };

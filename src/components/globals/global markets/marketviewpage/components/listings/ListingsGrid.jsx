@@ -1,57 +1,55 @@
 // marketviewpage/components/listings/ListingsGrid.jsx
 import React from "react";
-import { Box, Typography } from "@mui/material";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { AlertCircle } from "lucide-react";
 import ListingCard from "./ListingCard";
-import EmptyState from "../states/EmptyState";
 
-export default function ListingsGrid({ listings, searchQuery, onClearFilters, onClearSearch }) {
+export default function ListingsGrid({ listings, onClearFilters }) {
+  // Remove duplicates
+  const uniqueListings = Array.from(
+    new Map(listings.map(item => [item._id, item])).values()
+  );
+
+  if (uniqueListings.length === 0) {
+    return (
+      <div className="card border-0 shadow-sm rounded-4 text-center py-5">
+        <AlertCircle size={64} style={{ color: "#10b981" }} className="mx-auto mb-3" />
+        <h5 className="fw-bold mb-2" style={{ color: "#0f172a" }}>
+          No Listings Found
+        </h5>
+        <p style={{ color: "#0f172a" }} className="mb-3">
+          Try adjusting your filters or search query
+        </p>
+        <button
+          className="btn rounded-pill px-4"
+          onClick={onClearFilters}
+          style={{
+            backgroundColor: "#10b981",
+            color: "white",
+            border: "none",
+          }}
+        >
+          Clear All Filters
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
-      <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Typography variant="h6" fontWeight="bold">
-          {listings.length} Available Listing{listings.length !== 1 ? "s" : ""}
-        </Typography>
-        {searchQuery && (
-          <Typography variant="body2" color="text.secondary">
-            Searching for: <strong>"{searchQuery}"</strong>
-          </Typography>
-        )}
-      </Box>
+      <div className="mb-3">
+        <h5 className="fw-bold" style={{ color: "#0f172a" }}>
+          {uniqueListings.length} Available Listing{uniqueListings.length !== 1 ? "s" : ""}
+        </h5>
+      </div>
 
-      {listings.length > 0 ? (
-        <motion.div layout>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                md: "repeat(3, 1fr)",
-                lg: "repeat(4, 1fr)",
-              },
-              gap: 3,
-            }}
-          >
-            <AnimatePresence>
-              {listings.map((listing, idx) => (
-                <motion.div
-                  key={listing._id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <ListingCard listing={listing} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </Box>
-        </motion.div>
-      ) : (
-        <EmptyState onClearFilters={onClearFilters} onClearSearch={onClearSearch} />
-      )}
+      <motion.div layout className="row g-4">
+        {uniqueListings.map((listing) => (
+          <div key={listing._id} className="col-xl-3 col-lg-4 col-md-6">
+            <ListingCard listing={listing} />
+          </div>
+        ))}
+      </motion.div>
     </>
   );
 }
