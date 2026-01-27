@@ -75,11 +75,16 @@ const MilkRecording = () => {
     }
   };
 
+
+  const handleBack = () => {
+    navigate("/fmr.drb/animal-milk-summary");
+  };
+
   return (
     <Box px={2} py={2} maxWidth={420} mx="auto">
       {/* Header with back button */}
       <Box display="flex" alignItems="center" mb={1}>
-        <IconButton onClick={() => navigate(-1)}>
+        <IconButton onClick={handleBack}>
           <ArrowBackIosNewOutlinedIcon sx={{ color: "#0369a1" }} />
         </IconButton>
         <Typography variant="h5" fontWeight={800} color="#0f172a">

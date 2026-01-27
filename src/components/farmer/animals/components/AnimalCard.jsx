@@ -27,7 +27,6 @@ import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import InfoIcon from '@mui/icons-material/Info';
 import PregnantWomanIcon from '@mui/icons-material/PregnantWoman';
 import CloseIcon from '@mui/icons-material/Close';
 import EventIcon from '@mui/icons-material/Event';
@@ -77,7 +76,6 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
   const getSpeciesColor = (species) => {
     const colors = {
       cow: '#00bcd4',
-      bull: '#ef4444',
       goat: '#10b981',
       sheep: '#8b5cf6',
       pig: '#f59e0b',
@@ -89,6 +87,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
   const age = calculateAge(animal.birth_date);
   const lifetimeYield = animal.lifetime_milk || 0;
   const offspring = animal.offspring || [];
+  const isFemale = animal.gender === 'female';
 
   return (
     <>
@@ -164,7 +163,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
                 <CardMedia
                   component="img"
                   image={animal.photos[0]}
-                  alt={animal.name}
+                  alt={animal.cow_name}
                   sx={{ 
                     width: '100%', 
                     height: 180, 
@@ -219,7 +218,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
               <Box sx={{ width: '2px', height: '25px', bgcolor: '#e0e0e0' }} />
               
               <Box display="flex" alignItems="center" gap={1}>
-                {animal.species === 'cow' ? (
+                {animal.species === 'cow' && isFemale ? (
                   <>
                     <LocalDrinkIcon sx={{ color: speciesColor, fontSize: 22 }} />
                     <Typography variant="body2" color="#000000" fontWeight={700}>
@@ -280,7 +279,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
             >
               Delete
             </Button>
-            {animal.species === 'cow' && onViewDetails && (
+            {animal.species === 'cow' && isFemale && onViewDetails && (
               <Button
                 variant="contained"
                 size="small"
@@ -330,7 +329,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
             </Avatar>
             <Box>
               <Typography variant="h4" fontWeight="900">
-                {animal.name}
+                {animal.cow_name}
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 {animal.species.toUpperCase()} • {animal.stage?.replace(/_/g, ' ').toUpperCase()}
@@ -348,7 +347,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
             {animal.photos && animal.photos.length > 0 && (
               <Grid item xs={12}>
                 <Typography variant="h6" color="#000000" fontWeight={700} mb={2}>
-                  📸 Photos
+                  Photos
                 </Typography>
                 <Box display="flex" gap={2} flexWrap="wrap">
                   {animal.photos.map((photo, idx) => (
@@ -364,7 +363,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
                     >
                       <img
                         src={photo}
-                        alt={`${animal.name} ${idx + 1}`}
+                        alt={`${animal.cow_name} ${idx + 1}`}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     </Box>
@@ -378,7 +377,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
             <Grid item xs={12} md={6}>
               <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e0e0e0' }}>
                 <Typography variant="h6" color="#000000" fontWeight={700} mb={2}>
-                  📋 Basic Information
+                  Basic Information
                 </Typography>
                 <Stack spacing={1.5}>
                   <Box display="flex" justifyContent="space-between">
@@ -414,63 +413,31 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
             </Grid>
 
             {/* Parentage Information */}
-<Grid item xs={12} md={6}>
-  <Box
-    sx={{
-      p: 2,
-      backgroundColor: '#f8f9fa',
-      borderRadius: '12px',
-      border: '1px solid #e0e0e0',
-    }}
-  >
-    <Typography variant="h6" color="#000000" fontWeight={700} mb={2}>
-      👨‍👩‍👧‍👦 Parentage
-    </Typography>
-    <Stack spacing={1.5}>
-      {animal.mother && (
-        <Box>
-          <Typography color="#666666" fontWeight={600} fontSize="0.85rem">
-            Mother:
-          </Typography>
-          <Typography color="#000000" fontWeight={700}>
-            {animal.mother.name} ({animal.mother.species})
-          </Typography>
-        </Box>
-      )}
-
-      {animal.father ? (
-        <Box>
-          <Typography color="#666666" fontWeight={600} fontSize="0.85rem">
-            Father/Sire:
-          </Typography>
-          <Typography color="#000000" fontWeight={700}>
-            {animal.father.name}
-            {animal.father.code && ` (${animal.father.code})`}
-          </Typography>
-        </Box>
-      ) : (
-        (animal.bull_name || animal.bull_code) && (
-          <Box>
-            <Typography color="#666666" fontWeight={600} fontSize="0.85rem">
-              Bull Used for Breeding:
-            </Typography>
-            <Typography color="#000000" fontWeight={700}>
-              {animal.bull_name || 'Unknown'}
-              {animal.bull_code && ` (${animal.bull_code})`}
-            </Typography>
-          </Box>
-        )
-      )}
-
-      {!animal.mother && !animal.father && !animal.bull_name && (
-        <Typography color="#666666" fontStyle="italic">
-          No parentage information recorded
-        </Typography>
-      )}
-    </Stack>
-  </Box>
-</Grid>
-
+            <Grid item xs={12} md={6}>
+              <Box sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e0e0e0' }}>
+                <Typography variant="h6" color="#000000" fontWeight={700} mb={2}>
+                  Parentage
+                </Typography>
+                {animal.sire ? (
+                  <Box>
+                    <Typography color="#666666" fontWeight={600} fontSize="0.85rem">
+                      Sire:
+                    </Typography>
+                    <Typography color="#000000" fontWeight={700}>
+                      {animal.sire.name || 'Unknown'}
+                      {animal.sire.code && ` (${animal.sire.code})`}
+                    </Typography>
+                    <Typography variant="caption" color="#666666">
+                      {animal.sire.type === 'internal' ? 'Internal record' : 'External bull'}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography color="#666666" fontStyle="italic">
+                    No sire information recorded
+                  </Typography>
+                )}
+              </Box>
+            </Grid>
 
             {/* Pregnancy Status */}
             {animal.pregnancy?.is_pregnant && (
@@ -484,7 +451,7 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
                   <Box display="flex" alignItems="center" gap={1} mb={1}>
                     <PregnantWomanIcon sx={{ color: '#f59e0b', fontSize: 28 }} />
                     <Typography variant="h6" color="#000000" fontWeight={700}>
-                      🤰 Pregnancy Status
+                      Pregnancy Status
                     </Typography>
                   </Box>
                   <Stack spacing={1}>
@@ -498,21 +465,21 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
                       </Typography>
                     </Box>
                     <Typography color="#d97706" fontWeight={600} fontSize="0.9rem">
-                      ⏳ Currently pregnant and expecting offspring
+                      Currently pregnant and expecting offspring
                     </Typography>
                   </Stack>
                 </Box>
               </Grid>
             )}
 
-            {/* Milk Production (for cows) */}
-            {animal.species === 'cow' && (
+            {/* Milk Production (for female cows only) */}
+            {animal.species === 'cow' && isFemale && (
               <Grid item xs={12}>
                 <Box sx={{ p: 2, backgroundColor: '#dbeafe', borderRadius: '12px', border: '2px solid #3b82f6' }}>
                   <Box display="flex" alignItems="center" gap={1} mb={2}>
                     <LocalDrinkIcon sx={{ color: '#3b82f6', fontSize: 28 }} />
                     <Typography variant="h6" color="#000000" fontWeight={700}>
-                      🥛 Milk Production
+                      Milk Production
                     </Typography>
                   </Box>
                   <Grid container spacing={2}>
@@ -540,13 +507,13 @@ const AnimalCard = ({ animal, onEdit, onDelete, onViewDetails }) => {
                   <Box display="flex" alignItems="center" gap={1} mb={2}>
                     <FamilyRestroomIcon sx={{ color: '#10b981', fontSize: 28 }} />
                     <Typography variant="h6" color="#000000" fontWeight={700}>
-                      👶 Offspring ({offspring.length})
+                      Offspring ({offspring.length})
                     </Typography>
                   </Box>
                   <Stack spacing={2}>
-                    {offspring.map((off, idx) => (
+                    {offspring.map((off) => (
                       <Box 
-                        key={off.id || idx}
+                        key={off.id}
                         sx={{
                           p: 1.5,
                           backgroundColor: '#ffffff',

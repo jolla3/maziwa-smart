@@ -188,7 +188,7 @@ const CreateListing = () => {
 
       if (res.data.success) {
         showToast("✅ Listing created successfully!", "success");
-        setTimeout(() => handleNavigateBack(), 1500);
+        
       } else {
         showToast(res.data.message || "Failed to create listing", "error");
       }

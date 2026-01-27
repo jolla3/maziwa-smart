@@ -1,4 +1,4 @@
-// animals/AnimalDashboard.jsx
+// animals/AnimalDashboard.jsx 
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   Box,
@@ -45,8 +45,7 @@ const AnimalDashboard = () => {
   const [selectedAnimal, setSelectedAnimal] = useState(null);
 
   const speciesLabel = {
-    cow: 'Cows',
-    bull: 'Bulls',
+    cow: 'Cows & Bulls',
     goat: 'Goats',
     sheep: 'Sheep',
     pig: 'Pigs',
@@ -55,7 +54,6 @@ const AnimalDashboard = () => {
   const getSpeciesColor = (species) => {
     const colors = {
       cow: '#00bcd4',
-      bull: '#ef4444',
       goat: '#10b981',
       sheep: '#8b5cf6',
       pig: '#f59e0b',
@@ -65,13 +63,11 @@ const AnimalDashboard = () => {
 
   const processedAnimals = useMemo(() => {
     let filtered = animals.filter((animal) => {
-      const animalName = animal.name || '';
-      const animalCode = animal.code || '';
+      const animalName = animal.cow_name || '';
       const animalBreed = animal.breed || '';
       
       const matchesSearch = 
         animalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        animalCode.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
         animalBreed.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesSpecies = selectedSpecies === 'all' || animal.species === selectedSpecies;
@@ -80,8 +76,10 @@ const AnimalDashboard = () => {
         filterBy === 'all' || 
         (filterBy === 'male' && animal.gender === 'male') ||
         (filterBy === 'female' && animal.gender === 'female') ||
+        (filterBy === 'cows' && animal.species === 'cow' && animal.gender === 'female') ||
+        (filterBy === 'bulls' && animal.species === 'cow' && animal.gender === 'male') ||
         (filterBy === 'has_offspring' && (animal.offspring?.length > 0)) ||
-        (filterBy === 'high_yield' && animal.species === 'cow' && (animal.lifetime_milk || 0) > 1000);
+        (filterBy === 'high_yield' && animal.species === 'cow' && animal.gender === 'female' && (animal.lifetime_milk || 0) > 1000);
       
       return matchesSearch && matchesSpecies && matchesFilter;
     });
@@ -89,7 +87,7 @@ const AnimalDashboard = () => {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return (a.name || '').localeCompare(b.name || '');
+          return (a.cow_name || '').localeCompare(b.cow_name || '');
         case 'age':
           return new Date(a.birth_date || 0) - new Date(b.birth_date || 0);
         case 'yield':
@@ -197,7 +195,7 @@ const AnimalDashboard = () => {
   );
 
   const groupedAnimals = useMemo(() => {
-    const order = ['cow', 'bull', 'goat', 'sheep', 'pig'];
+    const order = ['cow', 'goat', 'sheep', 'pig'];
     return order.map((sp) => ({
       key: sp,
       label: speciesLabel[sp],
@@ -209,7 +207,7 @@ const AnimalDashboard = () => {
   return (
     <Box m="20px" sx={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
       <Header
-        title="🐄 ANIMAL DASHBOARD"
+        title="ANIMAL DASHBOARD"
         subtitle="Manage all your farm animals across species"
       />
       

@@ -22,8 +22,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const STAGE_OPTIONS = {
-  cow: ['calf', 'heifer', 'cow'],
-  bull: ['bull_calf', 'young_bull', 'mature_bull'],
+  cow: ['calf', 'heifer', 'cow', 'bull_calf', 'young_bull', 'mature_bull'],
   goat: ['kid', 'doeling', 'buckling', 'nanny', 'buck'],
   sheep: ['lamb', 'ewe', 'ram'],
   pig: ['piglet', 'gilt', 'sow', 'boar'],
@@ -35,24 +34,13 @@ const SPECIES_CONFIG = {
     color: '#00bcd4', 
     label: 'Cow',
     showSireInfo: true,
-    showOriginInfo: false,
     genderOptions: ['male', 'female']
-  },
-  bull: { 
-    icon: '🐂', 
-    color: '#ef4444', 
-    label: 'Bull',
-    showSireInfo: true,
-    showOriginInfo: true,
-    genderOptions: ['male'],
-    forceGender: 'male'
   },
   goat: { 
     icon: '🐐', 
     color: '#10b981', 
     label: 'Goat',
     showSireInfo: true,
-    showOriginInfo: false,
     genderOptions: ['male', 'female']
   },
   sheep: { 
@@ -60,7 +48,6 @@ const SPECIES_CONFIG = {
     color: '#8b5cf6', 
     label: 'Sheep',
     showSireInfo: true,
-    showOriginInfo: false,
     genderOptions: ['male', 'female']
   },
   pig: { 
@@ -68,7 +55,6 @@ const SPECIES_CONFIG = {
     color: '#f59e0b', 
     label: 'Pig',
     showSireInfo: true,
-    showOriginInfo: false,
     genderOptions: ['male', 'female']
   },
 };
@@ -76,11 +62,11 @@ const SPECIES_CONFIG = {
 const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) => {
   const [formData, setFormData] = useState({
     cow_name: '',
-    species: '',
+    species: 'cow',
     breed: '',
-    gender: '',
+    gender: 'female',
     birth_date: '',
-    stage: '',
+    stage: 'calf',
     bull_code: '',
     bull_name: '',
     origin_farm: '',
@@ -98,7 +84,7 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
       const config = SPECIES_CONFIG[species];
       
       setFormData({
-        cow_name: initialData.cow_name || '',  // Fix: Use initialData.cow_name
+        cow_name: initialData.name || '',
         species: species,
         breed: initialData.breed || '',
         gender: config?.forceGender || initialData.gender || 'female',
@@ -131,25 +117,13 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
     }
     setErrors({});
   }, [initialData, open]);
+
   const handleChange = (field, value) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
       
-      // Handle species change
-      if (field === 'species') {
-        const config = SPECIES_CONFIG[value];
-        if (STAGE_OPTIONS[value]) {
-          updated.stage = STAGE_OPTIONS[value][0];
-        }
-        // Force gender for bulls
-        if (config?.forceGender) {
-          updated.gender = config.forceGender;
-        }
-        // Clear origin fields if not applicable
-        if (!config?.showOriginInfo) {
-          updated.origin_farm = '';
-          updated.country = '';
-        }
+      if (field === 'species' && STAGE_OPTIONS[value]) {
+        updated.stage = STAGE_OPTIONS[value][0];
       }
       
       return updated;
@@ -249,9 +223,11 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <Typography variant="h4" fontWeight="900">
-          {isUpdate ? `✏️ Update ${currentSpecies.label}` : `➕ Add New ${currentSpecies.label}`}
-        </Typography>
+        <Box display="flex" alignItems="center" gap={2}>
+          <Typography variant="h5" fontWeight="900">
+            {isUpdate ? `Update ${currentSpecies.label}` : `Add New ${currentSpecies.label}`}
+          </Typography>
+        </Box>
         <IconButton onClick={onClose} sx={{ color: '#ffffff' }}>
           <CloseIcon />
         </IconButton>
@@ -465,10 +441,9 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
               <FormControl 
                 fullWidth 
                 variant="outlined"
-                disabled={currentSpecies.forceGender}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: currentSpecies.forceGender ? '#f5f5f5' : '#ffffff',
+                    backgroundColor: '#ffffff',
                     '& fieldset': { borderColor: '#e0e0e0', borderWidth: 2 },
                     '&:hover fieldset': { borderColor: speciesColor },
                     '&.Mui-focused fieldset': { borderColor: speciesColor }
@@ -489,9 +464,6 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
                     </MenuItem>
                   ))}
                 </Select>
-                {currentSpecies.forceGender && (
-                  <FormHelperText>Gender is fixed for {currentSpecies.label}s</FormHelperText>
-                )}
               </FormControl>
             </Grid>
 
@@ -605,59 +577,6 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
                 </Grid>
               </>
             )}
-
-            {/* Origin Information - Only for Bulls */}
-            {currentSpecies.showOriginInfo && (
-              <>
-                <Grid item xs={12}>
-                  <Typography variant="h6" color="#000000" mb={1} fontWeight={700}>
-                    🌍 Origin Information
-                  </Typography>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Origin Farm"
-                    value={formData.origin_farm}
-                    onChange={(e) => handleChange('origin_farm', e.target.value)}
-                    variant="outlined"
-                    placeholder="Farm where bull was bred"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#ffffff',
-                        '& fieldset': { borderColor: '#e0e0e0', borderWidth: 2 },
-                        '&:hover fieldset': { borderColor: speciesColor },
-                        '&.Mui-focused fieldset': { borderColor: speciesColor }
-                      },
-                      '& .MuiInputLabel-root': { color: '#000000' },
-                      '& .MuiInputBase-input': { color: '#000000' }
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Country"
-                    value={formData.country}
-                    onChange={(e) => handleChange('country', e.target.value)}
-                    variant="outlined"
-                    placeholder="Country of origin"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#ffffff',
-                        '& fieldset': { borderColor: '#e0e0e0', borderWidth: 2 },
-                        '&:hover fieldset': { borderColor: speciesColor },
-                        '&.Mui-focused fieldset': { borderColor: speciesColor }
-                      },
-                      '& .MuiInputLabel-root': { color: '#000000' },
-                      '& .MuiInputBase-input': { color: '#000000' }
-                    }}
-                  />
-                </Grid>
-              </>
-            )}
           </Grid>
         </Box>
       </DialogContent>
@@ -691,11 +610,11 @@ const AnimalFormDialog = ({ open, onClose, onSubmit, initialData, isUpdate }) =>
             },
           }}
         >
-          {isUpdate ? '💾 Update Animal' : `➕ Add ${currentSpecies.label}`}
+          {isUpdate ? 'Update Animal' : `Add ${currentSpecies.label}`}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default React.memo(AnimalFormDialog);  
+export default React.memo(AnimalFormDialog);

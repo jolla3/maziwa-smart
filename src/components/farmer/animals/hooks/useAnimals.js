@@ -3,7 +3,11 @@ import { useState, useEffect, useCallback, useContext } from 'react';
 import { AuthContext } from '../../../PrivateComponents/AuthContext';
 import animalApi from '../api/animalApi';
 
-const CACHE_KEY = 'animalDashboardCache';
+// Helper: Normalize animal data structure
+const normalizeAnimal = (a) => ({
+  ...a,
+  id: a.id || a._id, // Ensure consistent ID
+});
 
 const useAnimals = () => {
   const { token } = useContext(AuthContext);
@@ -13,13 +17,16 @@ const useAnimals = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  // Generate cache key with token to scope per user
+  const CACHE_KEY = `animalDashboardCache_${token}`;
+
   const loadCachedAnimals = useCallback(() => {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed)) {
-          setAnimals(parsed);
+          setAnimals(parsed.map(normalizeAnimal));
           return true;
         }
       }
@@ -27,7 +34,7 @@ const useAnimals = () => {
       console.warn('Failed to load cached animals:', err);
     }
     return false;
-  }, []);
+  }, [CACHE_KEY]);
 
   const saveCacheAnimals = useCallback((data) => {
     try {
@@ -35,7 +42,7 @@ const useAnimals = () => {
     } catch (err) {
       console.warn('Failed to cache animals:', err);
     }
-  }, []);
+  }, [CACHE_KEY]);
 
   const fetchAnimals = useCallback(async (showRefreshing = false, filters = {}) => {
     if (!token) {
@@ -43,7 +50,9 @@ const useAnimals = () => {
       return;
     }
 
-    const hasCache = loadCachedAnimals();
+    // Don't use cache if filters are active
+    const hasFilters = Object.keys(filters).length > 0;
+    const hasCache = !hasFilters && loadCachedAnimals();
     
     if (showRefreshing) {
       setRefreshing(true);
@@ -59,8 +68,13 @@ const useAnimals = () => {
       const response = await animalApi.getAnimals(token, filters);
       
       if (response?.animals) {
-        setAnimals(response.animals);
-        saveCacheAnimals(response.animals);
+        const normalized = response.animals.map(normalizeAnimal);
+        setAnimals(normalized);
+        
+        // Only cache if no filters
+        if (!hasFilters) {
+          saveCacheAnimals(normalized);
+        }
         
         if (showRefreshing) {
           setSuccess('Animal data refreshed successfully!');
@@ -73,7 +87,7 @@ const useAnimals = () => {
         : err.response?.data?.message || 'Failed to fetch animals. Please try again later.';
       setError(errorMessage);
       
-      if (!showRefreshing) {
+      if (!showRefreshing && !hasFilters) {
         loadCachedAnimals();
       }
     } finally {
@@ -92,13 +106,14 @@ const useAnimals = () => {
       const formDataToSend = new FormData();
       
       Object.keys(formData).forEach(key => {
-        if (formData[key] !== null && formData[key] !== undefined && key !== 'photos') {
+        if (formData[key] !== null && formData[key] !== undefined && key !== 'photos' && key !== 'newPhotos') {
           formDataToSend.append(key, formData[key]);
         }
       });
       
-      if (formData.photos && formData.photos.length > 0) {
-        formData.photos.forEach((photo) => {
+      // Handle new photos
+      if (formData.newPhotos && formData.newPhotos.length > 0) {
+        formData.newPhotos.forEach((photo) => {
           formDataToSend.append('photos', photo);
         });
       }
@@ -106,7 +121,7 @@ const useAnimals = () => {
       const response = await animalApi.createAnimal(token, formDataToSend);
 
       if (response?.animal) {
-        const updatedAnimals = [...animals, response.animal];
+        const updatedAnimals = [...animals, normalizeAnimal(response.animal)];
         setAnimals(updatedAnimals);
         saveCacheAnimals(updatedAnimals);
         setSuccess(`${formData.species} added successfully!`);
@@ -131,12 +146,14 @@ const useAnimals = () => {
         }
       });
 
+      // Handle existing photos (send as array)
       if (formData.photos && Array.isArray(formData.photos)) {
         formData.photos.forEach(photoUrl => {
           formDataToSend.append('photos', photoUrl);
         });
       }
       
+      // Handle new photos
       if (formData.newPhotos && formData.newPhotos.length > 0) {
         formData.newPhotos.forEach((photo) => {
           formDataToSend.append('photos', photo);
@@ -147,7 +164,7 @@ const useAnimals = () => {
 
       if (response?.animal) {
         const updatedAnimals = animals.map(a => 
-          a._id === id || a.id === id ? response.animal : a
+          a.id === id ? normalizeAnimal(response.animal) : a
         );
         setAnimals(updatedAnimals);
         saveCacheAnimals(updatedAnimals);
@@ -167,7 +184,7 @@ const useAnimals = () => {
     try {
       await animalApi.deleteAnimal(token, id);
 
-      const updatedAnimals = animals.filter(a => a._id !== id && a.id !== id);
+      const updatedAnimals = animals.filter(a => a.id !== id);
       setAnimals(updatedAnimals);
       saveCacheAnimals(updatedAnimals);
       setSuccess('Animal deleted successfully!');

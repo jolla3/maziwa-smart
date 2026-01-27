@@ -34,11 +34,20 @@ const AnimalFilters = ({
 }) => {
   const speciesConfig = [
     { value: 'all', label: 'All Animals', color: '#6b7280' },
-    { value: 'cow', label: 'Cows', color: '#00bcd4' },
-    { value: 'bull', label: 'Bulls', color: '#ef4444' },
+    { value: 'cow', label: 'Cows & Bulls', color: '#00bcd4' },
     { value: 'goat', label: 'Goats', color: '#10b981' },
     { value: 'sheep', label: 'Sheep', color: '#8b5cf6' },
     { value: 'pig', label: 'Pigs', color: '#f59e0b' },
+  ];
+
+  const filterOptions = [
+    { value: 'all', label: 'All Animals' },
+    { value: 'male', label: 'Males' },
+    { value: 'female', label: 'Females' },
+    { value: 'cows', label: 'Cows (Female)' },
+    { value: 'bulls', label: 'Bulls (Male Cows)' },
+    { value: 'has_offspring', label: 'With Offspring' },
+    { value: 'high_yield', label: 'High Yield' },
   ];
 
   return (
@@ -108,7 +117,7 @@ const AnimalFilters = ({
         <TextField
           variant="outlined"
           label="Search animals..."
-          placeholder="Name, code, or breed"
+          placeholder="Name or breed"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
@@ -143,7 +152,7 @@ const AnimalFilters = ({
         <FormControl 
           variant="outlined" 
           sx={{ 
-            minWidth: 170,
+            minWidth: 200,
             '& .MuiOutlinedInput-root': {
               backgroundColor: '#ffffff',
               '& fieldset': {
@@ -172,11 +181,11 @@ const AnimalFilters = ({
             startAdornment={<FilterListIcon sx={{ color: '#00bcd4', mr: 1 }} />}
             label="Filter"
           >
-            <MenuItem value="all">All Animals</MenuItem>
-            <MenuItem value="male">Males</MenuItem>
-            <MenuItem value="female">Females</MenuItem>
-            <MenuItem value="has_offspring">With Offspring</MenuItem>
-            <MenuItem value="high_yield">High Yield</MenuItem>
+            {filterOptions.map(option => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
