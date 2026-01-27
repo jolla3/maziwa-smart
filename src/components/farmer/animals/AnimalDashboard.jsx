@@ -195,13 +195,45 @@ const AnimalDashboard = () => {
   );
 
   const groupedAnimals = useMemo(() => {
-    const order = ['cow', 'goat', 'sheep', 'pig'];
-    return order.map((sp) => ({
-      key: sp,
-      label: speciesLabel[sp],
-      items: processedAnimals.filter(a => (a.species || '').toLowerCase() === sp),
-      color: getSpeciesColor(sp),
-    })).filter(section => section.items.length > 0);
+    const groups = [];
+    
+    // Separate cows by gender
+    const cows = processedAnimals.filter(a => a.species === 'cow' && a.gender === 'female');
+    const bulls = processedAnimals.filter(a => a.species === 'cow' && a.gender === 'male');
+    
+    if (cows.length > 0) {
+      groups.push({
+        key: 'cows',
+        label: 'Cows (Female)',
+        items: cows,
+        color: '#00bcd4',
+      });
+    }
+    
+    if (bulls.length > 0) {
+      groups.push({
+        key: 'bulls',
+        label: 'Bulls (Male)',
+        items: bulls,
+        color: '#ef4444',
+      });
+    }
+    
+    // Other species
+    const otherSpecies = [
+      { key: 'goat', label: 'Goats', color: '#10b981' },
+      { key: 'sheep', label: 'Sheep', color: '#8b5cf6' },
+      { key: 'pig', label: 'Pigs', color: '#f59e0b' },
+    ];
+    
+    otherSpecies.forEach(({ key, label, color }) => {
+      const items = processedAnimals.filter(a => a.species === key);
+      if (items.length > 0) {
+        groups.push({ key, label, items, color });
+      }
+    });
+    
+    return groups;
   }, [processedAnimals]);
 
   return (
