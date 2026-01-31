@@ -19,7 +19,12 @@ import { formatCurrency } from "../utils/currency.utils";
 
 export default function BasketPage({ onBack }) {
   const { basket, removeFromBasket, clearBasket } = useBasket();
+ 
 
+  // const onBack = () => {
+
+  // }
+  
   const totalPrice = basket.reduce((sum, item) => sum + (item.price || 0), 0);
 
   return (

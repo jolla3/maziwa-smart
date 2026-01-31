@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -21,16 +21,10 @@ import {
   Skeleton,
   IconButton,
 } from '@mui/material';
-import { useTheme } from '@mui/material';
-// Assuming the path to your theme/tokens is correct
-import { tokens } from '../../../theme';
 import axios from 'axios';
-// Assuming the path to your AuthContext is correct
 import { AuthContext } from '../../PrivateComponents/AuthContext';
-// Assuming the path to your Header component is correct
 import Header from '../../scenes/Header';
 
-// MUI Icons
 import AddIcon from '@mui/icons-material/Add';
 import GrassIcon from '@mui/icons-material/Grass';
 import PetsIcon from '@mui/icons-material/Pets';
@@ -41,18 +35,17 @@ import BusinessIcon from '@mui/icons-material/Business';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import CloseIcon from '@mui/icons-material/Close';
 
+// ============================================================================
+// BREED MANAGEMENT - MODAL FORM + BIGGER CARDS
+// ============================================================================
 
-// --- BREED MANAGEMENT COMPONENT ---
 const BreedManagement = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
   const { token } = useContext(AuthContext);
 
-  // State for data and CRUD operations
   const [breeds, setBreeds] = useState([]);
   const [newBreed, setNewBreed] = useState({
     breed_name: '',
-    species: 'cow',
+    animal_species: 'cow',
     description: '',
     bull_code: '',
     bull_name: '',
@@ -62,7 +55,6 @@ const BreedManagement = () => {
   const [editBreed, setEditBreed] = useState(null);
   const [deleteBreed, setDeleteBreed] = useState(null);
 
-  // State for UI/UX
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -70,46 +62,64 @@ const BreedManagement = () => {
     message: '',
     severity: 'success',
   });
+  const [openAddDialog, setOpenAddDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE;
 
-   const Base_API = process.env.REACT_APP_API_BASE
+  // ============================================================================
+  // THEME COLORS
+  // ============================================================================
 
+  const colors = {
+    white: '#ffffff',
+    aqua: '#17a2b8',
+    aquaDark: '#138496',
+    aquaLight: '#e0f7fa',
+    black: '#212529',
+    lightGrey: '#f8f9fa',
+    borderGrey: '#e0e0e0',
+    green: '#28a745',
+    greenLight: '#e6f4ea',
+    red: '#dc3545',
+    redLight: '#f8d7da',
+    blue: '#0056b3',
+    orange: '#fd7e14',
+    pink: '#e83e8c',
+  };
 
-  // --- Constants and Utility Functions ---
+  // ============================================================================
+  // SPECIES CONFIGURATION
+  // ============================================================================
 
   const speciesOptions = [
-    { value: 'cow', label: 'Cow', color: colors.greenAccent[400] },
-    { value: 'bull', label: 'Bull', color: colors.blueAccent[400] },
-    { value: 'goat', label: 'Goat', color: colors.grey[400] },
-    { value: 'pig', label: 'Pig', color: colors.redAccent[400] },
+    { value: 'cow', label: 'Cattle', color: colors.green },
+    { value: 'goat', label: 'Goats', color: colors.orange },
+    { value: 'sheep', label: 'Sheep', color: colors.blue },
+    { value: 'pig', label: 'Pigs', color: colors.pink },
   ];
 
-  const getSpeciesIcon = (species) => {
-    switch (species) {
-      case 'bull':
-        return <GrassIcon />;
-      case 'cow':
-        return <PetsIcon />;
-      case 'goat':
-        return <PetsIcon />;
-      case 'pig':
-        return <PetsIcon />;
-      default:
-        return <GrassIcon />;
-    }
+  const maleRoleMap = {
+    'cow': 'Bull',
+    'goat': 'Buck',
+    'sheep': 'Ram',
+    'pig': 'Boar'
   };
 
   const getSpeciesColor = (species) => {
-    if (!species) return colors.grey[400];
     const option = speciesOptions.find(opt => opt.value === species);
-    return option ? option.color : colors.grey[400];
+    return option ? option.color : colors.green;
+  };
+
+  const getSpeciesLabel = (species) => {
+    const option = speciesOptions.find(opt => opt.value === species);
+    return option ? option.label : species;
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
     try {
       return new Date(dateString).toLocaleDateString(undefined, options);
     } catch (e) {
@@ -117,7 +127,9 @@ const BreedManagement = () => {
     }
   };
 
-  // --- Snackbar Handlers ---
+  // ============================================================================
+  // SNACKBAR
+  // ============================================================================
 
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
@@ -128,34 +140,38 @@ const BreedManagement = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // --- API Call & Data Fetching (Fallback) ---
+  // ============================================================================
+  // API CALLS
+  // ============================================================================
 
   const fetchBreeds = useCallback(async () => {
     if (!token) {
-      showSnackbar('Authentication token not found. Please log in.', 'error');
+      showSnackbar('Authentication token not found.', 'error');
       setLoading(false);
       return;
     }
+
     setLoading(true);
     try {
-      const response = await axios.get(`${Base_API}/breed`, {
+      const response = await axios.get(`${API_BASE_URL}/breed`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Ensure we use the API's response data structure
       setBreeds(response.data.breeds || []);
     } catch (err) {
-      console.error('Failed to fetch breeds:', err.response?.data || err.message);
-      showSnackbar('Failed to fetch breeds. Displaying stale data or placeholders.', 'error');
+      console.error('Failed to fetch breeds:', err);
+      showSnackbar('Failed to fetch breeds.', 'error');
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, API_BASE_URL]);
 
   useEffect(() => {
     fetchBreeds();
   }, [fetchBreeds]);
 
-  // --- Input Change Handlers ---
+  // ============================================================================
+  // INPUT HANDLERS
+  // ============================================================================
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -167,47 +183,54 @@ const BreedManagement = () => {
     setEditBreed({ ...editBreed, [name]: value });
   };
 
-  // --- CRUD Operations ---
+  // ============================================================================
+  // CRUD OPERATIONS
+  // ============================================================================
 
   const handleCreateBreed = async (e) => {
-    // REQUIREMENT: No full-page reloads -> e.preventDefault()
     e.preventDefault();
+
     if (!token) {
-      showSnackbar('Authentication token not found. Please log in.', 'error');
+      showSnackbar('Authentication token not found.', 'error');
       return;
     }
+
+    if (!newBreed.breed_name.trim()) {
+      showSnackbar('Breed name is required.', 'error');
+      return;
+    }
+
+    if (!newBreed.description.trim()) {
+      showSnackbar('Description is required.', 'error');
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
-      breed_name: newBreed.breed_name,
-      species: newBreed.species,
-      description: newBreed.description,
+      breed_name: newBreed.breed_name.trim(),
+      animal_species: newBreed.animal_species,
+      description: newBreed.description.trim(),
     };
 
-    // Add optional bull-specific fields
-    if (newBreed.species === 'bull') {
-      // Only include if they have a value (backend handles required/optional logic)
-      if (newBreed.bull_code) payload.bull_code = newBreed.bull_code;
-      if (newBreed.bull_name) payload.bull_name = newBreed.bull_name;
-      if (newBreed.origin_farm) payload.origin_farm = newBreed.origin_farm;
-      if (newBreed.country) payload.country = newBreed.country;
-    }
+    if (newBreed.bull_code?.trim()) payload.bull_code = newBreed.bull_code.trim();
+    if (newBreed.bull_name?.trim()) payload.bull_name = newBreed.bull_name.trim();
+    if (newBreed.origin_farm?.trim()) payload.origin_farm = newBreed.origin_farm.trim();
+    if (newBreed.country?.trim()) payload.country = newBreed.country.trim();
 
     try {
-      const response = await axios.post(`${Base_API}/breed`, payload, {
+      const response = await axios.post(`${API_BASE_URL}/breed`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // REQUIREMENT: After creating -> append new breed to breeds state.
-      const newCreatedBreed = response.data.breed || { ...payload, _id: Date.now().toString(), created_at: new Date().toISOString() };
-      setBreeds(prevBreeds => [newCreatedBreed, ...prevBreeds]);
+      // Refetch breeds to get the updated list with server-provided IDs
+      await fetchBreeds();
 
       showSnackbar(response.data.message || 'Breed registered successfully!', 'success');
 
-      // Reset form state
       setNewBreed({
         breed_name: '',
-        species: 'cow',
+        animal_species: 'cow',
         description: '',
         bull_code: '',
         bull_name: '',
@@ -215,96 +238,113 @@ const BreedManagement = () => {
         country: '',
       });
 
+      setOpenAddDialog(false);
+
     } catch (err) {
-      console.error('Failed to create breed:', err.response?.data || err.message);
+      console.error('Failed to create breed:', err);
       showSnackbar(err.response?.data?.message || 'Failed to create breed.', 'error');
     } finally {
       setSubmitting(false);
-      // Fallback/refresh after successful local state update (optional but good practice)
-      // We are relying on the instant local update, so this fetch can be commented out 
-      // or kept as a slower, final consistency check. Keeping it commented for instant UI.
-      // fetchBreeds(); 
     }
   };
 
   const handleUpdateBreed = async () => {
     if (!token || !editBreed) return;
+
+    if (!editBreed.breed_name.trim()) {
+      showSnackbar('Breed name is required.', 'error');
+      return;
+    }
+
+    if (!editBreed.description.trim()) {
+      showSnackbar('Description is required.', 'error');
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
-      breed_name: editBreed.breed_name,
-      species: editBreed.species,
-      description: editBreed.description,
+      breed_name: editBreed.breed_name.trim(),
+      animal_species: editBreed.animal_species,
+      description: editBreed.description.trim(),
     };
 
-    if (editBreed.species === 'bull') {
-      if (editBreed.bull_code) payload.bull_code = editBreed.bull_code;
-      if (editBreed.bull_name) payload.bull_name = editBreed.bull_name;
-      if (editBreed.origin_farm) payload.origin_farm = editBreed.origin_farm;
-      if (editBreed.country) payload.country = editBreed.country;
-    }
-    // We get all fields from the edit state to use for the update
-    const updatedBreedData = { ...editBreed, ...payload };
+    if (editBreed.bull_code?.trim()) payload.bull_code = editBreed.bull_code.trim();
+    if (editBreed.bull_name?.trim()) payload.bull_name = editBreed.bull_name.trim();
+    if (editBreed.origin_farm?.trim()) payload.origin_farm = editBreed.origin_farm.trim();
+    if (editBreed.country?.trim()) payload.country = editBreed.country.trim();
 
     try {
       const response = await axios.put(
-        `${Base_API}/breed/${editBreed._id}`,
+        `${API_BASE_URL}/breed/${editBreed._id}`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // REQUIREMENT: After updating -> replace that one breed in the list.
       setBreeds(prevBreeds => prevBreeds.map(b =>
-        b._id === editBreed._id ? updatedBreedData : b
+        b._id === editBreed._id ? { ...editBreed, ...payload } : b
       ));
 
       showSnackbar(response.data.message || 'Breed updated successfully!', 'success');
       handleCloseEditDialog();
 
     } catch (err) {
-      console.error('Failed to update breed:', err.response?.data || err.message);
+      console.error('Failed to update breed:', err);
       showSnackbar(err.response?.data?.message || 'Failed to update breed.', 'error');
     } finally {
       setSubmitting(false);
-      // Fallback/refresh after successful local state update
-      // fetchBreeds();
     }
   };
 
   const handleDeleteBreed = async () => {
     if (!token || !deleteBreed) return;
+
     setSubmitting(true);
 
     try {
       const response = await axios.delete(
-        `${Base_API}/breed/${deleteBreed._id}`,
+        `${API_BASE_URL}/breed/${deleteBreed._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // REQUIREMENT: After deleting -> filter it out from the list.
       setBreeds(prevBreeds => prevBreeds.filter(b => b._id !== deleteBreed._id));
-
       showSnackbar(response.data.message || 'Breed deleted successfully!', 'success');
       handleCloseDeleteDialog();
 
     } catch (err) {
-      console.error('Failed to delete breed:', err.response?.data || err.message);
+      console.error('Failed to delete breed:', err);
       showSnackbar(err.response?.data?.message || 'Failed to delete breed.', 'error');
     } finally {
       setSubmitting(false);
-      // Fallback/refresh after successful local state update
-      // fetchBreeds();
     }
   };
 
-  // --- Dialog Handlers (Using type="button" for all dialog actions) ---
+  // ============================================================================
+  // DIALOG HANDLERS
+  // ============================================================================
+
+  const handleOpenAddDialog = () => {
+    setNewBreed({
+      breed_name: '',
+      animal_species: 'cow',
+      description: '',
+      bull_code: '',
+      bull_name: '',
+      origin_farm: '',
+      country: '',
+    });
+    setOpenAddDialog(true);
+  };
+
+  const handleCloseAddDialog = () => {
+    setOpenAddDialog(false);
+  };
 
   const handleOpenEditDialog = (breed) => {
-    // Ensure all optional fields are initialized to avoid uncontrolled component warnings
     setEditBreed({
       _id: breed._id,
       breed_name: breed.breed_name,
-      species: breed.species,
+      animal_species: breed.animal_species || breed.species,
       description: breed.description || '',
       bull_code: breed.bull_code || '',
       bull_name: breed.bull_name || '',
@@ -329,391 +369,488 @@ const BreedManagement = () => {
     setDeleteBreed(null);
   };
 
-  // --- UI/UX Components ---
+  // ============================================================================
+  // UI COMPONENTS
+  // ============================================================================
 
   const SkeletonCard = () => (
     <Card sx={{
-      background: colors.primary[500],
-      border: `1px solid ${colors.primary[300]}`,
+      background: colors.white,
+      border: `1px solid ${colors.borderGrey}`,
       borderRadius: '12px',
-      height: '200px', // Fixed height for consistency
+      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+      height: '280px',
     }}>
-      <CardContent sx={{ p: 2 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-          <Box flex={1}>
-            <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
-            <Skeleton variant="rectangular" width="80px" height={24} sx={{ borderRadius: '12px', mb: 1 }} />
-            <Skeleton variant="text" width="100%" height={20} />
-            <Skeleton variant="text" width="90%" height={20} />
-            <Skeleton variant="text" width="40%" height={16} sx={{ mt: 1 }} />
-          </Box>
-        </Box>
+      <CardContent sx={{ p: 2.5 }}>
+        <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
+        <Skeleton variant="rectangular" width="100px" height={28} sx={{ borderRadius: '4px', mb: 1.5 }} />
+        <Skeleton variant="text" width="100%" height={18} sx={{ mb: 0.75 }} />
+        <Skeleton variant="text" width="90%" height={18} sx={{ mb: 0.75 }} />
+        <Skeleton variant="text" width="40%" height={16} sx={{ mt: 2 }} />
       </CardContent>
-      <CardActions sx={{ p: 2, pt: 0, justifyContent: 'flex-end' }}>
-        <Skeleton variant="circular" width={36} height={36} sx={{ mr: 1 }} />
-        <Skeleton variant="circular" width={36} height={36} />
-      </CardActions>
     </Card>
   );
 
   const EmptyStateCard = () => (
     <Card sx={{
-      background: colors.primary[500],
-      border: `1px solid ${colors.primary[300]}`,
-      borderRadius: '16px',
+      background: colors.greenLight,
+      border: `2px dashed ${colors.green}`,
+      borderRadius: '12px',
       textAlign: 'center',
-      p: 4,
+      p: 5,
       mt: 2,
     }}>
-      <GrassIcon sx={{ fontSize: 60, color: colors.greenAccent[400], mb: 2 }} />
-      <Typography variant="h5" color={colors.grey[100]} gutterBottom>
+      <GrassIcon sx={{ fontSize: 56, color: colors.green, mb: 2 }} />
+      <Typography variant="h6" color={colors.black} fontWeight="600" gutterBottom>
         No Breeds Registered Yet
       </Typography>
-      <Typography variant="body1" color={colors.grey[400]}>
-        Start by using the "Register New Breed" form to the left.
+      <Typography variant="body2" color={colors.black}>
+        Click the "Add Breed" button to register your first breed.
       </Typography>
     </Card>
   );
 
-  const BullDetailsSubCard = ({ breed }) => (
-    <Box sx={{ mt: 2, p: 1.5, background: colors.blueAccent[900], borderRadius: '8px' }}>
+  const SireDetailsCard = ({ breed }) => (
+    <Box sx={{
+      mt: 2,
+      p: 1.5,
+      background: colors.aquaLight,
+      borderRadius: '8px',
+      border: `1px solid ${colors.aqua}`
+    }}>
       <Typography
         variant="caption"
-        color={colors.blueAccent[300]}
-        fontWeight="600"
+        color={colors.aqua}
+        fontWeight="700"
         display="block"
-        mb={0.5}
+        mb={1}
       >
-        Bull Details:
+        {(() => {
+          const resolvedSpecies = breed.animal_species ?? breed.species ?? 'unknown';
+          return (maleRoleMap[resolvedSpecies] ?? 'Unknown');
+        })()} Details:
       </Typography>
 
-      <Typography variant="caption" color={colors.grey[300]} display="block">
-        <FingerprintIcon sx={{ fontSize: 12, mr: 0.5, verticalAlign: 'middle' }} />
-        Code: {breed.bull_code || 'Not provided'}
-      </Typography>
-
-      <Typography variant="caption" color={colors.grey[300]} display="block">
-        Name: {breed.bull_name || 'Not provided'}
-      </Typography>
-
-      <Typography variant="caption" color={colors.grey[300]} display="block">
-        <BusinessIcon sx={{ fontSize: 12, mr: 0.5, verticalAlign: 'middle' }} />
-        Farm: {breed.origin_farm || 'Not provided'}
-      </Typography>
-
-      <Typography variant="caption" color={colors.grey[300]} display="block">
-        <PublicIcon sx={{ fontSize: 12, mr: 0.5, verticalAlign: 'middle' }} />
-        Country: {breed.country || 'Not provided'}
-      </Typography>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+        {(breed.bull_code || breed.bull_name) && (
+          <Typography variant="caption" color={colors.black} display="flex" alignItems="center">
+            <FingerprintIcon sx={{ fontSize: 14, mr: 0.75, color: colors.aqua }} />
+            <strong>Code:</strong>&nbsp;{breed.bull_code || 'Not provided'}
+          </Typography>
+        )}
+        {breed.bull_name && (
+          <Typography variant="caption" color={colors.black} display="flex" alignItems="center">
+            <strong>Name:</strong>&nbsp;{breed.bull_name}
+          </Typography>
+        )}
+        {breed.origin_farm && (
+          <Typography variant="caption" color={colors.black} display="flex" alignItems="center">
+            <BusinessIcon sx={{ fontSize: 14, mr: 0.75, color: colors.aqua }} />
+            <strong>Farm:</strong>&nbsp;{breed.origin_farm}
+          </Typography>
+        )}
+        {breed.country && (
+          <Typography variant="caption" color={colors.black} display="flex" alignItems="center">
+            <PublicIcon sx={{ fontSize: 14, mr: 0.75, color: colors.aqua }} />
+            <strong>Country:</strong>&nbsp;{breed.country}
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 
+  // Group breeds by species (with fallback for old data without animal_species)
+  const breedsBySpecies = useMemo(() => {
+    return speciesOptions.reduce((acc, option) => {
+      acc[option.value] = breeds.filter(b => {
+        const species = b.animal_species || b.species;
+        return species === option.value;
+      });
+      return acc;
+    }, {});
+  }, [breeds]);
 
-  // --- Main Render ---
+  // ============================================================================
+  // MAIN RENDER
+  // ============================================================================
+
   return (
-    <Box m="20px">
-      <Header
-        title="BREED MANAGEMENT"
-        subtitle="Register and manage breeds for your livestock records"
-      />
+    <Box sx={{ background: colors.white, minHeight: '100vh', py: 4 }}>
+      <Box sx={{ px: 3 }}>
+        {/* Header with Add Button */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4, gap: 2 }}>
+          <Box>
+            <Typography variant="h4" sx={{ color: colors.black, fontWeight: 700, mb: 0.5 }}>
+              BREED MANAGEMENT
+            </Typography>
+            <Typography variant="body1" sx={{ color: colors.black, fontWeight: 500 }}>
+              Register and manage sire/dam genetics for your livestock
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenAddDialog}
+            sx={{
+              background: colors.aqua,
+              color: colors.white,
+              fontWeight: 700,
+              padding: '12px 28px',
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontSize: '1rem',
+              whiteSpace: 'nowrap',
+              '&:hover': { background: colors.aquaDark },
+            }}
+          >
+            Add Breed
+          </Button>
+        </Box>
 
-      {/* REQUIREMENT: Error and success messages → Use Snackbar + Alert */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
           onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
-          action={
-            <IconButton
-              aria-label="close"
-              color="inherit"
-              size="small"
-              onClick={handleCloseSnackbar}
-            >
-              <CloseIcon fontSize="inherit" />
-            </IconButton>
-          }
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{
+              width: '100%',
+              background: snackbar.severity === 'success' ? colors.green : colors.red,
+              color: colors.white,
+            }}
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={handleCloseSnackbar}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
 
-      <Grid container spacing={4} mt={2}>
+        {/* Breeds organized by species */}
+        {loading ? (
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            {[1, 2, 3, 4].map((i) => (
+              <Grid item xs={12} sm={6} md={6} lg={3} key={i}>
+                <SkeletonCard />
+              </Grid>
+            ))}
+          </Grid>
+        ) : Object.values(breedsBySpecies).every(b => b.length === 0) ? (
+          <EmptyStateCard />
+        ) : (
+          <Box>
+            {speciesOptions.map((speciesOption) => {
+              const speciesBreeds = breedsBySpecies[speciesOption.value];
+              if (speciesBreeds.length === 0) return null;
 
-        {/* Create Breed Form */}
-        <Grid item xs={12} md={5}>
-          <Fade in timeout={800}>
-            <Card sx={{ background: colors.primary[400], border: `1px solid ${colors.primary[300]}`, borderRadius: '16px', p: 2 }}>
-              <CardContent>
-                <Typography variant="h5" fontWeight="600" color={colors.grey[100]} mb={2}>
-                  Register New Breed
-                </Typography>
-                {/* REQUIREMENT: Only the "Add Breed" form should use type="submit" */}
-                <Box component="form" onSubmit={handleCreateBreed}>
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Breed Name"
-                    name="breed_name"
-                    value={newBreed.breed_name}
-                    onChange={handleInputChange}
-                    sx={{ mb: 2 }}
-                    required
-                    placeholder="e.g., Holstein Friesian"
-                  />
-                  <TextField
-                    fullWidth
-                    select
-                    variant="filled"
-                    label="Species"
-                    name="species"
-                    value={newBreed.species}
-                    onChange={handleInputChange}
-                    sx={{ mb: 2 }}
-                    required
+              return (
+                <Box key={speciesOption.value} sx={{ mb: 5 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: speciesOption.color,
+                      fontWeight: 700,
+                      mb: 2.5,
+                      paddingLeft: 1,
+                      borderLeft: `4px solid ${speciesOption.color}`
+                    }}
                   >
-                    {speciesOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Description"
-                    name="description"
-                    value={newBreed.description}
-                    onChange={handleInputChange}
-                    sx={{ mb: 2 }}
-                    required
-                    multiline
-                    rows={4}
-                    placeholder="Describe the breed characteristics, production traits, etc."
-                  />
+                    {speciesOption.label}
+                  </Typography>
 
-                  {newBreed.species === 'bull' && (
-                    <Box sx={{ mt: 2, p: 2, background: colors.blueAccent[900], borderRadius: '8px' }}>
-                      <Typography variant="subtitle2" color={colors.blueAccent[300]} mb={1} fontWeight="600">
-                        Bull-Specific Information (Optional)
-                      </Typography>
-                      {/* Bull-Specific Fields */}
-                      <TextField
-                        fullWidth
-                        variant="filled"
-                        label="Bull Code"
-                        name="bull_code"
-                        value={newBreed.bull_code}
-                        onChange={handleInputChange}
-                        sx={{ mb: 2 }}
-                        placeholder="e.g., STD-2024-001"
-                        InputProps={{
-                          startAdornment: <FingerprintIcon sx={{ mr: 1, color: colors.grey[400] }} />
-                        }}
-                      />
-                      <TextField
-                        fullWidth
-                        variant="filled"
-                        label="Bull Name"
-                        name="bull_name"
-                        value={newBreed.bull_name}
-                        onChange={handleInputChange}
-                        sx={{ mb: 2 }}
-                        placeholder="Traceable name"
-                      />
-                      <TextField
-                        fullWidth
-                        variant="filled"
-                        label="Origin Farm"
-                        name="origin_farm"
-                        value={newBreed.origin_farm}
-                        onChange={handleInputChange}
-                        sx={{ mb: 2 }}
-                        placeholder="Farm or facility name"
-                        InputProps={{
-                          startAdornment: <BusinessIcon sx={{ mr: 1, color: colors.grey[400] }} />
-                        }}
-                      />
-                      <TextField
-                        fullWidth
-                        variant="filled"
-                        label="Country"
-                        name="country"
-                        value={newBreed.country}
-                        onChange={handleInputChange}
-                        placeholder="Country of origin"
-                        InputProps={{
-                          startAdornment: <PublicIcon sx={{ mr: 1, color: colors.grey[400] }} />
-                        }}
-                      />
-                    </Box>
-                  )}
-
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                    <Button
-                      type="submit" // Correct type
-                      variant="contained"
-                      sx={{
-                        backgroundColor: colors.greenAccent[600],
-                        color: colors.grey[100],
-                        '&:hover': { backgroundColor: colors.greenAccent[700] },
-                        '&:disabled': { backgroundColor: colors.grey[600] },
-                      }}
-                      disabled={submitting}
-                      startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
-                    >
-                      {submitting ? 'Registering...' : 'Register Breed'}
-                    </Button>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Fade>
-        </Grid>
-
-        {/* Breeds List */}
-        <Grid item xs={12} md={7}>
-          <Fade in timeout={1000}>
-            <Card sx={{
-              background: colors.primary[400],
-              border: `1px solid ${colors.primary[300]}`,
-              borderRadius: '16px',
-              p: 2,
-              maxHeight: '700px',
-              overflowY: 'auto'
-            }}>
-              <CardContent>
-                <Typography variant="h5" fontWeight="600" color={colors.grey[100]} mb={2}>
-                  Your Registered Breeds ({breeds.length})
-                </Typography>
-
-                {/* REQUIREMENT: UI/UX skeletons / empty state card */}
-                {loading ? (
-                  <Grid container spacing={2}>
-                    {[1, 2, 3].map((i) => (
-                      <Grid item xs={12} key={i}>
-                        <SkeletonCard />
-                      </Grid>
-                    ))}
-                  </Grid>
-                ) : breeds.length === 0 ? (
-                  <EmptyStateCard />
-                ) : (
-                  <Grid container spacing={2}>
-                    {breeds.map((breed) => (
-                      <Grid item xs={12} key={breed._id}>
+                  <Grid container spacing={3}>
+                    {speciesBreeds.map((breed) => (
+                      <Grid item xs={12} sm={6} md={6} lg={3} key={breed._id}>
                         <Card sx={{
-                          background: colors.primary[500],
-                          border: `1px solid ${colors.primary[300]}`,
+                          background: colors.white,
+                          border: `2px solid ${speciesOption.color}`,
                           borderRadius: '12px',
-                          transition: 'all 0.2s ease-in-out',
-                          '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(0,0,0,0.2)' }
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                          transition: 'all 0.3s ease-in-out',
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
+                          }
                         }}>
-                          <CardContent sx={{ p: 2 }}>
-                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                              <Box flex={1}>
-                                <Typography variant="h6" fontWeight="bold" color={getSpeciesColor(breed.species || 'cow')} mb={1}>
-                                  {getSpeciesIcon(breed.species || 'cow')}
-                                  <Box component="span" sx={{ ml: 1, verticalAlign: 'middle' }}>
-                                    {breed.breed_name}
-                                  </Box>
-                                </Typography>
-                                <Chip
-                                  label={breed.species ? breed.species.charAt(0).toUpperCase() + breed.species.slice(1) : 'Unknown'}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: getSpeciesColor(breed.species),
-                                    color: colors.grey[100],
-                                    fontWeight: 'bold',
-                                    mb: 1,
-                                  }}
-                                />
-                                <Typography variant="body2" color={colors.grey[300]} sx={{ mb: 1 }}>
-                                  {breed.description}
-                                </Typography>
+                          <CardContent sx={{ p: 2.5, flex: 1 }}>
+                            {/* Species Badge */}
+                            <Chip
+                              label={speciesOption.label}
+                              size="small"
+                              sx={{
+                                background: speciesOption.color,
+                                color: colors.white,
+                                fontWeight: 700,
+                                mb: 1.5,
+                                height: '28px',
+                              }}
+                            />
 
-                                {/* REQUIREMENT: Bull details must display */}
-                                {breed.species === 'bull' && <BullDetailsSubCard breed={breed} />}
+                            {/* Breed Name */}
+                            <Typography
+                              variant="h6"
+                              fontWeight="700"
+                              color={colors.black}
+                              sx={{ mb: 1, lineHeight: 1.3 }}
+                            >
+                              {breed.breed_name}
+                            </Typography>
 
-                                <Typography variant="caption" color={colors.grey[400]} display="block" mt={1}>
-                                  Created: {formatDate(breed.created_at || breed.createdAt)}
-                                </Typography>
-                              </Box>
-                            </Box>
+                            {/* Description */}
+                            <Typography
+                              variant="body2"
+                              color={colors.black}
+                              sx={{
+                                mb: 2,
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                minHeight: '3em'
+                              }}
+                            >
+                              {breed.description}
+                            </Typography>
+
+                            {/* Sire Details */}
+                            {(breed.bull_code || breed.bull_name || breed.origin_farm || breed.country) && (
+                              <SireDetailsCard breed={breed} />
+                            )}
+
+                            {/* Created Date */}
+                            <Typography
+                              variant="caption"
+                              color={colors.borderGrey}
+                              display="block"
+                              sx={{ mt: 2 }}
+                            >
+                              Created: {formatDate(breed.createdAt || breed.created_at)}
+                            </Typography>
                           </CardContent>
-                          <CardActions sx={{ p: 2, pt: 0, justifyContent: 'flex-end' }}>
-                            {/* REQUIREMENT: Update/Delete buttons must use type="button" */}
+
+                          {/* Action Buttons */}
+                          <CardActions sx={{ p: 1.5, pt: 0, justifyContent: 'flex-end', gap: 0.5 }}>
                             <IconButton
                               size="small"
                               onClick={() => handleOpenEditDialog(breed)}
-                              type="button" // Correct type
+                              type="button"
+                              aria-label={`Edit ${breed.breed_name || 'breed'}`}
                               sx={{
-                                color: colors.blueAccent[400],
-                                '&:hover': { backgroundColor: colors.blueAccent[800] }
+                                color: colors.aqua,
+                                '&:hover': { background: colors.aquaLight },
+                                padding: '8px'
                               }}
                             >
-                              <EditIcon fontSize="small" />
+                              <EditIcon sx={{ fontSize: '20px' }} />
                             </IconButton>
                             <IconButton
                               size="small"
                               onClick={() => handleOpenDeleteDialog(breed)}
-                              type="button" // Correct type
+                              type="button"
+                              aria-label={`Delete ${breed.breed_name || 'breed'}`}
                               sx={{
-                                color: colors.redAccent[400],
-                                '&:hover': { backgroundColor: colors.redAccent[800] }
+                                color: colors.red,
+                                '&:hover': { background: colors.redLight },
+                                padding: '8px'
                               }}
                             >
-                              <DeleteIcon fontSize="small" />
+                              <DeleteIcon sx={{ fontSize: '20px' }} />
                             </IconButton>
                           </CardActions>
                         </Card>
                       </Grid>
                     ))}
                   </Grid>
-                )}
-              </CardContent>
-            </Card>
-          </Fade>
-        </Grid>
-      </Grid>
+                </Box>
+              );
+            })}
+          </Box>
+        )}
+      </Box>
 
-      {/* Edit Dialog */}
-      <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ background: colors.primary[400], color: colors.grey[100] }}>
-          Edit Breed: {editBreed?.breed_name}
+      {/* ===== ADD BREED MODAL ===== */}
+      <Dialog open={openAddDialog} onClose={handleCloseAddDialog} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{
+          background: colors.aqua,
+          color: colors.white,
+          fontWeight: 700,
+          fontSize: '1.2rem'
+        }}>
+          Register New Breed
         </DialogTitle>
-        <DialogContent sx={{ background: colors.primary[400], mt: 2 }}>
-          {editBreed && (
-            <Box>
-              {/* Form fields for editing */}
+        <DialogContent sx={{ background: colors.white, mt: 2.5 }}>
+          <Box component="form" onSubmit={handleCreateBreed}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Breed Name"
+              name="breed_name"
+              value={newBreed.breed_name}
+              onChange={handleInputChange}
+              placeholder="e.g., Holstein Friesian"
+              required
+              sx={{ mb: 2.5, mt: 1 }}
+            />
+
+            <TextField
+              fullWidth
+              select
+              variant="outlined"
+              label="Species"
+              name="animal_species"
+              value={newBreed.animal_species}
+              onChange={handleInputChange}
+              sx={{ mb: 2.5 }}
+              required
+            >
+              {speciesOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Description"
+              name="description"
+              value={newBreed.description}
+              onChange={handleInputChange}
+              placeholder="Describe breed characteristics..."
+              required
+              multiline
+              rows={4}
+              sx={{ mb: 2.5 }}
+            />
+
+            {/* Sire Details */}
+            <Box sx={{
+              mt: 2.5,
+              p: 2,
+              background: colors.aquaLight,
+              borderRadius: '8px',
+              border: `1px solid ${colors.aqua}`
+            }}>
+              <Typography variant="subtitle2" color={colors.aqua} fontWeight="700" mb={1.5}>
+                {maleRoleMap[newBreed.animal_species]} Information (Optional)
+              </Typography>
+
               <TextField
                 fullWidth
-                variant="filled"
+                variant="outlined"
+                label={`${maleRoleMap[newBreed.animal_species]} Code`}
+                name="bull_code"
+                value={newBreed.bull_code}
+                onChange={handleInputChange}
+                placeholder="e.g., STD-2024-001"
+                size="small"
+                sx={{ mb: 1.5 }}
+              />
+
+              <TextField
+                fullWidth
+                variant="outlined"
+                label={`${maleRoleMap[newBreed.animal_species]} Name`}
+                name="bull_name"
+                value={newBreed.bull_name}
+                onChange={handleInputChange}
+                placeholder="Traceable name"
+                size="small"
+                sx={{ mb: 1.5 }}
+              />
+
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Origin Farm"
+                name="origin_farm"
+                value={newBreed.origin_farm}
+                onChange={handleInputChange}
+                placeholder="Farm name"
+                size="small"
+                sx={{ mb: 1.5 }}
+              />
+
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Country"
+                name="country"
+                value={newBreed.country}
+                onChange={handleInputChange}
+                placeholder="Country of origin"
+                size="small"
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ background: colors.white, p: 2 }}>
+          <Button onClick={handleCloseAddDialog} type="button" sx={{ color: colors.black }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateBreed}
+            variant="contained"
+            disabled={submitting}
+            type="button"
+            sx={{
+              background: colors.aqua,
+              color: colors.white,
+              '&:hover': { background: colors.aquaDark },
+            }}
+          >
+            {submitting ? 'Registering...' : 'Register'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ===== EDIT DIALOG ===== */}
+      <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{
+          background: colors.aqua,
+          color: colors.white,
+          fontWeight: 700,
+          fontSize: '1.2rem'
+        }}>
+          Edit: {editBreed?.breed_name}
+        </DialogTitle>
+        <DialogContent sx={{ background: colors.white, mt: 2.5 }}>
+          {editBreed && (
+            <Box>
+              <TextField
+                fullWidth
+                variant="outlined"
                 label="Breed Name"
                 name="breed_name"
                 value={editBreed.breed_name}
                 onChange={handleEditInputChange}
-                sx={{ mb: 2 }}
-                required
+                sx={{ mb: 2.5, mt: 1 }}
               />
-              {/* Species select is intentionally read-only/fixed in edit to avoid complex data migration logic in a simple dialog, 
-                  but we allow field population based on current species. */}
               <TextField
                 fullWidth
                 select
-                variant="filled"
+                variant="outlined"
                 label="Species"
-                name="species"
-                value={editBreed.species}
+                name="animal_species"
+                value={editBreed.animal_species || editBreed.species}
                 onChange={handleEditInputChange}
-                sx={{ mb: 2 }}
-                required
+                sx={{ mb: 2.5 }}
               >
                 {speciesOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
@@ -723,116 +860,119 @@ const BreedManagement = () => {
               </TextField>
               <TextField
                 fullWidth
-                variant="filled"
+                variant="outlined"
                 label="Description"
                 name="description"
                 value={editBreed.description}
                 onChange={handleEditInputChange}
-                sx={{ mb: 2 }}
                 multiline
                 rows={4}
+                sx={{ mb: 2.5 }}
               />
 
-              {/* Bull-Specific Fields for Edit Dialog */}
-              {editBreed.species === 'bull' && (
-                <Box sx={{ mt: 2, p: 2, background: colors.blueAccent[900], borderRadius: '8px' }}>
-                  <Typography variant="subtitle2" color={colors.blueAccent[300]} mb={1} fontWeight="600">
-                    Bull-Specific Information (Optional)
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Bull Code"
-                    name="bull_code"
-                    value={editBreed.bull_code}
-                    onChange={handleEditInputChange}
-                    sx={{ mb: 2 }}
-                    InputProps={{
-                      startAdornment: <FingerprintIcon sx={{ mr: 1, color: colors.grey[400] }} />
-                    }}
-                  />
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Bull Name"
-                    name="bull_name"
-                    value={editBreed.bull_name}
-                    onChange={handleEditInputChange}
-                    sx={{ mb: 2 }}
-                  />
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Origin Farm"
-                    name="origin_farm"
-                    value={editBreed.origin_farm}
-                    onChange={handleEditInputChange}
-                    sx={{ mb: 2 }}
-                    InputProps={{
-                      startAdornment: <BusinessIcon sx={{ mr: 1, color: colors.grey[400] }} />
-                    }}
-                  />
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Country"
-                    name="country"
-                    value={editBreed.country}
-                    onChange={handleEditInputChange}
-                    InputProps={{
-                      startAdornment: <PublicIcon sx={{ mr: 1, color: colors.grey[400] }} />
-                    }}
-                  />
-                </Box>
-              )}
+              <Box sx={{
+                mt: 2.5,
+                p: 2,
+                background: colors.aquaLight,
+                borderRadius: '8px',
+                border: `1px solid ${colors.aqua}`
+              }}>
+                <Typography variant="subtitle2" color={colors.aqua} fontWeight="700" mb={1.5}>
+                  {maleRoleMap[editBreed.animal_species || editBreed.species]} Details (Optional)
+                </Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label={`${maleRoleMap[editBreed.animal_species || editBreed.species]} Code`}
+                  name="bull_code"
+                  value={editBreed.bull_code}
+                  onChange={handleEditInputChange}
+                  size="small"
+                  sx={{ mb: 1 }}
+                />
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label={`${maleRoleMap[editBreed.animal_species || editBreed.species]} Name`}
+                  name="bull_name"
+                  value={editBreed.bull_name}
+                  onChange={handleEditInputChange}
+                  size="small"
+                  sx={{ mb: 1 }}
+                />
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="Origin Farm"
+                  name="origin_farm"
+                  value={editBreed.origin_farm}
+                  onChange={handleEditInputChange}
+                  size="small"
+                  sx={{ mb: 1 }}
+                />
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="Country"
+                  name="country"
+                  value={editBreed.country}
+                  onChange={handleEditInputChange}
+                  size="small"
+                />
+              </Box>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ background: colors.primary[400], p: 2 }}>
-          {/* REQUIREMENT: Update button must use type="button" */}
-          <Button onClick={handleCloseEditDialog} type="button" sx={{ color: colors.grey[300] }}>
+        <DialogActions sx={{ background: colors.white, p: 2 }}>
+          <Button onClick={handleCloseEditDialog} type="button" sx={{ color: colors.black }}>
             Cancel
           </Button>
           <Button
             onClick={handleUpdateBreed}
             variant="contained"
             disabled={submitting}
-            type="button" // Correct type
+            type="button"
             sx={{
-              backgroundColor: colors.greenAccent[600],
-              color: colors.grey[100],
-              '&:hover': { backgroundColor: colors.greenAccent[700] },
+              background: colors.aqua,
+              color: colors.white,
+              '&:hover': { background: colors.aquaDark },
             }}
           >
-            {submitting ? 'Saving...' : 'Save Changes'}
+            {submitting ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* ===== DELETE CONFIRMATION DIALOG ===== */}
       <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ background: colors.primary[400], color: colors.grey[100] }}>
-          Confirm Deletion
+        <DialogTitle sx={{
+          background: colors.red,
+          color: colors.white,
+          fontWeight: 700,
+          fontSize: '1.1rem'
+        }}>
+          Confirm Delete
         </DialogTitle>
-        <DialogContent sx={{ background: colors.primary[400], mt: 2 }}>
-          <Typography color={colors.grey[300]}>
-            Are you sure you want to delete the breed "<Box component="span" fontWeight="bold">{deleteBreed?.breed_name}</Box>"? This action will soft-delete the breed.
+        <DialogContent sx={{ background: colors.white, mt: 2 }}>
+          <Typography color={colors.black}>
+            Are you sure you want to delete "<strong>{deleteBreed?.breed_name}</strong>"?
+            <br />
+            This action cannot be undone.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ background: colors.primary[400], p: 2 }}>
-          {/* REQUIREMENT: Delete button must use type="button" */}
-          <Button onClick={handleCloseDeleteDialog} type="button" sx={{ color: colors.grey[300] }}>
+        <DialogActions sx={{ background: colors.white, p: 2 }}>
+          <Button onClick={handleCloseDeleteDialog} type="button" sx={{ color: colors.black }}>
             Cancel
           </Button>
           <Button
             onClick={handleDeleteBreed}
             variant="contained"
             disabled={submitting}
-            type="button" // Correct type
+            type="button"
             sx={{
-              backgroundColor: colors.redAccent[600],
-              color: colors.grey[100],
-              '&:hover': { backgroundColor: colors.redAccent[700] },
+              background: colors.red,
+              color: colors.white,
+              '&:hover': { background: colors.red, opacity: 0.9 }
             }}
           >
             {submitting ? 'Deleting...' : 'Delete'}

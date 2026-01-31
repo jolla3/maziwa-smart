@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -40,12 +41,13 @@ import {
     CheckCircle as CheckCircleIcon,
     HourglassEmpty as HourglassEmptyIcon,
     Cancel as CancelIcon,
+    Add as AddIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
 import { AuthContext } from '../../PrivateComponents/AuthContext';
-import Header from '../../scenes/Header';
 
 const InseminationRecordsList = () => {
+    const navigate = useNavigate()
     const { token } = useContext(AuthContext);
 
     const [records, setRecords] = useState([]);
@@ -73,8 +75,16 @@ const InseminationRecordsList = () => {
         notes: '',
     });
 
-    const API_BASE_URL =     process.env.REACT_APP_API_BASE
+    const API_BASE_URL = process.env.REACT_APP_API_BASE;
+
+    if (!API_BASE_URL) {
+        console.error('API_BASE_URL is not defined. Please check your environment variables.');
+        // Optionally, you can set a fallback or throw an error
+        // throw new Error('API_BASE_URL is required');
+    }
+
     const fetchRecords = async () => {
+        if (!API_BASE_URL) return; // Skip if not defined
         setLoading(true);
         try {
             const response = await axios.get(`${API_BASE_URL}/insemination`, {
@@ -156,6 +166,10 @@ const InseminationRecordsList = () => {
     };
 
     const handleEditSubmit = async () => {
+        if (!API_BASE_URL) {
+            showSnackbar('API configuration error', 'error');
+            return;
+        }
         setEditLoading(true);
         try {
             await axios.put(`${API_BASE_URL}/insemination/${selectedRecord.id}`, editFormData, {
@@ -173,7 +187,10 @@ const InseminationRecordsList = () => {
     };
 
     const handleDelete = async () => {
-        setDeleteLoading(true);
+        if (!API_BASE_URL) {
+            showSnackbar('API configuration error', 'error');
+            return;
+        } setDeleteLoading(true);
         try {
             await axios.delete(`${API_BASE_URL}/insemination/${selectedRecord.id}`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -193,20 +210,20 @@ const InseminationRecordsList = () => {
         const config = {
             pregnant: {
                 label: 'Pregnant',
-                color: '#10b981',
-                bgColor: '#d1fae5',
+                color: '#059669',
+                bgColor: '#ecfdf5',
                 icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
             },
             not_pregnant: {
                 label: 'Not Pregnant',
-                color: '#ef4444',
-                bgColor: '#fee2e2',
+                color: '#dc2626',
+                bgColor: '#fef2f2',
                 icon: <CancelIcon sx={{ fontSize: 16 }} />
             },
             unknown: {
                 label: 'Unknown',
-                color: '#64748b',
-                bgColor: '#f1f5f9',
+                color: '#7c3aed',
+                bgColor: '#f5f3ff',
                 icon: <HourglassEmptyIcon sx={{ fontSize: 16 }} />
             },
         };
@@ -247,11 +264,33 @@ const InseminationRecordsList = () => {
     const availableSpecies = [...new Set(records.map(r => r.animal?.species).filter(Boolean))];
 
     return (
-        <Box m="20px">
-            <Header
-                title="INSEMINATION RECORDS"
-                subtitle="View and manage all insemination records"
-            />
+        <Box sx={{ background: '#ffffff', minHeight: '100vh', p: '20px' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                    <Typography variant="h4" sx={{ color: '#000000', fontWeight: 700, mb: 0.5 }}>
+                        INSEMINATION RECORDS
+                    </Typography>
+                    <Typography variant="subtitle1" sx={{ color: '#000000', fontWeight: 500 }}>
+                        View and manage all insemination records
+                    </Typography>
+                </Box>
+                <Button
+                    variant="contained"
+                    sx={{
+                        bgcolor: '#8b5cf6',
+                        color: '#ffffff',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        '&:hover': { bgcolor: '#7c3aed' }
+                    }}
+                    startIcon={<AddIcon />}
+                    onClick={() => navigate('/fmr.drb/inseminationcard')}
+                >
+                    Add Record
+                </Button>
+            </Box>
 
             <Snackbar
                 open={snackbar.open}
@@ -264,7 +303,7 @@ const InseminationRecordsList = () => {
                 </Alert>
             </Snackbar>
 
-            <Card sx={{ mb: 3, bgcolor: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+            <Card sx={{ mb: 3, bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderRadius: '12px', border: '1px solid #f0f0f0' }}>
                 <CardContent>
                     <Grid container spacing={2} alignItems="center">
                         <Grid item xs={12} md={4}>
@@ -277,16 +316,19 @@ const InseminationRecordsList = () => {
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
-                                            <SearchIcon sx={{ color: '#10b981' }} />
+                                            <SearchIcon sx={{ color: '#8b5cf6' }} />
                                         </InputAdornment>
                                     ),
                                 }}
                                 sx={{
-                                    bgcolor: '#fafafa',
+                                    bgcolor: '#f9f9f9',
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
-                                        '&:hover fieldset': { borderColor: '#10b981' },
-                                        '&.Mui-focused fieldset': { borderColor: '#10b981' },
+                                        '&:hover fieldset': { borderColor: '#8b5cf6' },
+                                        '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                        color: '#000000'
                                     }
                                 }}
                             />
@@ -300,11 +342,14 @@ const InseminationRecordsList = () => {
                                 value={filterOutcome}
                                 onChange={(e) => setFilterOutcome(e.target.value)}
                                 sx={{
-                                    bgcolor: '#fafafa',
+                                    bgcolor: '#f9f9f9',
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
-                                        '&:hover fieldset': { borderColor: '#10b981' },
-                                        '&.Mui-focused fieldset': { borderColor: '#10b981' },
+                                        '&:hover fieldset': { borderColor: '#8b5cf6' },
+                                        '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                        color: '#000000'
                                     }
                                 }}
                             >
@@ -323,11 +368,14 @@ const InseminationRecordsList = () => {
                                 value={filterSpecies}
                                 onChange={(e) => setFilterSpecies(e.target.value)}
                                 sx={{
-                                    bgcolor: '#fafafa',
+                                    bgcolor: '#f9f9f9',
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
-                                        '&:hover fieldset': { borderColor: '#10b981' },
-                                        '&.Mui-focused fieldset': { borderColor: '#10b981' },
+                                        '&:hover fieldset': { borderColor: '#8b5cf6' },
+                                        '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                        color: '#000000'
                                     }
                                 }}
                             >
@@ -340,28 +388,27 @@ const InseminationRecordsList = () => {
                             </TextField>
                         </Grid>
                         <Grid item xs={12} md={2}>
-                            <Typography variant="body2" color="#64748b" fontWeight={500}>
+                            <Typography variant="body2" color="#000000" fontWeight={600}>
                                 Showing {filteredRecords.length} of {records.length} records
                             </Typography>
                         </Grid>
-
                     </Grid>
                 </CardContent>
             </Card>
 
             {loading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-                    <CircularProgress sx={{ color: '#10b981' }} size={48} />
+                    <CircularProgress sx={{ color: '#8b5cf6' }} size={48} />
                 </Box>
             ) : filteredRecords.length === 0 ? (
-                <Card sx={{ bgcolor: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <Card sx={{ bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderRadius: '12px', border: '1px solid #f0f0f0' }}>
                     <CardContent>
                         <Box textAlign="center" py={6}>
-                            <PetsIcon sx={{ fontSize: 64, color: '#d1fae5', mb: 2 }} />
-                            <Typography variant="h6" color="#0f172a" gutterBottom fontWeight={600}>
+                            <PetsIcon sx={{ fontSize: 64, color: '#e5e7eb', mb: 2 }} />
+                            <Typography variant="h6" color="#000000" gutterBottom fontWeight={600}>
                                 No records found
                             </Typography>
-                            <Typography variant="body2" color="#64748b">
+                            <Typography variant="body2" color="#666666">
                                 Try adjusting your filters or search terms
                             </Typography>
                         </Box>
@@ -371,22 +418,24 @@ const InseminationRecordsList = () => {
                 <TableContainer
                     component={Paper}
                     sx={{
-                        borderRadius: '16px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                        bgcolor: '#ffffff'
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                        bgcolor: '#ffffff',
+                        border: '1px solid #f0f0f0',
+                        overflowX: 'auto'
                     }}
                 >
                     <Table>
-                        <TableHead sx={{ bgcolor: '#fafafa' }}>
+                        <TableHead sx={{ bgcolor: '#f9f9f9', borderBottom: '2px solid #f0f0f0' }}>
                             <TableRow>
-                                <TableCell sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.875rem' }}>Animal</TableCell>
-                                <TableCell sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.875rem' }}>Species</TableCell>
-                                <TableCell sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.875rem' }}>Insemination Date</TableCell>
-                                <TableCell sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.875rem' }}>Bull Breed</TableCell>
-                                <TableCell sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.875rem' }}>Outcome</TableCell>
-                                <TableCell sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.875rem' }}>Due Date</TableCell>
-                                <TableCell sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.875rem' }}>Inseminator</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.875rem' }}>Actions</TableCell>
+                                <TableCell sx={{ fontWeight: 700, color: '#000000', fontSize: '0.875rem' }}>Animal</TableCell>
+                                <TableCell sx={{ fontWeight: 700, color: '#000000', fontSize: '0.875rem' }}>Species</TableCell>
+                                <TableCell sx={{ fontWeight: 700, color: '#000000', fontSize: '0.875rem' }}>Insemination Date</TableCell>
+                                <TableCell sx={{ fontWeight: 700, color: '#000000', fontSize: '0.875rem' }}>Bull Breed</TableCell>
+                                <TableCell sx={{ fontWeight: 700, color: '#000000', fontSize: '0.875rem' }}>Outcome</TableCell>
+                                <TableCell sx={{ fontWeight: 700, color: '#000000', fontSize: '0.875rem' }}>Due Date</TableCell>
+                                <TableCell sx={{ fontWeight: 700, color: '#000000', fontSize: '0.875rem' }}>Inseminator</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 700, color: '#000000', fontSize: '0.875rem' }}>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -396,19 +445,20 @@ const InseminationRecordsList = () => {
                                     <TableRow
                                         key={record.id}
                                         sx={{
-                                            '&:hover': { bgcolor: '#fafafa' },
-                                            '&:last-child td': { border: 0 }
+                                            '&:hover': { bgcolor: '#f9f9f9' },
+                                            '&:last-child td': { border: 0 },
+                                            borderBottom: '1px solid #f0f0f0'
                                         }}
                                     >
                                         <TableCell>
                                             <Box display="flex" alignItems="center" gap={1}>
-                                                <PetsIcon sx={{ color: '#10b981', fontSize: 20 }} />
+                                                <PetsIcon sx={{ color: '#8b5cf6', fontSize: 20 }} />
                                                 <Box>
-                                                    <Typography variant="body2" fontWeight={600} color="#0f172a">
+                                                    <Typography variant="body2" fontWeight={600} color="#000000">
                                                         {record.animal?.name || 'Unknown'}
                                                     </Typography>
                                                     {record.animal?.tag && (
-                                                        <Typography variant="caption" color="#64748b">
+                                                        <Typography variant="caption" color="#666666">
                                                             Tag: {record.animal.tag}
                                                         </Typography>
                                                     )}
@@ -421,21 +471,21 @@ const InseminationRecordsList = () => {
                                                 size="small"
                                                 sx={{
                                                     bgcolor: '#dbeafe',
-                                                    color: '#3b82f6',
+                                                    color: '#0369a1',
                                                     fontWeight: 600,
                                                 }}
                                             />
                                         </TableCell>
                                         <TableCell>
                                             <Box display="flex" alignItems="center" gap={1}>
-                                                <CalendarIcon sx={{ fontSize: 16, color: '#64748b' }} />
-                                                <Typography variant="body2" color="#0f172a">
+                                                <CalendarIcon sx={{ fontSize: 16, color: '#8b5cf6' }} />
+                                                <Typography variant="body2" color="#000000">
                                                     {formatDate(record.insemination_date)}
                                                 </Typography>
                                             </Box>
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="body2" color="#0f172a" fontWeight={500}>
+                                            <Typography variant="body2" color="#000000" fontWeight={500}>
                                                 {record.bull?.breed || 'N/A'}
                                             </Typography>
                                         </TableCell>
@@ -443,14 +493,14 @@ const InseminationRecordsList = () => {
                                         <TableCell>
                                             {record.expected_due_date ? (
                                                 <Box>
-                                                    <Typography variant="body2" color="#0f172a">
+                                                    <Typography variant="body2" color="#000000">
                                                         {formatDate(record.expected_due_date)}
                                                     </Typography>
                                                     {daysUntilDue !== null && record.outcome === 'pregnant' && (
                                                         <Typography
                                                             variant="caption"
                                                             sx={{
-                                                                color: daysUntilDue < 30 ? '#ef4444' : '#10b981',
+                                                                color: daysUntilDue < 30 ? '#dc2626' : '#059669',
                                                                 fontWeight: 600
                                                             }}
                                                         >
@@ -461,13 +511,13 @@ const InseminationRecordsList = () => {
                                                     )}
                                                 </Box>
                                             ) : (
-                                                <Typography variant="body2" color="#64748b">
+                                                <Typography variant="body2" color="#666666">
                                                     N/A
                                                 </Typography>
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="body2" color="#0f172a">
+                                            <Typography variant="body2" color="#000000">
                                                 {record.inseminator || 'N/A'}
                                             </Typography>
                                         </TableCell>
@@ -477,10 +527,10 @@ const InseminationRecordsList = () => {
                                                     onClick={(e) => handleMenuClick(e, record)}
                                                     size="small"
                                                     sx={{
-                                                        color: '#64748b',
+                                                        color: '#8b5cf6',
                                                         '&:hover': {
-                                                            bgcolor: '#f1f5f9',
-                                                            color: '#10b981'
+                                                            bgcolor: '#f3f0ff',
+                                                            color: '#7c3aed'
                                                         }
                                                     }}
                                                 >
@@ -505,26 +555,26 @@ const InseminationRecordsList = () => {
                 PaperProps={{
                     sx: {
                         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        borderRadius: '12px',
+                        borderRadius: '8px',
                         mt: 1
                     }
                 }}
             >
                 <MenuItem onClick={handleViewDetails} sx={{ py: 1.5 }}>
                     <ListItemIcon>
-                        <SearchIcon fontSize="small" sx={{ color: '#10b981' }} />
+                        <SearchIcon fontSize="small" sx={{ color: '#8b5cf6' }} />
                     </ListItemIcon>
                     <ListItemText>View Details</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={handleOpenEdit} sx={{ py: 1.5 }}>
                     <ListItemIcon>
-                        <EditIcon fontSize="small" sx={{ color: '#3b82f6' }} />
+                        <EditIcon fontSize="small" sx={{ color: '#0369a1' }} />
                     </ListItemIcon>
                     <ListItemText>Edit</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={handleOpenDelete} sx={{ py: 1.5, color: '#ef4444' }}>
+                <MenuItem onClick={handleOpenDelete} sx={{ py: 1.5, color: '#dc2626' }}>
                     <ListItemIcon>
-                        <DeleteIcon fontSize="small" sx={{ color: '#ef4444' }} />
+                        <DeleteIcon fontSize="small" sx={{ color: '#dc2626' }} />
                     </ListItemIcon>
                     <ListItemText>Delete</ListItemText>
                 </MenuItem>
@@ -536,11 +586,11 @@ const InseminationRecordsList = () => {
                 maxWidth="sm"
                 fullWidth
                 PaperProps={{
-                    sx: { borderRadius: '16px' }
+                    sx: { borderRadius: '12px' }
                 }}
             >
-                <DialogTitle sx={{ bgcolor: '#fafafa', borderBottom: '1px solid #e5e7eb', pb: 2 }}>
-                    <Typography variant="h6" fontWeight={700} color="#0f172a">
+                <DialogTitle sx={{ bgcolor: '#f9f9f9', borderBottom: '1px solid #f0f0f0', pb: 2 }}>
+                    <Typography variant="h6" fontWeight={700} color="#000000">
                         Insemination Record Details
                     </Typography>
                 </DialogTitle>
@@ -548,55 +598,55 @@ const InseminationRecordsList = () => {
                     {selectedRecord && (
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                     Animal
                                 </Typography>
-                                <Typography variant="body1" fontWeight={600} color="#0f172a">
+                                <Typography variant="body1" fontWeight={600} color="#000000">
                                     {selectedRecord.animal?.name || 'Unknown'}
                                 </Typography>
                             </Grid>
                             <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                     Species
                                 </Typography>
-                                <Typography variant="body1" color="#0f172a">
+                                <Typography variant="body1" color="#000000">
                                     {selectedRecord.animal?.species || 'N/A'}
                                 </Typography>
                             </Grid>
                             <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                     Status
                                 </Typography>
-                                <Typography variant="body1" color="#0f172a">
+                                <Typography variant="body1" color="#000000">
                                     {selectedRecord.animal?.status || 'N/A'}
                                 </Typography>
                             </Grid>
                             <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                     Insemination Date
                                 </Typography>
-                                <Typography variant="body1" color="#0f172a">
+                                <Typography variant="body1" color="#000000">
                                     {formatDate(selectedRecord.insemination_date)}
                                 </Typography>
                             </Grid>
                             <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                     Expected Due Date
                                 </Typography>
-                                <Typography variant="body1" color="#0f172a">
+                                <Typography variant="body1" color="#000000">
                                     {formatDate(selectedRecord.expected_due_date)}
                                 </Typography>
                             </Grid>
                             <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                     Inseminator
                                 </Typography>
-                                <Typography variant="body1" color="#0f172a">
+                                <Typography variant="body1" color="#000000">
                                     {selectedRecord.inseminator || 'N/A'}
                                 </Typography>
                             </Grid>
                             <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                     Outcome
                                 </Typography>
                                 <Box mt={0.5}>
@@ -604,24 +654,24 @@ const InseminationRecordsList = () => {
                                 </Box>
                             </Grid>
                             <Grid item xs={12}>
-                                <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                     Bull Information
                                 </Typography>
-                                <Typography variant="body1" color="#0f172a">
+                                <Typography variant="body1" color="#000000">
                                     Breed: {selectedRecord.bull?.breed || 'N/A'}
                                 </Typography>
                                 {selectedRecord.bull?.name && (
-                                    <Typography variant="body1" color="#0f172a">
+                                    <Typography variant="body1" color="#000000">
                                         Name: {selectedRecord.bull.name}
                                     </Typography>
                                 )}
                             </Grid>
                             {selectedRecord.notes && (
                                 <Grid item xs={12}>
-                                    <Typography variant="subtitle2" color="#64748b" gutterBottom fontWeight={600}>
+                                    <Typography variant="subtitle2" color="#666666" gutterBottom fontWeight={600}>
                                         Notes
                                     </Typography>
-                                    <Typography variant="body2" color="#0f172a">
+                                    <Typography variant="body2" color="#000000">
                                         {selectedRecord.notes}
                                     </Typography>
                                 </Grid>
@@ -629,12 +679,12 @@ const InseminationRecordsList = () => {
                         </Grid>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ p: 2.5, bgcolor: '#fafafa', borderTop: '1px solid #e5e7eb' }}>
+                <DialogActions sx={{ p: 2.5, bgcolor: '#f9f9f9', borderTop: '1px solid #f0f0f0' }}>
                     <Button
                         onClick={() => setDetailsDialogOpen(false)}
                         sx={{
-                            color: '#64748b',
-                            '&:hover': { bgcolor: '#f1f5f9' }
+                            color: '#8b5cf6',
+                            '&:hover': { bgcolor: '#f3f0ff' }
                         }}
                     >
                         Close
@@ -648,11 +698,11 @@ const InseminationRecordsList = () => {
                 maxWidth="sm"
                 fullWidth
                 PaperProps={{
-                    sx: { borderRadius: '16px' }
+                    sx: { borderRadius: '12px' }
                 }}
             >
-                <DialogTitle sx={{ bgcolor: '#fafafa', borderBottom: '1px solid #e5e7eb', pb: 2 }}>
-                    <Typography variant="h6" fontWeight={700} color="#0f172a">
+                <DialogTitle sx={{ bgcolor: '#f9f9f9', borderBottom: '1px solid #f0f0f0', pb: 2 }}>
+                    <Typography variant="h6" fontWeight={700} color="#000000">
                         Edit Insemination Record
                     </Typography>
                 </DialogTitle>
@@ -671,8 +721,11 @@ const InseminationRecordsList = () => {
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
-                                        '&:hover fieldset': { borderColor: '#10b981' },
-                                        '&.Mui-focused fieldset': { borderColor: '#10b981' },
+                                        '&:hover fieldset': { borderColor: '#8b5cf6' },
+                                        '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                        color: '#000000'
                                     }
                                 }}
                             />
@@ -688,8 +741,11 @@ const InseminationRecordsList = () => {
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
-                                        '&:hover fieldset': { borderColor: '#10b981' },
-                                        '&.Mui-focused fieldset': { borderColor: '#10b981' },
+                                        '&:hover fieldset': { borderColor: '#8b5cf6' },
+                                        '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                        color: '#000000'
                                     }
                                 }}
                             />
@@ -705,8 +761,11 @@ const InseminationRecordsList = () => {
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
-                                        '&:hover fieldset': { borderColor: '#10b981' },
-                                        '&.Mui-focused fieldset': { borderColor: '#10b981' },
+                                        '&:hover fieldset': { borderColor: '#8b5cf6' },
+                                        '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                        color: '#000000'
                                     }
                                 }}
                             />
@@ -723,8 +782,11 @@ const InseminationRecordsList = () => {
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
-                                        '&:hover fieldset': { borderColor: '#10b981' },
-                                        '&.Mui-focused fieldset': { borderColor: '#10b981' },
+                                        '&:hover fieldset': { borderColor: '#8b5cf6' },
+                                        '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                        color: '#000000'
                                     }
                                 }}
                             >
@@ -746,20 +808,23 @@ const InseminationRecordsList = () => {
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': { borderColor: '#e5e7eb' },
-                                        '&:hover fieldset': { borderColor: '#10b981' },
-                                        '&.Mui-focused fieldset': { borderColor: '#10b981' },
+                                        '&:hover fieldset': { borderColor: '#8b5cf6' },
+                                        '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                        color: '#000000'
                                     }
                                 }}
                             />
                         </Grid>
                     </Grid>
                 </DialogContent>
-                <DialogActions sx={{ p: 2.5, bgcolor: '#fafafa', borderTop: '1px solid #e5e7eb' }}>
+                <DialogActions sx={{ p: 2.5, bgcolor: '#f9f9f9', borderTop: '1px solid #f0f0f0' }}>
                     <Button
                         onClick={() => setEditDialogOpen(false)}
                         sx={{
-                            color: '#64748b',
-                            '&:hover': { bgcolor: '#f1f5f9' }
+                            color: '#8b5cf6',
+                            '&:hover': { bgcolor: '#f3f0ff' }
                         }}
                     >
                         Cancel
@@ -769,8 +834,8 @@ const InseminationRecordsList = () => {
                         variant="contained"
                         disabled={editLoading}
                         sx={{
-                            bgcolor: '#10b981',
-                            '&:hover': { bgcolor: '#059669' },
+                            bgcolor: '#8b5cf6',
+                            '&:hover': { bgcolor: '#7c3aed' },
                             color: '#ffffff'
                         }}
                         startIcon={editLoading && <CircularProgress size={16} sx={{ color: '#ffffff' }} />}
@@ -786,16 +851,16 @@ const InseminationRecordsList = () => {
                 maxWidth="xs"
                 fullWidth
                 PaperProps={{
-                    sx: { borderRadius: '16px' }
+                    sx: { borderRadius: '12px' }
                 }}
             >
                 <DialogTitle sx={{ bgcolor: '#fef2f2', borderBottom: '1px solid #fecaca', pb: 2 }}>
-                    <Typography variant="h6" fontWeight={700} color="#ef4444">
+                    <Typography variant="h6" fontWeight={700} color="#dc2626">
                         Delete Record?
                     </Typography>
                 </DialogTitle>
                 <DialogContent sx={{ mt: 3, bgcolor: '#ffffff' }}>
-                    <Typography variant="body1" color="#0f172a">
+                    <Typography variant="body1" color="#000000">
                         Are you sure you want to delete this insemination record for{' '}
                         <strong>{selectedRecord?.animal?.name}</strong>?
                     </Typography>
@@ -805,12 +870,12 @@ const InseminationRecordsList = () => {
                         </Alert>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ p: 2.5, bgcolor: '#fafafa', borderTop: '1px solid #e5e7eb' }}>
+                <DialogActions sx={{ p: 2.5, bgcolor: '#f9f9f9', borderTop: '1px solid #f0f0f0' }}>
                     <Button
                         onClick={() => setDeleteDialogOpen(false)}
                         sx={{
-                            color: '#64748b',
-                            '&:hover': { bgcolor: '#f1f5f9' }
+                            color: '#8b5cf6',
+                            '&:hover': { bgcolor: '#f3f0ff' }
                         }}
                     >
                         Cancel
@@ -820,8 +885,8 @@ const InseminationRecordsList = () => {
                         variant="contained"
                         disabled={deleteLoading || selectedRecord?.has_calved}
                         sx={{
-                            bgcolor: '#ef4444',
-                            '&:hover': { bgcolor: '#dc2626' },
+                            bgcolor: '#dc2626',
+                            '&:hover': { bgcolor: '#991b1b' },
                             color: '#ffffff',
                             '&.Mui-disabled': {
                                 bgcolor: '#fca5a5',
