@@ -75,6 +75,7 @@ import PurchaseHistoryPage from "./components/globals/global markets/marketviewp
 import BasketPage from "./components/globals/global markets/marketviewpage/pages/BasketPage";
 import WishlistPage from "./components/globals/global markets/marketviewpage/pages/WishlistPage";
 import SellerRoutes from "./components/Sellers/seller-routes";
+import SellerAnalytics from "./components/farmer/farmhome/components/SellerAnalytics";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -224,6 +225,7 @@ function App() {
               <Route path="wishlist" element={<WishlistPage />} />
               <Route path="basket" element={<BasketPage />} />
               <Route path="purchases" element={<PurchaseHistoryPage />} />
+              <Route path="fmr-analytics" element={<SellerAnalytics />} />
 
             </Route>
 

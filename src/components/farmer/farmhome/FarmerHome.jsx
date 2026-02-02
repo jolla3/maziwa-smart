@@ -22,6 +22,7 @@ import ServicesOverview from './components/ServicesOverview';
 import StatsSection from './components/StatsSection';
 import RecentActivities from './components/RecentActivities';
 import ManagersSection from './components/ManagersSection';
+import MarketplaceAnalytics from './components/SellerAnalytics';
 import Footer from './components/Footer';
 import { COLORS } from './utils/constants';
 
@@ -29,10 +30,17 @@ const FarmerHome = () => {
   const { token, user } = useContext(AuthContext);
   const { data, loading, error, refresh, isOffline } = useDashboardData(token);
 
-  // Loading state
+  // Initial loading state
   if (loading && !data) {
     return (
-      <Container maxWidth="xl" disableGutters sx={{ px: { xs: 2, sm: 3, md: 4 }, py: 4 }}>
+      <Container
+        maxWidth="xl"
+        disableGutters
+        sx={{
+          px: { xs: 2, sm: 3, md: 4 },
+          py: 4,
+        }}
+      >
         <Box
           display="flex"
           flexDirection="column"
@@ -158,7 +166,7 @@ const FarmerHome = () => {
           </Tooltip>
         </Box>
 
-        {/* Hero Section */}
+        {/* Welcome Hero */}
         <Fade in timeout={600}>
           <Box>
             <WelcomeHero farmerName={data?.farmer?.fullname || user?.name} />
@@ -179,14 +187,21 @@ const FarmerHome = () => {
           </Box>
         </Grow>
 
-        {/* Statistics Section */}
+        {/* Stats Section */}
         <Grow in timeout={1000}>
           <Box>
             <StatsSection stats={data?.stats} loading={loading} />
           </Box>
         </Grow>
 
-        {/* Milk Graph + Recent Activities */}
+        {/* Marketplace Analytics Section */}
+        <Grow in timeout={1100}>
+          <Box>
+            <MarketplaceAnalytics />
+          </Box>
+        </Grow>
+
+        {/* Recent Activities & Charts */}
         <Grow in timeout={1200}>
           <Grid container spacing={3} mb={4}>
             <Grid item xs={12} md={8}>
@@ -196,75 +211,53 @@ const FarmerHome = () => {
                   borderRadius: '16px',
                   border: `2px solid ${COLORS.aqua.main}30`,
                   p: 3,
-                  width: '100%',
                   height: '100%',
                 }}
               >
                 <Box display="flex" alignItems="center" gap={2} mb={3}>
                   <Box sx={{ fontSize: '1.5rem' }}>📊</Box>
-                  <Box
-                    sx={{
-                      fontSize: '1.3rem',
-                      fontWeight: 900,
-                      color: '#000000',
-                    }}
-                  >
+                  <Box sx={{ fontSize: '1.3rem', fontWeight: 900, color: '#000000' }}>
                     Milk by Time Slot
                   </Box>
                 </Box>
 
-                {data?.stats?.milk_by_slot &&
-                Object.keys(data.stats.milk_by_slot).length > 0 ? (
+                {data?.stats?.milk_by_slot && Object.keys(data.stats.milk_by_slot).length > 0 ? (
                   <Grid container spacing={2}>
-                    {Object.entries(data.stats.milk_by_slot).map(
-                      ([slot, litres], index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                          <Box
+                    {Object.entries(data.stats.milk_by_slot).map(([slot, litres], index) => (
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Box
+                          sx={{
+                            p: 3,
+                            borderRadius: '12px',
+                            backgroundColor: '#f8f9fa',
+                            border: '1px solid #e0e0e0',
+                            textAlign: 'center',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              backgroundColor: `${COLORS.aqua.main}08`,
+                              border: `1px solid ${COLORS.aqua.main}40`,
+                            },
+                          }}
+                        >
+                          <Chip
+                            label={slot.toUpperCase()}
+                            size="small"
                             sx={{
-                              p: 3,
-                              borderRadius: '12px',
-                              backgroundColor: '#f8f9fa',
-                              border: '1px solid #e0e0e0',
-                              textAlign: 'center',
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: `${COLORS.aqua.main}08`,
-                                border: `1px solid ${COLORS.aqua.main}40`,
-                              },
+                              backgroundColor: COLORS.aqua.main,
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              mb: 1,
                             }}
-                          >
-                            <Chip
-                              label={slot.toUpperCase()}
-                              size="small"
-                              sx={{
-                                backgroundColor: COLORS.aqua.main,
-                                color: '#ffffff',
-                                fontWeight: 700,
-                                mb: 1,
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                fontSize: '1.8rem',
-                                fontWeight: 900,
-                                color: '#000000',
-                              }}
-                            >
-                              {litres}
-                            </Box>
-                            <Box
-                              sx={{
-                                fontSize: '0.75rem',
-                                color: '#666666',
-                                fontWeight: 600,
-                              }}
-                            >
-                              litres
-                            </Box>
+                          />
+                          <Box sx={{ fontSize: '1.8rem', fontWeight: 900, color: '#000000' }}>
+                            {litres}
                           </Box>
-                        </Grid>
-                      )
-                    )}
+                          <Box sx={{ fontSize: '0.75rem', color: '#666666', fontWeight: 600 }}>
+                            litres
+                          </Box>
+                        </Box>
+                      </Grid>
+                    ))}
                   </Grid>
                 ) : (
                   <Box
@@ -287,78 +280,56 @@ const FarmerHome = () => {
           </Grid>
         </Grow>
 
-        {/* Cow Stage Breakdown */}
-        {data?.stats?.cow_stages &&
-          Object.keys(data.stats.cow_stages).length > 0 && (
-            <Grow in timeout={1400}>
-              <Box mb={4}>
-                <Box
-                  sx={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '16px',
-                    border: `2px solid ${COLORS.green.main}30`,
-                    p: 3,
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={3}>
-                    <Box sx={{ fontSize: '1.5rem' }}>🐄</Box>
-                    <Box
-                      sx={{
-                        fontSize: '1.3rem',
-                        fontWeight: 900,
-                        color: '#000000',
-                      }}
-                    >
-                      Cows by Stage
-                    </Box>
+        {/* Cow Stages Breakdown */}
+        {data?.stats?.cow_stages && Object.keys(data.stats.cow_stages).length > 0 && (
+          <Grow in timeout={1400}>
+            <Box mb={4}>
+              <Box
+                sx={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '16px',
+                  border: `2px solid ${COLORS.green.main}30`,
+                  p: 3,
+                }}
+              >
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <Box sx={{ fontSize: '1.5rem' }}>🐄</Box>
+                  <Box sx={{ fontSize: '1.3rem', fontWeight: 900, color: '#000000' }}>
+                    Cows by Stage
                   </Box>
-
-                  <Grid container spacing={2}>
-                    {Object.entries(data.stats.cow_stages).map(
-                      ([stage, count], index) => (
-                        <Grid item xs={6} sm={4} md={3} key={index}>
-                          <Box
-                            sx={{
-                              p: 2,
-                              borderRadius: '12px',
-                              backgroundColor: '#f8f9fa',
-                              border: '1px solid #e0e0e0',
-                              textAlign: 'center',
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: `${COLORS.green.main}08`,
-                                border: `1px solid ${COLORS.green.main}40`,
-                              },
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                fontSize: '1.8rem',
-                                fontWeight: 900,
-                                color: '#000000',
-                                mb: 0.5,
-                              }}
-                            >
-                              {count}
-                            </Box>
-                            <Box
-                              sx={{
-                                fontSize: '0.85rem',
-                                color: '#666666',
-                                fontWeight: 700,
-                              }}
-                            >
-                              {stage.replace(/_/g, ' ').toUpperCase()}
-                            </Box>
-                          </Box>
-                        </Grid>
-                      )
-                    )}
-                  </Grid>
                 </Box>
+
+                <Grid container spacing={2}>
+                  {Object.entries(data.stats.cow_stages).map(([stage, count], index) => (
+                    <Grid item xs={6} sm={4} md={3} key={index}>
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: '12px',
+                          backgroundColor: '#f8f9fa',
+                          border: '1px solid #e0e0e0',
+                          textAlign: 'center',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: `${COLORS.green.main}08`,
+                            border: `1px solid ${COLORS.green.main}40`,
+                          },
+                        }}
+                      >
+                        <Box sx={{ fontSize: '1.8rem', fontWeight: 900, color: '#000000', mb: 0.5 }}>
+                          {count}
+                        </Box>
+                        <Box sx={{ fontSize: '0.85rem', color: '#666666', fontWeight: 700 }}>
+                          {stage.replace(/_/g, ' ').toUpperCase()}
+                        </Box>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
               </Box>
-            </Grow>
-          )}
+            </Box>
+          </Grow>
+        )}
 
         {/* Managers Section */}
         <Grow in timeout={1600}>
@@ -371,7 +342,7 @@ const FarmerHome = () => {
       {/* Footer */}
       <Footer />
 
-      {/* Inline Animation */}
+      {/* Inline CSS for spin animation */}
       <style>
         {`
           @keyframes spin {

@@ -35,22 +35,22 @@ const AnimalDetailsCard = ({ animalDetails }) => {
     lifetime_milk,
     daily_average,
     pregnancy,
-    birth_date,
+    age,
   } = animalDetails;
 
   // Calculate age from birth_date
-  const calculateAge = (birthDate) => {
-    if (!birthDate) return "N/A";
-    const birth = new Date(birthDate);
-    const today = new Date("2025-11-25");
-    let ageYears = today.getFullYear() - birth.getFullYear();
-    let ageMonths = today.getMonth() - birth.getMonth();
-    if (ageMonths < 0 || (ageMonths === 0 && today.getDate() < birth.getDate())) {
-      ageYears--;
-      ageMonths += 12;
-    }
-    return `${ageYears} year${ageYears !== 1 ? 's' : ''} ${ageMonths} month${ageMonths !== 1 ? 's' : ''}`;
-  };
+  // const calculateAge = (birthDate) => {
+  //   if (!birthDate) return "N/A";
+  //   const birth = new Date(birthDate);
+  //   const today = new Date("2025-11-25");
+  //   let ageYears = today.getFullYear() - birth.getFullYear();
+  //   let ageMonths = today.getMonth() - birth.getMonth();
+  //   if (ageMonths < 0 || (ageMonths === 0 && today.getDate() < birth.getDate())) {
+  //     ageYears--;
+  //     ageMonths += 12;
+  //   }
+  //   return `${ageYears} year${ageYears !== 1 ? 's' : ''} ${ageMonths} month${ageMonths !== 1 ? 's' : ''}`;
+  // };
 
   const DetailItem = ({ label, value, colSize = "col-12 col-sm-6" }) => {
     if (value == null || value === "" || value === 0) return null;
@@ -138,7 +138,7 @@ const AnimalDetailsCard = ({ animalDetails }) => {
                   <DetailItem label="Stage" value={stage} />
                   <DetailItem label="Status" value={<StatusBadge status={status} />} />
                   <DetailItem label="Breed" value={breed} />
-                  <DetailItem label="Age" value={calculateAge(birth_date)} />
+                  <DetailItem label="Age" value={age} />
                 </div>
               </div>
             )}
