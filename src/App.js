@@ -1,5 +1,5 @@
 // src/App.js
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./theme";
@@ -74,6 +74,7 @@ import MilkIntelligenceDashboard from "./components/farmer/CRUD/MilkAnimalSummar
 import PurchaseHistoryPage from "./components/globals/global markets/marketviewpage/pages/PurchaseHistoryPage";
 import BasketPage from "./components/globals/global markets/marketviewpage/pages/BasketPage";
 import WishlistPage from "./components/globals/global markets/marketviewpage/pages/WishlistPage";
+import SellerRoutes from "./components/Sellers/seller-routes";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -220,9 +221,9 @@ function App() {
               <Route path="view-market" element={<MarketView />} />
               <Route path="animal-milk-summary" element={<MilkIntelligenceDashboard />} />
               {/* <Route index element={<MainMarketView />} /> */}
-                    <Route path="wishlist" element={<WishlistPage />} />
-                    <Route path="basket" element={<BasketPage />} />
-                    <Route path="purchases" element={<PurchaseHistoryPage />} />
+              <Route path="wishlist" element={<WishlistPage />} />
+              <Route path="basket" element={<BasketPage />} />
+              <Route path="purchases" element={<PurchaseHistoryPage />} />
 
             </Route>
 
@@ -257,24 +258,26 @@ function App() {
 
             {/* sellers  Routes */}
             <Route
-  path="/slr.drb"
+              path="/slr.drb"
+              element={
+                <PrivateRoute role="seller">
+                  <SellerRoutes />
+                </PrivateRoute>
+              }
+            >
+              {/* sellers Routes */}
+              {/* import SellerRoutes from "./components/Sellers/seller-routes"; */}
+
+{/* sellers Routes */}
+<Route
+  path="/slr.drb/*"
   element={
     <PrivateRoute role="seller">
-      <SellerDashboard />
+      <SellerRoutes />
     </PrivateRoute>
   }
->
-  <Route index element={< SellerDashboard/>} />
-
-  <Route path="dashboard" element={<DashboardHomePage />} />
-  <Route path="my-listings" element={<MyListings />} />
-  <Route path="seller-approval" element={<SellerRequest />} />
-  <Route path="market" element={<MarketPage />} />
-  <Route path="view-market" element={<MarketView />} />
-  <Route path="chatroom" element={<ChatRoom />} />
-  <Route path="recents" element={<ChatList />} />
-
-</Route>
+/>
+            </Route>
 
 
             {/* buyer  Routes */}

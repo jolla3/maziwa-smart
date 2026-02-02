@@ -1,13 +1,9 @@
-
-// ============================================================================
-// FILE: /src/components/sellerdashboard/layout/DashboardLayout.jsx
-// ============================================================================
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
-const DashboardLayout = () => {
+const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -23,7 +19,7 @@ const DashboardLayout = () => {
         
         <div className="flex-grow-1 overflow-auto" style={{ backgroundColor: '#fafafa' }}>
           <div className="container-fluid p-4">
-            <Outlet />
+            {children || <Outlet />}
           </div>
         </div>
       </div>

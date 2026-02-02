@@ -76,19 +76,17 @@ export default function ViewListing() {
     }).format(val || 0);
 
   const handleBack  = () => {
-    if (user?.role === "farmer") {
-      navigate("/frmr.drb/my-listings");
-    } else {
+    
+     
       navigate("/slr.drb/my-listings");
-    }
+    
   };
   
   const handleEdit = () =>{
-     if (user?.role === "farmer") {
+     
      navigate("/slr.drb/edit", { state: { listing } });
-     }
-     else{
-      navigate("/frmr.drb/edit", { state: { listing } });}
+     
+     
      }
 
   const imgUrl = (path) =>

@@ -60,7 +60,7 @@ export default function EditListing() {
       prefill(listingData);
     } else {
       showToast("error", "No listing data provided");
-      setTimeout(() => navigate("/slr.drb/my-listings"), 2000) || navigate("/fmr.drb/my-listings");
+      setTimeout(() => navigate("/slr.drb/my-listings"), 2000)
     }
   }, []);
 
@@ -274,7 +274,7 @@ export default function EditListing() {
         setPreviews([]);
 
         setTimeout(() => {
-          navigate("/slr.drb/my-listings") || navigate("/frmr.drb/my-listings");
+          navigate("/slr.drb/my-listings") 
         }, 1500);
       } else {
         showToast("error", res.data.message || "Failed to update listing");
@@ -307,11 +307,9 @@ export default function EditListing() {
   };
 
   const handleNavigateBack = () => {
-    if (user?.role === "farmer") {
-      navigate("/frmr.drb/my-listings");
-    } else {
+   
       navigate("/slr.drb/my-listings");
-    }
+    
   };
 
   return (

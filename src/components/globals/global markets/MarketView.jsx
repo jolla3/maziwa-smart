@@ -76,6 +76,18 @@ const MarketView = () => {
     }
   };
 
+  // Register view (fire-and-forget, only if auth)
+  const registerView = async (id) => {
+    if (!token) return; // Silent skip for unauth—fix if you want guest views
+    try {
+      await axios.post(`${API_BASE}/listing/views/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      console.error("View register failed:", err); // Silent to user
+    }
+  };
+
   // Initialize listing on mount—always fetch full by ID
   useEffect(() => {
     const stateData = location.state;
@@ -87,6 +99,13 @@ const MarketView = () => {
       setLoading(false);
     }
   }, [location.state]);
+
+  // Register view after listing set (once)
+  useEffect(() => {
+    if (listing?._id) {
+      registerView(listing._id);
+    }
+  }, [listing]);
 
   // Update favorites when listing changes
   useEffect(() => {
@@ -224,10 +243,11 @@ const MarketView = () => {
           />
 
           <StatsBar
-            views={views}
-            createdAt={createdAt}
-            location={loc}
-          />
+  views={views || 0}
+  createdAt={createdAt}
+  location={loc}
+/>
+
         </div>
 
         {/* Details Section */}

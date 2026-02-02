@@ -83,7 +83,7 @@ const ConfirmModal = ({ open, title, message, onCancel, onConfirm, busy }) => (
 );
 
 const MyListings = () => {
-  const { token, user } = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [listings, setListings] = useState([]);
@@ -213,39 +213,8 @@ const MyListings = () => {
       }
       return `https://maziwasmart.onrender.com/${photoPath}`;
     }
-  return "/placeholder-600x400.png";
-};
-
-//   const handleNavigateBack = () => {
-//   if (user?.role === "farmer") {
-//     navigate("/frmr.drb/my-listings");
-//   } else {
-//     navigate("/slr.drb/my-listings");
-//   }
-// };
-// };
-
-const handleCreate = () => {
-  if (user?.role === "farmer") {
-    navigate("/frmr.drb/create");
-  } else {
-    navigate("/slr.drb/create");
-  }
-};
-const handleView = () => {
-  if (user?.role === "farmer") {
-    navigate("/frmr.drb/view");
-  } else {
-    navigate("/slr.drb/view");
-  }
-};
-const handleEdit = () => {
-  if (user?.role === "farmer") {
-    navigate("/frmr.drb/edit");
-  } else {
-    navigate("/slr.drb/edit");
-  }
-};
+    return "/placeholder-600x400.png";
+  };
 
   return (
     <div className="container-fluid px-3 py-4" style={{ minHeight: "100vh", background: "#f7fbff" }}>
@@ -266,7 +235,7 @@ const handleEdit = () => {
               background: "linear-gradient(90deg,#00d4ff,#00bcd4)",
               boxShadow: "0 8px 24px rgba(0,188,212,0.16)",
             }}
-            onClick={handleCreate}
+            onClick={() => navigate("/slr.drb/create")}
             aria-label="Create new listing"
           >
             <Plus size={18} className="me-2" />
@@ -299,7 +268,7 @@ const handleEdit = () => {
                 whileTap={{ scale: 0.97 }}
                 className="btn btn-primary"
                 style={{ background: "#00bcd4", borderColor: "#00bcd4" }}
-                onClick={handleCreate}
+                onClick={() => navigate("/slr.drb/create")}
               >
                 Create listing
               </motion.button>
@@ -361,7 +330,7 @@ const handleEdit = () => {
                         background: "rgba(255,255,255,0.9)",
                         boxShadow: "0 4px 10px rgba(0,0,0,0.04)"
                       }}
-                      onClick={() => navigate(handleView, { state: { listing: item } })}
+                      onClick={() => navigate("/slr.drb/view", { state: { listing: item } })}
                       aria-label={`View ${item.title}`}
                       title="View"
                     >
@@ -375,7 +344,7 @@ const handleEdit = () => {
                         background: "rgba(255,255,255,0.9)",
                         boxShadow: "0 4px 10px rgba(0,0,0,0.04)"
                       }}
-                      onClick={() => navigate(handleEdit, { state: { listing: item } })}
+                      onClick={() => navigate("/slr.drb/edit", { state: { listing: item } })}
                       aria-label={`Edit ${item.title}`}
                       title="Edit"
                     >

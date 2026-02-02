@@ -1,4 +1,3 @@
-// /src/components/Sellers/routes/sellerRoutes.js
 import {
   LayoutDashboard,
   List,
@@ -11,37 +10,37 @@ import {
 
 const sellerRoutes = [
   {
-    path: "/slr.drb/dashboard",
+    path: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard
   },
   {
-    path: "/slr.drb/my-listings",
+    path: "my-listings",
     label: "My Listings",
     icon: List
   },
   {
-    path: "/slr.drb/seller-approval",
+    path: "seller-approval",
     label: "Approval",
     icon: ClipboardCheck
   },
   {
-    path: "/slr.drb/market",
+    path: "market",
     label: "Market",
     icon: Store
   },
   {
-    path: "/slr.drb/view-market",
+    path: "view-market",
     label: "Market View",
     icon: Eye
   },
   {
-    path: "/slr.drb/chatroom",
+    path: "chatroom",
     label: "Chat Room",
     icon: MessageCircle
   },
   {
-    path: "/slr.drb/recents",
+    path: "recents",
     label: "Recent Chats",
     icon: Clock
   }

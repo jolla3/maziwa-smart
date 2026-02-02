@@ -1,13 +1,11 @@
-// ============================================================================
-// FILE: /src/components/sellerdashboard/layout/Header.jsx
-// ============================================================================
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, Bell } from 'lucide-react';
-import  sellerRoutes  from '../routes/sellerRoutes';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Menu, Bell, ShoppingBag } from 'lucide-react';
+import sellerRoutes from '../routes/sellerRoutes';
 
 const Header = ({ onToggleSidebar }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const getCurrentRoute = () => {
     const path = location.pathname.split('/').pop();
@@ -27,23 +25,35 @@ const Header = ({ onToggleSidebar }) => {
         <Menu size={24} />
       </button>
       
-      <nav aria-label="breadcrumb" className="mb-0">
-        <ol className="breadcrumb mb-0">
-          <li className="breadcrumb-item">
-            <Link to="/slr.drb/dashboard" className="text-decoration-none" style={{ color: '#64748b' }}>
-              Seller
-            </Link>
-          </li>
-          <li className="breadcrumb-item active" aria-current="page" style={{ color: '#0f172a', fontWeight: 600 }}>
-            {currentRoute?.label || 'Dashboard'}
-          </li>
-        </ol>
-      </nav>
+      <div className="d-flex align-items-center gap-2">
+        <h6 className="mb-0" style={{ color: '#0f172a', fontWeight: 700, fontSize: '1.1rem' }}>
+          {currentRoute?.label || 'Dashboard'}
+        </h6>
+      </div>
 
       <div className="ms-auto d-flex align-items-center gap-3">
-        <button className="btn btn-link p-0" style={{ color: '#64748b' }}>
+        <button 
+          className="btn btn-link p-0 position-relative" 
+          style={{ color: '#64748b' }}
+          onClick={() => navigate('/notifications')}
+        >
           <Bell size={20} />
+          <span 
+            className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+            style={{ backgroundColor: '#ef4444', fontSize: '0.65rem' }}
+          >
+            3
+          </span>
         </button>
+        
+        <button 
+          className="btn btn-link p-0 position-relative" 
+          style={{ color: '#64748b' }}
+          onClick={() => navigate('/slr.drb/my-listings')}
+        >
+          <ShoppingBag size={20} />
+        </button>
+        
         <div 
           className="d-flex align-items-center justify-content-center rounded-circle fw-bold" 
           style={{ 
@@ -51,8 +61,10 @@ const Header = ({ onToggleSidebar }) => {
             height: '40px',
             backgroundColor: '#10b981',
             color: '#ffffff',
-            fontSize: '0.875rem'
+            fontSize: '0.875rem',
+            cursor: 'pointer'
           }}
+          onClick={() => navigate('/slr.drb/settings')}
         >
           S
         </div>

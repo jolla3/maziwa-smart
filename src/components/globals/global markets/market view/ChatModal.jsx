@@ -12,7 +12,7 @@ const ChatModal = ({ showChatModal, setShowChatModal, seller, listing }) => {
   const receiverId = seller?._id;
   if (!receiverId || !user?.id) return;
 
-  navigate("/chatroom", {
+  navigate("/frm.drb/chatroom", {
     state: {
       receiverId,
       listingId: listing?._id || null,

@@ -1,188 +1,249 @@
-// ============================================================================
-// FILE: /src/components/sellerdashboard/pages/DashboardHomePage.jsx
-// ============================================================================
 import React from 'react';
-import { TrendingUp, Package, ShoppingCart, DollarSign } from 'lucide-react';
+import { TrendingUp, Package, ShoppingCart, Eye, MessageSquare, Plus, RefreshCw, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useListingViews } from '../hooks/useListingViews';
+import { formatNumber } from '../utils/formatters';
+import ViewsChart from '../components/ViewsChart';
+import TopListings from '../components/TopListings';
 
 const DashboardHomePage = () => {
+  const navigate = useNavigate();
+  const { viewsData, loading, error, isStale, refresh } = useListingViews(true);
+
+  const totalViews = viewsData?.total_views || 0;
+  const totalListings = viewsData?.total_listings || 0;
+  const byRole = viewsData?.by_role || {};
+  const topListings = viewsData?.top_viewed || [];
+
+  // Calculate most engaged user type
+  const topEngagedRole = Object.entries(byRole).sort((a, b) => b[1] - a[1])[0];
+
+  const stats = [
+    {
+      label: 'Total Views',
+      value: formatNumber(totalViews),
+      icon: Eye,
+      bgColor: '#dbeafe',
+      iconColor: '#3b82f6',
+      trend: `Across ${totalListings} listing${totalListings !== 1 ? 's' : ''}`,
+      trendColor: '#3b82f6'
+    },
+    {
+      label: 'Active Listings',
+      value: totalListings,
+      icon: Package,
+      bgColor: '#fef3c7',
+      iconColor: '#f59e0b',
+      trend: 'Total products',
+      trendColor: '#f59e0b'
+    },
+    {
+      label: 'Most Engaged',
+      value: topEngagedRole ? topEngagedRole[0].charAt(0).toUpperCase() + topEngagedRole[0].slice(1) : 'N/A',
+      icon: Users,
+      bgColor: '#dcfce7',
+      iconColor: '#10b981',
+      trend: topEngagedRole ? `${topEngagedRole[1]} views` : 'No data',
+      trendColor: '#10b981'
+    },
+    {
+      label: 'Avg Views/Listing',
+      value: totalListings > 0 ? formatNumber(Math.round(totalViews / totalListings)) : '0',
+      icon: TrendingUp,
+      bgColor: '#e0e7ff',
+      iconColor: '#6366f1',
+      trend: 'Per product',
+      trendColor: '#6366f1'
+    }
+  ];
+
+  const quickActions = [
+    {
+      label: 'Add New Product',
+      icon: Package,
+      bgColor: '#10b981',
+      textColor: '#ffffff',
+      onClick: () => navigate('/slr.drb/my-listings')
+    },
+    {
+      label: 'View All Listings',
+      icon: ShoppingCart,
+      bgColor: '#f8fafc',
+      textColor: '#0f172a',
+      border: '1px solid #e2e8f0',
+      onClick: () => navigate('/slr.drb/my-listings')
+    },
+    {
+      label: 'Check Messages',
+      icon: MessageSquare,
+      bgColor: '#f8fafc',
+      textColor: '#0f172a',
+      border: '1px solid #e2e8f0',
+      onClick: () => navigate('/slr.drb/recents')
+    },
+    {
+      label: 'Browse Market',
+      icon: TrendingUp,
+      bgColor: '#f8fafc',
+      textColor: '#0f172a',
+      border: '1px solid #e2e8f0',
+      onClick: () => navigate('/slr.drb/market')
+    }
+  ];
+
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="mb-2 fw-bold" style={{ color: '#0f172a', fontSize: '1.75rem' }}>
-          Dashboard Overview
-        </h2>
-        <p className="mb-0" style={{ color: '#64748b', fontSize: '0.9375rem' }}>
-          Welcome back! Here's what's happening with your store today.
-        </p>
+      {/* Header */}
+      <div className="mb-4 d-flex justify-content-between align-items-start">
+        <div>
+          <h2 className="mb-2 fw-bold" style={{ color: '#0f172a', fontSize: '2rem' }}>
+            Dashboard Analytics
+          </h2>
+          <p className="mb-0" style={{ color: '#64748b', fontSize: '1rem' }}>
+            Track who's viewing your products and optimize your listings
+          </p>
+        </div>
+        <button
+          className="btn btn-sm d-flex align-items-center gap-2"
+          style={{
+            backgroundColor: isStale ? '#fef3c7' : '#f0fdf4',
+            color: isStale ? '#f59e0b' : '#10b981',
+            border: 'none',
+            fontWeight: 600
+          }}
+          onClick={() => refresh()}
+          disabled={loading}
+        >
+          <RefreshCw size={16} className={loading ? 'spinner-border spinner-border-sm' : ''} />
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <div className="alert alert-warning mb-4" role="alert">
+          <strong>Warning:</strong> {error}. Showing cached data if available.
+        </div>
+      )}
+
+      {/* Stats Cards */}
       <div className="row g-4 mb-4">
-        <div className="col-md-6 col-lg-3">
-          <div className="bg-white p-4 rounded-3 border-0 shadow-sm h-100">
-            <div className="d-flex align-items-start justify-content-between mb-3">
-              <div>
-                <p className="mb-1 small" style={{ color: '#64748b' }}>Total Revenue</p>
-                <h3 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>$0.00</h3>
-              </div>
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div key={index} className="col-md-6 col-lg-3">
               <div 
-                className="d-flex align-items-center justify-content-center rounded-3"
-                style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  backgroundColor: '#dcfce7',
-                  color: '#10b981'
-                }}
+                className="bg-white p-4 rounded-3 border-0 shadow-sm h-100"
+                style={{ transition: 'transform 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <DollarSign size={24} />
+                <div className="d-flex align-items-start justify-content-between mb-3">
+                  <div>
+                    <p className="mb-1 small" style={{ color: '#64748b', fontWeight: 500 }}>
+                      {stat.label}
+                    </p>
+                    <h3 className="mb-0 fw-bold" style={{ color: '#0f172a', fontSize: '1.75rem' }}>
+                      {stat.value}
+                    </h3>
+                  </div>
+                  <div 
+                    className="d-flex align-items-center justify-content-center rounded-3"
+                    style={{ 
+                      width: '52px', 
+                      height: '52px', 
+                      backgroundColor: stat.bgColor,
+                      color: stat.iconColor
+                    }}
+                  >
+                    <Icon size={26} />
+                  </div>
+                </div>
+                <div className="d-flex align-items-center">
+                  <small style={{ color: stat.trendColor, fontWeight: 600 }}>
+                    {stat.trend}
+                  </small>
+                </div>
               </div>
             </div>
-            <div className="d-flex align-items-center">
-              <TrendingUp size={14} style={{ color: '#10b981' }} className="me-1" />
-              <small style={{ color: '#10b981', fontWeight: 600 }}>Connect your data</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-6 col-lg-3">
-          <div className="bg-white p-4 rounded-3 border-0 shadow-sm h-100">
-            <div className="d-flex align-items-start justify-content-between mb-3">
-              <div>
-                <p className="mb-1 small" style={{ color: '#64748b' }}>Total Orders</p>
-                <h3 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>0</h3>
-              </div>
-              <div 
-                className="d-flex align-items-center justify-content-center rounded-3"
-                style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  backgroundColor: '#dbeafe',
-                  color: '#3b82f6'
-                }}
-              >
-                <ShoppingCart size={24} />
-              </div>
-            </div>
-            <div className="d-flex align-items-center">
-              <TrendingUp size={14} style={{ color: '#3b82f6' }} className="me-1" />
-              <small style={{ color: '#3b82f6', fontWeight: 600 }}>Connect your data</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-6 col-lg-3">
-          <div className="bg-white p-4 rounded-3 border-0 shadow-sm h-100">
-            <div className="d-flex align-items-start justify-content-between mb-3">
-              <div>
-                <p className="mb-1 small" style={{ color: '#64748b' }}>Total Products</p>
-                <h3 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>0</h3>
-              </div>
-              <div 
-                className="d-flex align-items-center justify-content-center rounded-3"
-                style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  backgroundColor: '#fef3c7',
-                  color: '#f59e0b'
-                }}
-              >
-                <Package size={24} />
-              </div>
-            </div>
-            <div className="d-flex align-items-center">
-              <TrendingUp size={14} style={{ color: '#f59e0b' }} className="me-1" />
-              <small style={{ color: '#f59e0b', fontWeight: 600 }}>Connect your data</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-6 col-lg-3">
-          <div className="bg-white p-4 rounded-3 border-0 shadow-sm h-100">
-            <div className="d-flex align-items-start justify-content-between mb-3">
-              <div>
-                <p className="mb-1 small" style={{ color: '#64748b' }}>Conversion Rate</p>
-                <h3 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>0%</h3>
-              </div>
-              <div 
-                className="d-flex align-items-center justify-content-center rounded-3"
-                style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  backgroundColor: '#e0e7ff',
-                  color: '#6366f1'
-                }}
-              >
-                <TrendingUp size={24} />
-              </div>
-            </div>
-            <div className="d-flex align-items-center">
-              <TrendingUp size={14} style={{ color: '#6366f1' }} className="me-1" />
-              <small style={{ color: '#6366f1', fontWeight: 600 }}>Connect your data</small>
-            </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
+      {/* Main Content */}
       <div className="row g-4">
+        {/* Top Listings */}
         <div className="col-lg-8">
-          <div className="bg-white rounded-3 border-0 shadow-sm overflow-hidden">
-            <div className="p-4 border-bottom" style={{ borderColor: '#e2e8f0' }}>
-              <h5 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>Recent Activity</h5>
+          <div className="bg-white rounded-3 border-0 shadow-sm overflow-hidden h-100">
+            <div className="p-4 border-bottom d-flex justify-content-between align-items-center" 
+                 style={{ borderColor: '#e2e8f0' }}>
+              <h5 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>
+                Top Performing Listings
+              </h5>
+              <button 
+                className="btn btn-sm"
+                style={{ 
+                  backgroundColor: '#f0fdf4', 
+                  color: '#10b981',
+                  border: 'none',
+                  fontWeight: 600
+                }}
+                onClick={() => navigate('/slr.drb/my-listings')}
+              >
+                <Plus size={16} className="me-1" />
+                Add Listing
+              </button>
             </div>
-            <div className="p-5 text-center">
-              <p style={{ color: '#64748b' }}>No activity yet. Start by adding products or processing orders.</p>
-            </div>
+            <TopListings listings={topListings} loading={loading} />
           </div>
         </div>
 
+        {/* Sidebar */}
         <div className="col-lg-4">
+          {/* Views by Role Chart */}
+          <div className="bg-white rounded-3 border-0 shadow-sm overflow-hidden mb-4">
+            <ViewsChart byRole={byRole} totalViews={totalViews} />
+          </div>
+
+          {/* Quick Actions */}
           <div className="bg-white rounded-3 border-0 shadow-sm overflow-hidden">
             <div className="p-4 border-bottom" style={{ borderColor: '#e2e8f0' }}>
-              <h5 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>Quick Actions</h5>
+              <h5 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>
+                Quick Actions
+              </h5>
             </div>
             <div className="p-4">
               <div className="d-grid gap-3">
-                <button 
-                  className="btn btn-lg text-start d-flex align-items-center justify-content-between"
-                  style={{
-                    backgroundColor: '#10b981',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '12px',
-                    padding: '1rem 1.25rem',
-                    fontWeight: 600
-                  }}
-                >
-                  <span>Add New Product</span>
-                  <Package size={20} />
-                </button>
-                <button 
-                  className="btn btn-lg text-start d-flex align-items-center justify-content-between"
-                  style={{
-                    backgroundColor: '#f8fafc',
-                    color: '#0f172a',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    padding: '1rem 1.25rem',
-                    fontWeight: 600
-                  }}
-                >
-                  <span>View Orders</span>
-                  <ShoppingCart size={20} />
-                </button>
-                <button 
-                  className="btn btn-lg text-start d-flex align-items-center justify-content-between"
-                  style={{
-                    backgroundColor: '#f8fafc',
-                    color: '#0f172a',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    padding: '1rem 1.25rem',
-                    fontWeight: 600
-                  }}
-                >
-                  <span>View Analytics</span>
-                  <TrendingUp size={20} />
-                </button>
+                {quickActions.map((action, index) => {
+                  const Icon = action.icon;
+                  return (
+                    <button 
+                      key={index}
+                      className="btn btn-lg text-start d-flex align-items-center justify-content-between"
+                      style={{
+                        backgroundColor: action.bgColor,
+                        color: action.textColor,
+                        border: action.border || 'none',
+                        borderRadius: '12px',
+                        padding: '1rem 1.25rem',
+                        fontWeight: 600,
+                        transition: 'all 0.2s'
+                      }}
+                      onClick={action.onClick}
+                      onMouseEnter={(e) => {
+                        if (action.bgColor === '#f8fafc') {
+                          e.currentTarget.style.backgroundColor = '#f1f5f9';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = action.bgColor;
+                      }}
+                    >
+                      <span>{action.label}</span>
+                      <Icon size={20} />
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
