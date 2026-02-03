@@ -27,6 +27,7 @@ const CreateListing = () => {
     location: "",
     animal_details: {
       age: "",
+      birth_date: "",
       breed_name: "",
       gender: "",
       bull_code: "",
@@ -87,40 +88,52 @@ const CreateListing = () => {
   };
 
   const handleChange = async (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-
-    if (name === "animal_id" && user?.role === "farmer" && value) {
-  try {
-    const res = await axios.get(`${API_BASE}/animals/${value}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.data.success) {
-      const animal = res.data.animal;
-      setForm((prev) => ({
-        ...prev,
-        animal_details: {
-          age: animal.age || calculateAge(animal.birth_date) || "",
-          breed_name: (animal.breed || "").trim() || "",
-          gender: animal.gender || "",
-          stage: animal.stage || "",
-          status: animal.status || "active",
-          bull_code: animal.sire?.code || "",
-          bull_name: animal.sire?.name || "",
-          bull_breed: animal.sire?.breed || "",  // if sire ever has breed
-          lifetime_milk: animal.lifetime_milk || "",
-          daily_average: animal.daily_average || "",
-          total_offspring: animal.total_offspring || "",
-          is_pregnant: animal.is_pregnant || false,  // if direct field exists
-          expected_due_date: animal.expected_due_date || "",
-          // Add pregnancy.insemination_id if your model has nested, but samples don't
-        },
-      }));
+    const { name, value, type, checked } = e.target;
+    if (name.startsWith("animal_details.")) {
+      const key = name.split(".")[1];
+      let updatedDetails = {
+        ...form.animal_details,
+        [key]: type === "checkbox" ? checked : value,
+      };
+      // Auto-calc age if birth_date changed (for sellers)
+      if (key === "birth_date") {
+        updatedDetails.age = calculateAge(value);
+      }
+      setForm((prev) => ({ ...prev, animal_details: updatedDetails }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+      if (name === "animal_id" && user?.role === "farmer" && value) {
+        try {
+          const res = await axios.get(`${API_BASE}/animals/${value}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.data.success) {
+            const animal = res.data.animal;
+            setForm((prev) => ({
+              ...prev,
+              animal_details: {
+                age: animal.age || calculateAge(animal.birth_date) || "",
+                birth_date: animal.birth_date || "",
+                breed_name: (animal.breed || "").trim() || "",
+                gender: animal.gender || "",
+                stage: animal.stage || "",
+                status: animal.status || "active",
+                bull_code: animal.sire?.code || "",
+                bull_name: animal.sire?.name || "",
+                bull_breed: animal.sire?.breed || "",
+                lifetime_milk: animal.lifetime_milk || "",
+                daily_average: animal.daily_average || "",
+                total_offspring: animal.total_offspring || "",
+                is_pregnant: animal.is_pregnant || false,
+                expected_due_date: animal.expected_due_date || "",
+              },
+            }));
+          }
+        } catch (err) {
+          showToast("Failed to load animal details", "error");
+        }
+      }
     }
-  } catch (err) {
-    showToast("Failed to load animal details", "error");
-  }
-}
   };
 
   const handleAnimalDetailsChange = (updatedDetails) => {
@@ -301,7 +314,6 @@ const CreateListing = () => {
                     );
                   })}
                 </select>
-
                 {form.animal_id && (
                   <AnimalDetailsEditable
                     animalDetails={form.animal_details}
@@ -316,8 +328,184 @@ const CreateListing = () => {
             {user?.role === "seller" && (
               <div className="border rounded p-3 mb-3" style={{ background: "#f0f9ff" }}>
                 <h5 className="fw-semibold text-primary mb-3">Animal Details</h5>
-                {/* Your existing seller manual inputs here - unchanged for now */}
-                {/* ... (keep your original seller form fields) */}
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Birth Date (for age calc)</label>
+                    <input
+                      name="animal_details.birth_date"
+                      type="date"
+                      className="form-control"
+                      value={form.animal_details.birth_date}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Age (e.g., 3 years) *</label>
+                    <input
+                      name="animal_details.age"
+                      type="text"
+                      className="form-control"
+                      placeholder="3 years"
+                      value={form.animal_details.age}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Breed Name *</label>
+                    <input
+                      name="animal_details.breed_name"
+                      type="text"
+                      className="form-control"
+                      placeholder="Friesian"
+                      value={form.animal_details.breed_name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Gender</label>
+                    <select
+                      name="animal_details.gender"
+                      className="form-select"
+                      value={form.animal_details.gender}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-semibold">Stage</label>
+                    <select
+                      name="animal_details.stage"
+                      className="form-select"
+                      value={form.animal_details.stage}
+                      onChange={handleChange}
+                      disabled={!form.animal_type}
+                    >
+                      <option value="">Select stage</option>
+                      {form.animal_type && stageOptions[form.animal_type]?.map((stage) => (
+                        <option key={stage} value={stage}>
+                          {stage.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Lifetime Milk (L)</label>
+                    <input
+                      name="animal_details.lifetime_milk"
+                      type="number"
+                      className="form-control"
+                      placeholder="5000"
+                      value={form.animal_details.lifetime_milk}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Daily Average (L)</label>
+                    <input
+                      name="animal_details.daily_average"
+                      type="number"
+                      className="form-control"
+                      placeholder="15"
+                      value={form.animal_details.daily_average}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Total Offspring</label>
+                    <input
+                      name="animal_details.total_offspring"
+                      type="number"
+                      className="form-control"
+                      placeholder="3"
+                      value={form.animal_details.total_offspring}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Bull Code</label>
+                    <input
+                      name="animal_details.bull_code"
+                      type="text"
+                      className="form-control"
+                      placeholder="B001"
+                      value={form.animal_details.bull_code}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Bull Name</label>
+                    <input
+                      name="animal_details.bull_name"
+                      type="text"
+                      className="form-control"
+                      placeholder="Thunder"
+                      value={form.animal_details.bull_name}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label fw-semibold">Bull Breed</label>
+                    <input
+                      name="animal_details.bull_breed"
+                      type="text"
+                      className="form-control"
+                      placeholder="Angus"
+                      value={form.animal_details.bull_breed}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="row align-items-end">
+                  <div className="col-md-6 mb-3">
+                    <div className="form-check">
+                      <input
+                        name="animal_details.is_pregnant"
+                        type="checkbox"
+                        className="form-check-input"
+                        id="isPregnant"
+                        checked={form.animal_details.is_pregnant}
+                        onChange={handleChange}
+                      />
+                      <label className="form-check-label fw-semibold" htmlFor="isPregnant">
+                        Is Pregnant?
+                      </label>
+                    </div>
+                  </div>
+
+                  {form.animal_details.is_pregnant && (
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold">Expected Due Date</label>
+                      <input
+                        name="animal_details.expected_due_date"
+                        type="date"
+                        className="form-control"
+                        value={form.animal_details.expected_due_date}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

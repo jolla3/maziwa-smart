@@ -68,14 +68,16 @@ import MarketView from "./components/globals/global markets/MarketView";
 import SetPassword from "./components/globals/logins/SetPassword";
 // import DashboardHome from "./components/SUPERaDMIN/DashboardHome";
 import SuperAdminRoutes from "./components/SUPERaDMIN/superadmin-routes";
-import SellerDashboard from "./components/Sellers/SellerDashboard";
-import DashboardHomePage from "./components/Sellers/pages/DashboardHomePage";
+// import SellerDashboard from "./components/Sellers/SellerDashboard";
+// import DashboardHomePage from "./components/Sellers/pages/DashboardHomePage";
 import MilkIntelligenceDashboard from "./components/farmer/CRUD/MilkAnimalSummary";
 import PurchaseHistoryPage from "./components/globals/global markets/marketviewpage/pages/PurchaseHistoryPage";
 import BasketPage from "./components/globals/global markets/marketviewpage/pages/BasketPage";
 import WishlistPage from "./components/globals/global markets/marketviewpage/pages/WishlistPage";
 import SellerRoutes from "./components/Sellers/seller-routes";
 import SellerAnalytics from "./components/farmer/farmhome/components/SellerAnalytics";
+import ForgotPassword from "./components/PrivateComponents/ForgotPassword";
+import ResetPassword from "./components/PrivateComponents/ResetPassword";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -123,6 +125,8 @@ function App() {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/seller-approval" element={<SellerRequest />} />
             <Route path="/admin-approval" element={<AdminSellerRequests />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword/>} />
 
 
 
@@ -270,15 +274,15 @@ function App() {
               {/* sellers Routes */}
               {/* import SellerRoutes from "./components/Sellers/seller-routes"; */}
 
-{/* sellers Routes */}
-<Route
-  path="/slr.drb/*"
-  element={
-    <PrivateRoute role="seller">
-      <SellerRoutes />
-    </PrivateRoute>
-  }
-/>
+              {/* sellers Routes */}
+              <Route
+                path="/slr.drb/*"
+                element={
+                  <PrivateRoute role="seller">
+                    <SellerRoutes />
+                  </PrivateRoute>
+                }
+              />
             </Route>
 
 

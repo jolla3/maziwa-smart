@@ -43,11 +43,11 @@ const sidebarItems = [
   {
     section: "Data",
     items: [
-      {
-        title: "My Milk Summary",
-        to: "/fmr.drb/daily",
-        icon: <LocalDrinkOutlinedIcon />, // milk = drink, obvious
-      },
+      // {
+      //   title: "My Milk Summary",
+      //   to: "/fmr.drb/daily",
+      //   icon: <LocalDrinkOutlinedIcon />, // milk = drink, obvious
+      // },
       {
         title: "Insemination Card",
         to: "/fmr.drb/insemination-record",
@@ -68,11 +68,11 @@ const sidebarItems = [
   {
     section: "Pages",
     items: [
-      {
-        title: "Milk Recording",
-        to: "/fmr.drb/milkrecording",
-        icon: <Inventory2OutlinedIcon />, // input / recording / stock
-      },
+      // {
+      //   title: "Milk Recording",
+      //   to: "/fmr.drb/milkrecording",
+      //   icon: <Inventory2OutlinedIcon />, // input / recording / stock
+      // },
       {
         title: "Cow Production History",
         to: "/fmr.drb/animal-milk-summary",

@@ -210,7 +210,7 @@ const MarketplaceAnalytics = () => {
               ) : (
                 topListings.map((listing, index) => (
                   <div 
-                    key={listing._id || index}
+                    key={listing.listing_id || index}
                     className="mb-3 p-3 rounded-3 d-flex justify-content-between align-items-center"
                     style={{
                       backgroundColor: '#f8fafc',
@@ -231,7 +231,7 @@ const MarketplaceAnalytics = () => {
                         {listing.title || 'Untitled Listing'}
                       </h6>
                       <small style={{ color: '#64748b' }}>
-                        {listing.category || 'No category'} • KES {formatNumber(listing.price || 0)}
+                        {listing.category || 'Uncategorized'} • KES {formatNumber(listing.price || 0)}
                       </small>
                     </div>
                     <span 
@@ -242,7 +242,7 @@ const MarketplaceAnalytics = () => {
                         fontWeight: 600
                       }}
                     >
-                      {listing.views || 0} views
+                      {listing.total_views || 0} views
                     </span>
                   </div>
                 ))
