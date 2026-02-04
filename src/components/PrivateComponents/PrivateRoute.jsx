@@ -1,19 +1,23 @@
-// src/components/PrivateComponents/PrivateRoute.js
-import { useContext } from 'react';
-import { Navigate } from 'react-router-dom';
-import { AuthContext } from './AuthContext';
+import { useContext } from "react";
+import { Navigate } from "react-router-dom";
+import { AuthContext } from "./AuthContext";
 
 const PrivateRoute = ({ children, role }) => {
-  const { user } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
+
+  // Auth still resolving
+  if (token && !user) {
+    return null; // or a spinner if you want
+  }
 
   // Not logged in
-  if (!user) {
+  if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
 
   // Role mismatch
   if (role && user.role !== role) {
-    return <Navigate to="/not-authorized" replace />;
+    return <Navigate  />;
   }
 
   return children;
