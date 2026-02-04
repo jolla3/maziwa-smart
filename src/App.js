@@ -275,8 +275,18 @@ function App() {
                 </PrivateRoute>
               }
             >
-             
+              {/* sellers Routes */}
+              {/* import SellerRoutes from "./components/Sellers/seller-routes"; */}
 
+              {/* sellers Routes */}
+              <Route
+                path="/slr.drb/*"
+                element={
+                  <PrivateRoute role="seller">
+                    <SellerRoutes />
+                  </PrivateRoute>
+                }
+              />
             </Route>
 
 

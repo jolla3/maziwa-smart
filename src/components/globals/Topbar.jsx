@@ -443,7 +443,7 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
         <Divider sx={{ backgroundColor: colors.grey[700] }} />
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
-            onClick={() => { setProfileAnchor(null); onProfileAction?.('view-profile'); }}
+            onClick={() => { setProfileAnchor(null); onProfileAction?.('/profile'); }}
             sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(colors.greenAccent[500], 0.1) } }}
           >
             <PersonOutlinedIcon sx={{ mr: 2 }} />View Profile
@@ -451,7 +451,7 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
         </motion.div>
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
-            onClick={() => { setProfileAnchor(null); onProfileAction?.('account-settings'); }}
+            onClick={() => { setProfileAnchor(null); onProfileAction?.('/profile'); }}
             sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(colors.greenAccent[500], 0.1) } }}
           >
             <SettingsOutlinedIcon sx={{ mr: 2 }} />Account Settings
