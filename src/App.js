@@ -129,7 +129,7 @@ function App() {
             <Route path="/seller-approval" element={<SellerRequest />} />
             <Route path="/admin-approval" element={<AdminSellerRequests />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword/>} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/profile" element={<ProfilePage />} />
 
 
@@ -266,28 +266,15 @@ function App() {
             </Route>
 
 
-            {/* sellers  Routes */}
             <Route
-              path="/slr.drb"
+              path="/slr.drb/*"
               element={
                 <PrivateRoute role="seller">
                   <SellerRoutes />
                 </PrivateRoute>
               }
-            >
-              {/* sellers Routes */}
-              {/* import SellerRoutes from "./components/Sellers/seller-routes"; */}
+            />
 
-              {/* sellers Routes */}
-              <Route
-                path="/slr.drb/*"
-                element={
-                  <PrivateRoute role="seller">
-                    <SellerRoutes />
-                  </PrivateRoute>
-                }
-              />
-            </Route>
 
 
             {/* buyer  Routes */}

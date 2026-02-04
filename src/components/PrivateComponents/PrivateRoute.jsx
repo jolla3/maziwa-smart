@@ -1,26 +1,22 @@
-import { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext";
 
-const PrivateRoute = ({ children, role }) => {
-  const { user, token } = useContext(AuthContext);
+const AuthGate = ({ children }) => {
+  const { token, user } = useContext(AuthContext);
+  const [ready, setReady] = useState(false);
 
-  // Auth still resolving
-  if (token && !user) {
-    return null; // or a spinner if you want
-  }
+  useEffect(() => {
+    // Auth resolved if:
+    // - logged out
+    // - OR logged in with decoded user
+    if (!token || (token && user)) {
+      setReady(true);
+    }
+  }, [token, user]);
 
-  // Not logged in
-  if (!token || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Role mismatch
-  if (role && user.role !== role) {
-    return <Navigate  />;
-  }
+  if (!ready) return null; // DO NOT redirect here
 
   return children;
 };
 
-export default PrivateRoute;
+export default AuthGate;
