@@ -25,13 +25,26 @@ export const marketApi = {
     return response.data;
   },
 
-  incrementViews: async (listingId, token) => {
-    const response = await axios.post(
-      `${API_BASE}/market/${listingId}/view`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+  getListingViews: async (listingId, token) => {
+    const response = await axios.get(`${API_BASE}/market/summary/${listingId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     
     return response.data;
+  },
+
+  incrementViews: async (listingId, token) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE}/market/${listingId}/view`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      return response.data;
+    } catch (err) {
+      console.error("Failed to increment views:", err);
+      return null;
+    }
   },
 };

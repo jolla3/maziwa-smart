@@ -78,6 +78,8 @@ import SellerRoutes from "./components/Sellers/seller-routes";
 import SellerAnalytics from "./components/farmer/farmhome/components/SellerAnalytics";
 import ForgotPassword from "./components/PrivateComponents/ForgotPassword";
 import ResetPassword from "./components/PrivateComponents/ResetPassword";
+import ProfilePage from "./components/PrivateComponents/ProfilePage";
+import NotAuthorized from "./components/globals/NotAuthorized";
 // import { GoogleLogin } from "@react-oauth/google";
 
 
@@ -107,6 +109,7 @@ function App() {
             <Route path="register_farmer" element={<FarmerRegister />} />
             <Route path="register_seller" element={<SellerRegister />} />
             <Route path="/set-password" element={<SetPassword />} />
+            <Route path="/not-authorized" element={<NotAuthorized />} />
 
 
             {/* <Route path="/google-login" element={<GoogleLogin />} /> */}
@@ -127,6 +130,7 @@ function App() {
             <Route path="/admin-approval" element={<AdminSellerRequests />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword/>} />
+            <Route path="/profile" element={<ProfilePage />} />
 
 
 
@@ -271,18 +275,8 @@ function App() {
                 </PrivateRoute>
               }
             >
-              {/* sellers Routes */}
-              {/* import SellerRoutes from "./components/Sellers/seller-routes"; */}
+             
 
-              {/* sellers Routes */}
-              <Route
-                path="/slr.drb/*"
-                element={
-                  <PrivateRoute role="seller">
-                    <SellerRoutes />
-                  </PrivateRoute>
-                }
-              />
             </Route>
 
 
@@ -311,7 +305,7 @@ function App() {
             <Route
               path="*"
               element={
-                <h3 className="text-center mt-5">404 - Page Not Found</h3>
+                <NotAuthorized />
               }
             />
 

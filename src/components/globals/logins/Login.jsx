@@ -1,4 +1,3 @@
-// src/components/Login.jsx
 import React, { useState, useContext, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { Eye, EyeOff, User, Lock, WifiOff } from 'lucide-react';
@@ -21,7 +20,6 @@ import {
   Link,
   CircularProgress,
   Divider,
-  useTheme,
   Checkbox,
   FormControlLabel,
   Backdrop,
@@ -39,13 +37,10 @@ const Login = () => {
   const [redirecting, setRedirecting] = useState(false);
 
   const navigate = useNavigate();
-  const theme = useTheme();
   const { setUser, setToken, user, token } = useContext(AuthContext);
 
-  // API Base URL
-  const API_BASE_URL = process.env.REACT_APP_API_BASE
+  const API_BASE_URL = process.env.REACT_APP_API_BASE;
 
-  // Monitor network status
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -66,7 +61,6 @@ const Login = () => {
     };
   }, []);
 
-  // Auto-login if valid token exists
   useEffect(() => {
     const checkAutoLogin = async () => {
       const savedToken = localStorage.getItem('token');
@@ -81,12 +75,10 @@ const Login = () => {
             setToken(savedToken);
             setUser(decoded);
 
-            // Navigate based on role
             setTimeout(() => {
               navigateByRole(decoded.role);
             }, 3000);
           } else {
-            // Clear expired token
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             localStorage.removeItem('rememberMe');
@@ -108,7 +100,6 @@ const Login = () => {
 
   const togglePassword = () => setShowPassword((prev) => !prev);
 
-  // Role-based navigation function
   const navigateByRole = (role) => {
     const roleRoutes = {
       admin: '/admindashboard',
@@ -132,26 +123,22 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Check network first
     if (!isOnline) {
       toast.error('No internet connection. Please check your network.');
       return;
     }
 
-    // Validation
     if (!formData.email || !formData.password) {
       toast.error('Email and password are required');
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error('Please enter a valid email address');
       return;
     }
 
-    
     setLoading(true);
 
     try {
@@ -159,7 +146,7 @@ const Login = () => {
         `${API_BASE_URL}/userAuth/login`,
         formData,
         {
-          timeout: 15000, // 15 second timeout
+          timeout: 15000,
           headers: {
             'Content-Type': 'application/json',
           }
@@ -174,25 +161,20 @@ const Login = () => {
         return;
       }
 
-      // Decode token for additional user info
       const decodedUser = jwtDecode(receivedToken);
 
-      // Save to context (AuthContext handles localStorage)
       setToken(receivedToken);
       setUser(decodedUser);
 
-      // Save to localStorage
       localStorage.setItem('token', receivedToken);
       localStorage.setItem('user', JSON.stringify(decodedUser));
 
-      // Handle "Remember Me"
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
       } else {
         localStorage.removeItem('rememberMe');
       }
 
-      // Show success toast with auto-fade
       toast.success(response.data.message || '✅ Login successful!', {
         autoClose: 1500,
         hideProgressBar: false,
@@ -201,7 +183,6 @@ const Login = () => {
         draggable: true,
       });
 
-      // Navigate based on role with animation delay
       setTimeout(() => {
         navigateByRole(role || decodedUser.role);
       }, 1500);
@@ -216,7 +197,6 @@ const Login = () => {
       } else if (err.code === 'ERR_NETWORK') {
         errorMessage = 'Network error. Please check your connection.';
       } else if (err.response) {
-        // Server responded with error
         switch (err.response.status) {
           case 404:
             errorMessage = 'Account not found. Please check your email.';
@@ -237,7 +217,6 @@ const Login = () => {
             errorMessage = err.response.data?.message || errorMessage;
         }
       } else if (err.request) {
-        // Request made but no response
         errorMessage = 'No response from server. Please try again.';
       }
 
@@ -254,15 +233,13 @@ const Login = () => {
     }
 
     setGoogleLoading(true);
-    // Redirect to backend Google OAuth route
     window.location.href = `${API_BASE_URL}/userAuth/google`;
   };
 
   return (
-    <Box>
+    <Box sx={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
       <AppNavbar />
 
-      {/* Network offline banner */}
       {!isOnline && (
         <Alert
           severity="error"
@@ -273,26 +250,28 @@ const Login = () => {
             left: 0,
             right: 0,
             zIndex: 9999,
-            borderRadius: 0
+            borderRadius: 0,
+            backgroundColor: '#fee2e2',
+            color: '#991b1b',
+            border: '1px solid #fecaca'
           }}
         >
           No internet connection. Please check your network settings.
         </Alert>
       )}
 
-      {/* Loading overlay during login */}
       <Backdrop
         sx={{
           color: '#fff',
-          zIndex: theme.zIndex.drawer + 1,
-          bgcolor: 'rgba(0, 0, 0, 0.7)',
+          zIndex: 1200,
+          bgcolor: 'rgba(0, 0, 0, 0.5)',
           backdropFilter: 'blur(4px)',
         }}
         open={loading || redirecting}
       >
         <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress size={60} thickness={4} />
-          <Typography variant="h6" sx={{ mt: 2 }}>
+          <CircularProgress size={60} thickness={4} sx={{ color: '#10b981' }} />
+          <Typography variant="h6" sx={{ mt: 2, color: '#fff', fontWeight: 600 }}>
             {redirecting ? 'Redirecting to dashboard...' : 'Signing you in...'}
           </Typography>
         </Box>
@@ -301,7 +280,7 @@ const Login = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          bgcolor: 'background.default',
+          bgcolor: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -312,15 +291,13 @@ const Login = () => {
         <Container maxWidth="sm">
           <Fade in timeout={800}>
             <Paper
-              elevation={8}
+              elevation={3}
               sx={{
                 p: 4,
-                bgcolor: 'background.paper',
+                bgcolor: '#ffffff',
                 borderRadius: 3,
-                border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
-                boxShadow: theme.palette.mode === 'dark'
-                  ? '0 8px 32px rgba(0, 0, 0, 0.3)'
-                  : '0 8px 32px rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgba(16, 185, 129, 0.1)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
               }}
             >
               <Box component="form" onSubmit={handleLogin} noValidate>
@@ -329,9 +306,9 @@ const Login = () => {
                   align="center"
                   gutterBottom
                   sx={{
-                    color: 'text.primary',
+                    color: '#0f172a',
                     mb: 2,
-                    fontWeight: 600,
+                    fontWeight: 700,
                   }}
                 >
                   Welcome Back
@@ -341,8 +318,9 @@ const Login = () => {
                   variant="body2"
                   align="center"
                   sx={{
-                    color: 'text.secondary',
+                    color: '#475569',
                     mb: 4,
+                    fontWeight: 500,
                   }}
                 >
                   Sign in to your MaziWaSmart account
@@ -363,7 +341,7 @@ const Login = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <User size={20} color={theme.palette.text.secondary} />
+                        <User size={20} color="#10b981" />
                       </InputAdornment>
                     ),
                   }}
@@ -371,14 +349,23 @@ const Login = () => {
                     mb: 2,
                     '& .MuiOutlinedInput-root': {
                       '& fieldset': {
-                        borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[400],
+                        borderColor: 'rgba(16, 185, 129, 0.2)',
                       },
                       '&:hover fieldset': {
-                        borderColor: theme.palette.primary.main,
+                        borderColor: '#10b981',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: theme.palette.primary.main,
+                        borderColor: '#10b981',
                       },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: '#475569',
+                      '&.Mui-focused': {
+                        color: '#10b981',
+                      },
+                    },
+                    '& .MuiInputBase-input': {
+                      color: '#0f172a',
                     },
                   }}
                 />
@@ -398,7 +385,7 @@ const Login = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Lock size={20} color={theme.palette.text.secondary} />
+                        <Lock size={20} color="#10b981" />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -406,7 +393,7 @@ const Login = () => {
                         <IconButton
                           onClick={togglePassword}
                           edge="end"
-                          sx={{ color: theme.palette.text.secondary }}
+                          sx={{ color: '#10b981' }}
                         >
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </IconButton>
@@ -417,14 +404,23 @@ const Login = () => {
                     mb: 1,
                     '& .MuiOutlinedInput-root': {
                       '& fieldset': {
-                        borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[400],
+                        borderColor: 'rgba(16, 185, 129, 0.2)',
                       },
                       '&:hover fieldset': {
-                        borderColor: theme.palette.primary.main,
+                        borderColor: '#10b981',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: theme.palette.primary.main,
+                        borderColor: '#10b981',
                       },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: '#475569',
+                      '&.Mui-focused': {
+                        color: '#10b981',
+                      },
+                    },
+                    '& .MuiInputBase-input': {
+                      color: '#0f172a',
                     },
                   }}
                 />
@@ -436,15 +432,15 @@ const Login = () => {
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
                         sx={{
-                          color: theme.palette.primary.main,
+                          color: '#10b981',
                           '&.Mui-checked': {
-                            color: theme.palette.primary.main,
+                            color: '#10b981',
                           },
                         }}
                       />
                     }
                     label={
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      <Typography variant="body2" sx={{ color: '#475569', fontWeight: 500 }}>
                         Remember me
                       </Typography>
                     }
@@ -453,9 +449,10 @@ const Login = () => {
                   <Link
                     href="/forgot-password"
                     sx={{
-                      color: theme.palette.primary.main,
+                      color: '#10b981',
                       textDecoration: 'none',
                       fontSize: '0.875rem',
+                      fontWeight: 600,
                       '&:hover': {
                         textDecoration: 'underline',
                       },
@@ -474,16 +471,17 @@ const Login = () => {
                     py: 1.5,
                     mb: 2,
                     fontSize: '1rem',
-                    fontWeight: 600,
-                    bgcolor: theme.palette.primary.main,
+                    fontWeight: 700,
+                    bgcolor: '#10b981',
+                    color: '#fff',
                     '&:hover': {
-                      bgcolor: theme.palette.primary.dark,
+                      bgcolor: '#059669',
                       transform: 'translateY(-2px)',
-                      boxShadow: `0 6px 20px ${theme.palette.primary.main}40`,
+                      boxShadow: '0 6px 20px rgba(16, 185, 129, 0.3)',
                     },
                     '&:disabled': {
-                      bgcolor: theme.palette.action.disabled,
-                      color: theme.palette.text.disabled,
+                      bgcolor: '#d1d5db',
+                      color: '#9ca3af',
                     },
                     transition: 'all 0.3s ease',
                   }}
@@ -498,8 +496,8 @@ const Login = () => {
                   )}
                 </Button>
 
-                <Divider sx={{ my: 3 }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', px: 2 }}>
+                <Divider sx={{ my: 3, backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                  <Typography variant="body2" sx={{ color: '#475569', px: 2, fontWeight: 500 }}>
                     OR
                   </Typography>
                 </Divider>
@@ -514,28 +512,28 @@ const Login = () => {
                     mb: 3,
                     fontSize: '1rem',
                     fontWeight: 600,
-                    borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[400],
-                    color: 'text.primary',
+                    borderColor: 'rgba(16, 185, 129, 0.3)',
+                    color: '#0f172a',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 2,
                     '&:hover': {
-                      borderColor: theme.palette.primary.main,
-                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                      borderColor: '#10b981',
+                      bgcolor: 'rgba(16, 185, 129, 0.05)',
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)',
                     },
                     '&:disabled': {
-                      borderColor: theme.palette.action.disabled,
-                      color: theme.palette.text.disabled,
+                      borderColor: '#d1d5db',
+                      color: '#9ca3af',
                     },
                     transition: 'all 0.3s ease',
                   }}
                 >
                   {googleLoading ? (
                     <>
-                      <CircularProgress size={20} />
+                      <CircularProgress size={20} sx={{ color: '#10b981' }} />
                       <span>Connecting to Google...</span>
                     </>
                   ) : (
@@ -564,14 +562,14 @@ const Login = () => {
                 </Button>
 
                 <Box sx={{ textAlign: 'center', mb: 2 }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  <Typography variant="body2" sx={{ color: '#475569', fontWeight: 500 }}>
                     Don't have an account?{' '}
                     <Link
                       href="/register"
                       sx={{
-                        color: theme.palette.primary.main,
+                        color: '#10b981',
                         textDecoration: 'none',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         '&:hover': {
                           textDecoration: 'underline',
                         },
@@ -587,9 +585,10 @@ const Login = () => {
                   align="center"
                   display="block"
                   sx={{
-                    color: 'text.disabled',
+                    color: '#6b7280',
                     fontSize: '0.75rem',
                     mt: 2,
+                    fontWeight: 500,
                   }}
                 >
                   By signing in, you agree to our{' '}
@@ -597,9 +596,9 @@ const Login = () => {
                     component={RouterLink}
                     to="/terms"
                     sx={{
-                      color: 'primary.main',
+                      color: '#10b981',
                       textDecoration: 'none',
-                      fontWeight: 500,
+                      fontWeight: 600,
                       '&:hover': { textDecoration: 'underline' },
                     }}
                   >
@@ -610,9 +609,9 @@ const Login = () => {
                     component={RouterLink}
                     to="/privacy"
                     sx={{
-                      color: 'primary.main',
+                      color: '#10b981',
                       textDecoration: 'none',
-                      fontWeight: 500,
+                      fontWeight: 600,
                       '&:hover': { textDecoration: 'underline' },
                     }}
                   >
@@ -636,7 +635,7 @@ const Login = () => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme={theme.palette.mode}
+        theme="light"
       />
     </Box>
   );
