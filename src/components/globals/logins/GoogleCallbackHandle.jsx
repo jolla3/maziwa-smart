@@ -1,54 +1,83 @@
-import React, { useEffect, useContext } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { AuthContext } from '../../PrivateComponents/AuthContext';
-import { jwtDecode } from 'jwt-decode';
+import { useEffect, useContext, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AuthContext } from "../../PrivateComponents/AuthContext";
+import { jwtDecode } from "jwt-decode";
 
 const GoogleCallbackHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setToken } = useContext(AuthContext);
+  const { setToken, setUser } = useContext(AuthContext);
 
- useEffect(() => {
-  const params = new URLSearchParams(location.search);
-  const token = params.get('token');
-  const role = params.get('role');
-  const error = params.get('error');
+  // Prevent double execution (React strict mode / rerenders)
+  const hasHandled = useRef(false);
 
-  if (error) {
-    return navigate('/login', { replace: true });
-  }
+  useEffect(() => {
+    if (hasHandled.current) return;
+    hasHandled.current = true;
 
-  // First-time Google user
-  if (token && !role) {
-    return navigate(`/set-password?token=${token}`, { replace: true });
-  }
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    const error = params.get("error");
 
-  // Existing user
-  if (token && role) {
-    setToken(token); // <-- ONLY THIS
+    // -----------------------------
+    // ERROR FROM BACKEND
+    // -----------------------------
+    if (error) {
+      console.error("Google OAuth error:", error);
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // -----------------------------
+    // NO TOKEN = INVALID CALLBACK
+    // -----------------------------
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    let decoded;
+    try {
+      decoded = jwtDecode(token);
+    } catch (err) {
+      console.error("Invalid Google JWT:", err);
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // -----------------------------
+    // PASSWORD SETUP FLOW (ONLY IF FLAGGED)
+    // -----------------------------
+    if (decoded.needs_password_setup === true) {
+      navigate(`/set-password?token=${token}`, { replace: true });
+      return;
+    }
+
+    // -----------------------------
+    // NORMAL LOGIN FLOW
+    // -----------------------------
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(decoded));
+
+    setToken(token);
+    setUser(decoded);
 
     const roleRoutes = {
-      admin: '/admindashboard',
-      superadmin: '/spr.dmn',
-      seller: '/slr.drb',
-      buyer: '/byr.drb',
-      farmer: '/fmr.drb',
-      porter: '/porterdashboard',
-      manager: '/man.drb',
+      admin: "/admindashboard",
+      superadmin: "/spr.dmn",
+      seller: "/slr.drb",
+      buyer: "/byr.drb",
+      farmer: "/fmr.drb",
+      porter: "/porterdashboard",
+      manager: "/man.drb",
     };
 
-    return navigate(roleRoutes[role], { replace: true });
-  }
+    const destination = roleRoutes[decoded.role] || "/";
 
-  navigate('/login', { replace: true });
-}, [location, navigate, setToken]);
+    navigate(destination, { replace: true });
+  }, [location, navigate, setToken, setUser]);
 
-
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <p>Redirecting...</p>
-    </div>
-  );
+  return null;
 };
 
 export default GoogleCallbackHandler;

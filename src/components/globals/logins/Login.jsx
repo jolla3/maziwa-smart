@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { Eye, EyeOff, User, Lock, WifiOff } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -33,8 +33,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  const navigate = useNavigate();
-  const { setToken, token } = useContext(AuthContext);
+  const { setToken } = useContext(AuthContext);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE;
 
@@ -58,13 +57,6 @@ const Login = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
-  // Redirect authenticated users - let route guards handle role-based routing
-  useEffect(() => {
-    if (token) {
-      navigate('/', { replace: true });
-    }
-  }, [token, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -111,14 +103,13 @@ const Login = () => {
       }
 
       // AuthContext handles all token logic (decode, store, set user)
-      // rememberMe flag controls persistence behavior in AuthContext
       setToken(receivedToken, rememberMe);
 
       toast.success(response.data.message || 'Login successful!', {
         autoClose: 1500,
       });
 
-      // Navigation handled by route guards based on AuthContext state
+      // No navigation - PrivateRoute will handle redirect based on AuthContext
       
     } catch (err) {
       console.error('Login error:', err);
