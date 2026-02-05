@@ -1,4 +1,4 @@
-import { useEffect, useContext, useRef } from "react";
+import { useEffect, useRef, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../PrivateComponents/AuthContext";
 import { jwtDecode } from "jwt-decode";
@@ -6,32 +6,22 @@ import { jwtDecode } from "jwt-decode";
 const GoogleCallbackHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setToken, setUser } = useContext(AuthContext);
+  const { setToken } = useContext(AuthContext);
 
-  // Prevent double execution (React strict mode / rerenders)
-  const hasHandled = useRef(false);
+  const handled = useRef(false);
 
   useEffect(() => {
-    if (hasHandled.current) return;
-    hasHandled.current = true;
+    if (handled.current) return;
+    handled.current = true;
 
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
     const error = params.get("error");
 
     // -----------------------------
-    // ERROR FROM BACKEND
+    // BACKEND ERROR
     // -----------------------------
-    if (error) {
-      console.error("Google OAuth error:", error);
-      navigate("/login", { replace: true });
-      return;
-    }
-
-    // -----------------------------
-    // NO TOKEN = INVALID CALLBACK
-    // -----------------------------
-    if (!token) {
+    if (error || !token) {
       navigate("/login", { replace: true });
       return;
     }
@@ -39,29 +29,27 @@ const GoogleCallbackHandler = () => {
     let decoded;
     try {
       decoded = jwtDecode(token);
-    } catch (err) {
-      console.error("Invalid Google JWT:", err);
+    } catch {
       navigate("/login", { replace: true });
       return;
     }
 
     // -----------------------------
-    // PASSWORD SETUP FLOW (ONLY IF FLAGGED)
+    // PERSIST TOKEN (SINGLE SOURCE OF TRUTH)
     // -----------------------------
-    if (decoded.needs_password_setup === true) {
-      navigate(`/set-password?token=${token}`, { replace: true });
+    setToken(token);
+
+    // -----------------------------
+    // ONBOARDING FLOW (BACKEND DECIDES)
+    // -----------------------------
+    if (decoded.onboarding_complete === false) {
+      navigate("/set-password", { replace: true });
       return;
     }
 
     // -----------------------------
-    // NORMAL LOGIN FLOW
+    // ROLE ROUTING
     // -----------------------------
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(decoded));
-
-    setToken(token);
-    setUser(decoded);
-
     const roleRoutes = {
       admin: "/admindashboard",
       superadmin: "/spr.dmn",
@@ -72,10 +60,8 @@ const GoogleCallbackHandler = () => {
       manager: "/man.drb",
     };
 
-    const destination = roleRoutes[decoded.role] || "/";
-
-    navigate(destination, { replace: true });
-  }, [location, navigate, setToken, setUser]);
+    navigate(roleRoutes[decoded.role] || "/", { replace: true });
+  }, [location, navigate, setToken]);
 
   return null;
 };

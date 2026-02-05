@@ -1,55 +1,56 @@
 // src/context/AuthContext.js
-import { createContext, useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useMemo, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext(null);
 
+const safeDecode = (token) => {
+  try {
+    const decoded = jwtDecode(token);
+    if (!decoded?.exp || decoded.exp * 1000 < Date.now()) return null;
+    return decoded;
+  } catch {
+    return null;
+  }
+};
+
 const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [token, setTokenState] = useState(() => localStorage.getItem("token"));
 
-  const isAuthenticated = Boolean(token && user);
+  // 🔒 derive user ONCE from token
+  const user = useMemo(() => {
+    if (!token) return null;
+    return safeDecode(token);
+  }, [token]);
 
-  const hardResetAuth = useCallback(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
-  }, []);
+  const isAuthenticated = Boolean(user);
 
-  const logout = useCallback(() => {
-    hardResetAuth();
-    navigate("/login", { replace: true });
-  }, [hardResetAuth, navigate]);
-
-  useEffect(() => {
-    if (!token) {
-      hardResetAuth();
+  const setToken = useCallback((newToken) => {
+    if (!newToken) {
+      localStorage.removeItem("token");
+      setTokenState(null);
       return;
     }
 
-    try {
-      const decoded = jwtDecode(token);
-
-      // Expired token = instant death
-      if (!decoded?.exp || decoded.exp * 1000 < Date.now()) {
-        hardResetAuth();
-        return;
-      }
-
-      setUser(decoded);
-      localStorage.setItem("user", JSON.stringify(decoded));
-    } catch (err) {
-      // Invalid token = instant death
-      hardResetAuth();
+    const decoded = safeDecode(newToken);
+    if (!decoded) {
+      localStorage.removeItem("token");
+      setTokenState(null);
+      return;
     }
-  }, [token, hardResetAuth]);
+
+    localStorage.setItem("token", newToken);
+    setTokenState(newToken);
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    setTokenState(null);
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   return (
     <AuthContext.Provider
@@ -58,9 +59,7 @@ const AuthProvider = ({ children }) => {
         user,
         isAuthenticated,
         setToken,
-        setUser,
         logout,
-        hardResetAuth,
       }}
     >
       {children}

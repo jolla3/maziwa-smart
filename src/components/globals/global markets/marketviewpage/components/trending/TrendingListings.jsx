@@ -1,326 +1,219 @@
 // marketviewpage/components/trending/TrendingListings.jsx
-import React, { useState, useEffect } from "react";
-import { Box, IconButton, Paper } from "@mui/material";
-import { ChevronLeft, ChevronRight, TrendingUp, Eye, MapPin } from "lucide-react";
+import React, { useState, useEffect, useContext } from "react";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, TrendingUp, Eye, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../../../PrivateComponents/AuthContext";
+import { marketApi } from "../../api/market.api";
 import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency } from "../../utils/currency.utils";
 
 export default function TrendingListings({ listings }) {
   const navigate = useNavigate();
+  const { token } = useContext(AuthContext);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [viewCounts, setViewCounts] = useState({});
 
   const uniqueListings = Array.from(
     new Map(listings.map(item => [item._id, item])).values()
   );
 
+  // Fetch view counts for all trending listings
   useEffect(() => {
-    if (!isAutoPlaying || uniqueListings.length === 0) return;
+    const fetchViews = async () => {
+      const counts = {};
+      for (const listing of uniqueListings) {
+        try {
+          const data = await marketApi.getListingViews(listing._id, token);
+          counts[listing._id] = data.total_views || 0;
+        } catch (err) {
+          counts[listing._id] = 0;
+        }
+      }
+      setViewCounts(counts);
+    };
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % uniqueListings.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, uniqueListings.length]);
+    if (uniqueListings.length > 0) {
+      fetchViews();
+    }
+  }, [uniqueListings, token]);
 
   const handlePrev = () => {
-    setIsAutoPlaying(false);
-    setCurrentIndex((prev) => (prev - 1 + uniqueListings.length) % uniqueListings.length);
+    setCurrentIndex((prev) => Math.max(0, prev - 2));
   };
 
   const handleNext = () => {
-    setIsAutoPlaying(false);
-    setCurrentIndex((prev) => (prev + 1) % uniqueListings.length);
+    setCurrentIndex((prev) => Math.min(uniqueListings.length - 2, prev + 2));
   };
 
-  const handleView = (listing) => {
+  const handleView = async (listing) => {
+    await marketApi.incrementViews(listing._id, token);
     navigate("/view-market", { state: { listing } });
   };
 
   if (uniqueListings.length === 0) return null;
 
-  const currentListing = uniqueListings[currentIndex];
+  const visibleListings = uniqueListings.slice(currentIndex, currentIndex + 2);
+  const hasNext = currentIndex + 2 < uniqueListings.length;
+  const hasPrev = currentIndex > 0;
 
   return (
-    <Box sx={{ mb: 4, mt: 2 }}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 3,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Box
-            sx={{
-              backgroundColor: "#ef444415",
-              borderRadius: 3,
-              p: 1.5,
-              mr: 2,
-            }}
-          >
-            <TrendingUp size={24} color="#ef4444" />
-          </Box>
-          <Box component="h4" sx={{ fontWeight: 700, color: "#0f172a", mb: 0 }}>
+    <div className="mb-4">
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <div className="d-flex align-items-center">
+          <div className="bg-danger bg-opacity-10 rounded-3 p-2 me-3">
+            <TrendingUp style={{ color: "#ef4444" }} size={24} />
+          </div>
+          <h4 className="fw-bold mb-0" style={{ color: "#0f172a" }}>
             Trending Livestock
-          </Box>
-        </Box>
-        <Box
-          component="span"
-          sx={{
-            backgroundColor: "#ef4444",
-            color: "white",
-            px: 3,
-            py: 1,
-            borderRadius: 8,
-            fontWeight: 600,
-            fontSize: "0.9rem",
-          }}
-        >
+          </h4>
+        </div>
+        <span className="badge bg-danger px-3 py-2" style={{ fontSize: "0.9rem" }}>
           🔥 Hot Deals
-        </Box>
-      </Box>
+        </span>
+      </div>
 
-      <Paper
-        elevation={0}
-        sx={{
-          position: "relative",
-          borderRadius: 4,
-          overflow: "hidden",
-          background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-          cursor: "pointer",
-        }}
-        onClick={() => handleView(currentListing)}
-      >
-        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, minHeight: 400 }}>
-          {/* Image Section */}
-          <Box
-            sx={{
-              flex: { xs: "1 1 auto", md: "0 0 60%" },
-              position: "relative",
-              overflow: "hidden",
-              minHeight: { xs: 300, md: 400 },
+      <div className="position-relative">
+        <div className="row g-3">
+          {visibleListings.map((listing) => (
+            <div key={listing._id} className="col-md-6">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="card border-0 shadow-sm rounded-4 overflow-hidden"
+                onClick={() => handleView(listing)}
+                style={{ cursor: "pointer", height: "280px" }}
+              >
+                <div className="row g-0 h-100">
+                  {/* Image - 50% */}
+                  <div className="col-5 position-relative">
+                    <div className="position-absolute top-0 end-0 m-2" style={{ zIndex: 2 }}>
+                      <span className="badge bg-danger shadow-sm">
+                        <Award size={12} className="me-1" />
+                        Trending
+                      </span>
+                    </div>
+                    <img
+                      src={imgUrl(getFirstImage(listing))}
+                      alt={listing.title}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        transition: "transform 0.3s ease",
+                      }}
+                      className="trending-img"
+                    />
+                  </div>
+
+                  {/* Content - 50% */}
+                  <div className="col-7">
+                    <div className="card-body p-3 d-flex flex-column h-100">
+                      <h6 className="fw-bold mb-2" style={{ color: "#0f172a", fontSize: "1rem" }}>
+                        {listing.title}
+                      </h6>
+
+                      <div className="mb-2">
+                        <h4 className="fw-bold mb-0" style={{ color: "#10b981" }}>
+                          {formatCurrency(listing.price)}
+                        </h4>
+                      </div>
+
+                      <div className="d-flex gap-1 flex-wrap mb-2">
+                        {listing.animal_id?.species && (
+                          <span className="badge" style={{ backgroundColor: "#10b981", color: "white", fontSize: "0.75rem" }}>
+                            {listing.animal_id.species}
+                          </span>
+                        )}
+                        {listing.animal_id?.gender && (
+                          <span className="badge" style={{ backgroundColor: "#3b82f6", color: "white", fontSize: "0.75rem" }}>
+                            {listing.animal_id.gender}
+                          </span>
+                        )}
+                        {listing.animal_id?.stage && (
+                          <span className="badge" style={{ backgroundColor: "#8b5cf6", color: "white", fontSize: "0.75rem" }}>
+                            {listing.animal_id.stage}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-auto">
+                        <div className="d-flex align-items-center" style={{ color: "#0f172a" }}>
+                          <Eye size={14} className="me-1" />
+                          <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                            {viewCounts[listing._id] || 0} views
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          ))}
+        </div>
+
+        {/* Navigation Arrows */}
+        {hasPrev && (
+          <button
+            onClick={handlePrev}
+            className="btn btn-light shadow position-absolute top-50 start-0 translate-middle-y"
+            style={{
+              zIndex: 10,
+              borderRadius: "50%",
+              width: "40px",
+              height: "40px",
+              padding: 0,
+              marginLeft: "-20px",
+              border: "none",
             }}
           >
-            <Box
-              component="img"
-              src={imgUrl(getFirstImage(currentListing))}
-              alt={currentListing.title}
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                transition: "transform 0.5s ease",
-                "&:hover": {
-                  transform: "scale(1.05)",
-                },
-              }}
-            />
+            <ChevronLeft size={20} />
+          </button>
+        )}
 
-            {/* Navigation Arrows */}
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePrev();
-              }}
-              sx={{
-                position: "absolute",
-                left: 16,
-                top: "50%",
-                transform: "translateY(-50%)",
-                backgroundColor: "rgba(255,255,255,0.9)",
-                "&:hover": {
-                  backgroundColor: "white",
-                },
-              }}
-            >
-              <ChevronLeft size={24} color="#0f172a" />
-            </IconButton>
-
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleNext();
-              }}
-              sx={{
-                position: "absolute",
-                right: 16,
-                top: "50%",
-                transform: "translateY(-50%)",
-                backgroundColor: "rgba(255,255,255,0.9)",
-                "&:hover": {
-                  backgroundColor: "white",
-                },
-              }}
-            >
-              <ChevronRight size={24} color="#0f172a" />
-            </IconButton>
-
-            {/* Indicators */}
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 16,
-                left: "50%",
-                transform: "translateX(-50%)",
-                display: "flex",
-                gap: 1,
-              }}
-            >
-              {uniqueListings.map((_, idx) => (
-                <Box
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentIndex(idx);
-                    setIsAutoPlaying(false);
-                  }}
-                  sx={{
-                    width: idx === currentIndex ? 32 : 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: idx === currentIndex ? "white" : "rgba(255,255,255,0.5)",
-                    transition: "all 0.3s ease",
-                    cursor: "pointer",
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-
-          {/* Content Section */}
-          <Box
-            sx={{
-              flex: { xs: "1 1 auto", md: "0 0 40%" },
-              p: 4,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              color: "white",
+        {hasNext && (
+          <button
+            onClick={handleNext}
+            className="btn btn-light shadow position-absolute top-50 end-0 translate-middle-y"
+            style={{
+              zIndex: 10,
+              borderRadius: "50%",
+              width: "40px",
+              height: "40px",
+              padding: 0,
+              marginRight: "-20px",
+              border: "none",
             }}
           >
-            <Box
-              sx={{
-                backgroundColor: "rgba(255,255,255,0.2)",
-                px: 2,
-                py: 0.5,
-                borderRadius: 2,
-                display: "inline-block",
-                mb: 2,
-                width: "fit-content",
-              }}
-            >
-              <Box component="span" sx={{ fontSize: "0.85rem", fontWeight: 600 }}>
-                FEATURED LISTING
-              </Box>
-            </Box>
+            <ChevronRight size={20} />
+          </button>
+        )}
+      </div>
 
-            <Box
-              component="h2"
-              sx={{
-                fontSize: { xs: "1.75rem", md: "2.5rem" },
-                fontWeight: 800,
-                mb: 2,
-                color: "white",
-              }}
-            >
-              {currentListing.title}
-            </Box>
+      {/* Indicators */}
+      <div className="d-flex justify-content-center gap-2 mt-3">
+        {Array.from({ length: Math.ceil(uniqueListings.length / 2) }).map((_, idx) => (
+          <div
+            key={idx}
+            onClick={() => setCurrentIndex(idx * 2)}
+            style={{
+              width: currentIndex / 2 === idx ? "32px" : "8px",
+              height: "8px",
+              borderRadius: "4px",
+              backgroundColor: currentIndex / 2 === idx ? "#10b981" : "#e5e7eb",
+              transition: "all 0.3s ease",
+              cursor: "pointer",
+            }}
+          />
+        ))}
+      </div>
 
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <MapPin size={20} style={{ marginRight: 8 }} />
-              <Box component="span" sx={{ fontSize: "1.1rem", opacity: 0.9 }}>
-                {currentListing.location || "Location not specified"}
-              </Box>
-            </Box>
-
-            <Box
-              component="h3"
-              sx={{
-                fontSize: { xs: "2rem", md: "3rem" },
-                fontWeight: 800,
-                mb: 3,
-                color: "white",
-              }}
-            >
-              {formatCurrency(currentListing.price)}
-            </Box>
-
-            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-              {currentListing.animal_id?.species && (
-                <Box
-                  sx={{
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    fontWeight: 600,
-                  }}
-                >
-                  {currentListing.animal_id.species}
-                </Box>
-              )}
-              {currentListing.animal_id?.gender && (
-                <Box
-                  sx={{
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    fontWeight: 600,
-                  }}
-                >
-                  {currentListing.animal_id.gender === "male" ? "♂" : "♀"} {currentListing.animal_id.gender}
-                </Box>
-              )}
-              {currentListing.animal_id?.stage && (
-                <Box
-                  sx={{
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    fontWeight: 600,
-                  }}
-                >
-                  {currentListing.animal_id.stage}
-                </Box>
-              )}
-            </Box>
-
-            <Box sx={{ display: "flex", alignItems: "center", opacity: 0.9 }}>
-              <Eye size={18} style={{ marginRight: 8 }} />
-              <Box component="span" sx={{ fontSize: "1rem" }}>
-                {currentListing.views || 0} views
-              </Box>
-            </Box>
-
-            <Box
-              sx={{
-                mt: 4,
-                backgroundColor: "white",
-                color: "#10b981",
-                px: 4,
-                py: 1.5,
-                borderRadius: 3,
-                fontWeight: 700,
-                fontSize: "1.1rem",
-                textAlign: "center",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  backgroundColor: "#f0fdf4",
-                  transform: "scale(1.05)",
-                },
-              }}
-            >
-              View Details →
-            </Box>
-          </Box>
-        </Box>
-      </Paper>
-    </Box>
+      <style>{`
+        .card:hover .trending-img {
+          transform: scale(1.05);
+        }
+      `}</style>
+    </div>
   );
 }

@@ -1,8 +1,10 @@
 // marketviewpage/components/listings/ListingCard.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Eye, Heart, ShoppingCart, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../../../PrivateComponents/AuthContext";
+import { marketApi } from "../../api/market.api";
 import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency, timeAgo } from "../../utils/currency.utils";
 
@@ -15,8 +17,24 @@ const speciesConfig = {
 
 export default function ListingCard({ listing }) {
   const navigate = useNavigate();
+  const { token } = useContext(AuthContext);
   const [inWishlist, setInWishlist] = useState(false);
   const [inBasket, setInBasket] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
+
+  // Fetch actual view count from API
+  useEffect(() => {
+    const fetchViews = async () => {
+      try {
+        const data = await marketApi.getListingViews(listing._id, token);
+        setViewCount(data.total_views || 0);
+      } catch (err) {
+        setViewCount(0);
+      }
+    };
+
+    fetchViews();
+  }, [listing._id, token]);
 
   useEffect(() => {
     const checkStatus = () => {
@@ -32,7 +50,9 @@ export default function ListingCard({ listing }) {
     return () => clearInterval(interval);
   }, [listing._id]);
 
-  const handleView = () => {
+  const handleView = async () => {
+    await marketApi.incrementViews(listing._id, token);
+    setViewCount(prev => prev + 1);
     navigate("/view-market", { state: { listing } });
   };
 
@@ -149,7 +169,7 @@ export default function ListingCard({ listing }) {
           </h5>
           <div className="d-flex align-items-center" style={{ color: "#0f172a" }}>
             <Eye size={14} className="me-1" />
-            <span style={{ fontSize: "0.9rem" }}>{listing.views || 0}</span>
+            <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{viewCount}</span>
           </div>
         </div>
 
