@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, User, Lock, WifiOff } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import AppNavbar from '../../scenes/AppNavbar';
 import { AuthContext } from '../../PrivateComponents/AuthContext';
+import { jwtDecode } from 'jwt-decode';
 import {
   Box,
   TextField,
@@ -18,8 +19,6 @@ import {
   Link,
   CircularProgress,
   Divider,
-  Checkbox,
-  FormControlLabel,
   Backdrop,
   Alert,
   Fade
@@ -30,10 +29,10 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const { setToken } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE;
 
@@ -102,14 +101,35 @@ const Login = () => {
         return;
       }
 
-      // AuthContext handles all token logic (decode, store, set user)
-      setToken(receivedToken, rememberMe);
+      // Decode to get role for navigation (mirror Google handler)
+      let decoded;
+      try {
+        decoded = jwtDecode(receivedToken);
+      } catch (err) {
+        console.error('Token decode failed:', err);
+        toast.error('Invalid authentication token');
+        return;
+      }
+
+      // Set token (AuthContext validates and derives user)
+      setToken(receivedToken);
 
       toast.success(response.data.message || 'Login successful!', {
         autoClose: 1500,
       });
 
-      // No navigation - PrivateRoute will handle redirect based on AuthContext
+      // Role-based navigation
+      const roleRoutes = {
+        admin: "/admindashboard",
+        superadmin: "/spr.dmn",
+        seller: "/slr.drb",
+        buyer: "/byr.drb",
+        farmer: "/fmr.drb",
+        porter: "/porterdashboard",
+        manager: "/man.drb",
+      };
+
+      navigate(roleRoutes[decoded.role] || "/", { replace: true });
       
     } catch (err) {
       console.error('Login error:', err);
@@ -348,27 +368,7 @@ const Login = () => {
                   }}
                 />
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        sx={{
-                          color: '#10b981',
-                          '&.Mui-checked': {
-                            color: '#10b981',
-                          },
-                        }}
-                      />
-                    }
-                    label={
-                      <Typography variant="body2" sx={{ color: '#475569', fontWeight: 500 }}>
-                        Remember me
-                      </Typography>
-                    }
-                  />
-
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 3 }}>
                   <Link
                     href="/forgot-password"
                     sx={{
