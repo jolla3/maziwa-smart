@@ -1,11 +1,24 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Box, Button, Container, Typography } from '@mui/material';
-import { ArrowBack, Home } from '@mui/icons-material';
+import React, { useContext } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Box, Button, Container, Typography, Paper } from '@mui/material';
+import { ArrowBack, Home, Login, PersonAdd, Logout } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { AuthContext } from '../PrivateComponents/AuthContext';   // ← adjust path if needed
 
 const NotAuthorized = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user, logout } = useContext(AuthContext);
+
+  const from = location.state?.from?.pathname || '/';
+
+  const handleGoHome = () => navigate('/', { replace: true });
+  const handleLogin = () => navigate('/login', { replace: true, state: { from } });
+  const handleRegister = () => navigate('/register', { replace: true });
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <Box
@@ -20,26 +33,35 @@ const NotAuthorized = () => {
     >
       <Container maxWidth="sm">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6 }}
         >
-          <Box sx={{ textAlign: 'center' }}>
-            {/* 403 Error Code */}
+          <Paper
+            elevation={8}
+            sx={{
+              p: { xs: 4, md: 6 },
+              borderRadius: 4,
+              textAlign: 'center',
+              background: '#fff',
+              boxShadow: '0 20px 60px rgba(16, 185, 129, 0.15)',
+            }}
+          >
+            {/* Big 403 */}
             <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
             >
               <Typography
                 sx={{
-                  fontSize: { xs: '5rem', md: '8rem' },
+                  fontSize: { xs: '6rem', md: '9rem' },
                   fontWeight: 900,
                   background: 'linear-gradient(135deg, #10b981 0%, #0f172a 100%)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  mb: 2,
                   lineHeight: 1,
+                  mb: 1,
                 }}
               >
                 403
@@ -48,120 +70,99 @@ const NotAuthorized = () => {
 
             <Typography
               variant="h3"
-              sx={{
-                fontWeight: 900,
-                color: '#0f172a',
-                mb: 2,
-                fontSize: { xs: '1.8rem', md: '2.5rem' },
-              }}
+              sx={{ fontWeight: 800, color: '#0f172a', mb: 1 }}
             >
-              Access Denied
+              {isAuthenticated ? 'Access Denied' : 'Please Sign In'}
             </Typography>
 
             <Typography
               variant="h6"
-              sx={{
-                color: '#475569',
-                mb: 4,
-                fontSize: '1.05rem',
-                lineHeight: 1.6,
-              }}
+              sx={{ color: '#475569', mb: 4, maxWidth: 420, mx: 'auto', lineHeight: 1.7 }}
             >
-              You do not have permission to access this page. This area is restricted to authorized users only.
+              {isAuthenticated
+                ? `You are currently logged in as a ${user?.role || 'user'}. This section is restricted to specific roles only.`
+                : 'This page requires you to be signed in to continue.'}
             </Typography>
 
-            {/* Buttons */}
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  startIcon={<ArrowBack />}
-                  onClick={() => navigate(-1)}
-                  variant="contained"
-                  sx={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    color: '#fff',
-                    fontWeight: 700,
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)',
-                    '&:hover': {
-                      boxShadow: '0 12px 24px rgba(16, 185, 129, 0.4)',
-                    },
-                  }}
-                >
-                  Go Back
-                </Button>
-              </motion.div>
+              <Button
+                startIcon={<ArrowBack />}
+                onClick={() => navigate(-1)}
+                variant="contained"
+                sx={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  px: 4,
+                  py: 1.5,
+                  fontWeight: 700,
+                  borderRadius: 2,
+                }}
+              >
+                Go Back
+              </Button>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  startIcon={<Home />}
-                  onClick={() => navigate('/')}
-                  variant="outlined"
-                  sx={{
-                    borderColor: '#0f172a',
-                    color: '#0f172a',
-                    fontWeight: 700,
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    border: '2px solid',
-                    '&:hover': {
-                      backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                      borderColor: '#10b981',
-                      color: '#10b981',
-                    },
-                  }}
-                >
-                  Home
-                </Button>
-              </motion.div>
-            </Box>
+              <Button
+                startIcon={<Home />}
+                onClick={handleGoHome}
+                variant="outlined"
+                sx={{
+                  borderColor: '#0f172a',
+                  color: '#0f172a',
+                  px: 4,
+                  py: 1.5,
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  '&:hover': { borderColor: '#10b981', color: '#10b981' },
+                }}
+              >
+                Home
+              </Button>
 
-            {/* Additional help */}
-            <Box sx={{ mt: 4, pt: 4, borderTop: '1px solid rgba(16, 185, 129, 0.1)' }}>
-              <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>
-                Need help? Here are some options:
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <motion.div whileHover={{ scale: 1.05 }}>
+              {!isAuthenticated ? (
+                <>
                   <Button
-                    onClick={() => navigate('/login')}
-                    sx={{
-                      color: '#10b981',
-                      fontWeight: 600,
-                      textTransform: 'none',
-                      '&:hover': {
-                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                      },
-                    }}
+                    startIcon={<Login />}
+                    onClick={handleLogin}
+                    variant="contained"
+                    sx={{ px: 4, py: 1.5, fontWeight: 700, borderRadius: 2 }}
                   >
                     Sign In
                   </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }}>
+
                   <Button
-                    onClick={() => navigate('/register')}
+                    startIcon={<PersonAdd />}
+                    onClick={handleRegister}
+                    variant="outlined"
                     sx={{
+                      borderColor: '#10b981',
                       color: '#10b981',
-                      fontWeight: 600,
-                      textTransform: 'none',
-                      '&:hover': {
-                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                      },
+                      px: 4,
+                      py: 1.5,
+                      fontWeight: 700,
+                      borderRadius: 2,
                     }}
                   >
                     Create Account
                   </Button>
-                </motion.div>
-              </Box>
+                </>
+              ) : (
+                <Button
+                  startIcon={<Logout />}
+                  onClick={handleLogout}
+                  variant="outlined"
+                  color="error"
+                  sx={{ px: 4, py: 1.5, fontWeight: 700, borderRadius: 2 }}
+                >
+                  Log Out & Try Again
+                </Button>
+              )}
             </Box>
-          </Box>
+
+            {isAuthenticated && (
+              <Typography variant="body2" sx={{ mt: 5, color: '#64748b' }}>
+                If you believe this is a mistake, please contact support or try logging in with a different account.
+              </Typography>
+            )}
+          </Paper>
         </motion.div>
       </Container>
     </Box>

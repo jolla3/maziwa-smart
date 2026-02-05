@@ -6,7 +6,7 @@ const getSocketURL = () => {
   const apiBase = process.env.REACT_APP_API_BASE;
   if (!apiBase) {
     console.warn("⚠️ REACT_APP_API_BASE not found, using fallback");
-    return "http://localhost:5000";
+    return "http://localhost:5001";
   }
   
   // Remove /api suffix for Socket.IO (socket connects to root)

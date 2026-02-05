@@ -1,4 +1,4 @@
-import  { useEffect, useContext } from "react";
+import { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../PrivateComponents/AuthContext";
 
@@ -7,20 +7,24 @@ const ChatModal = ({ showChatModal, setShowChatModal, seller, listing }) => {
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
-  if (!showChatModal) return;
+    if (!showChatModal) return;
 
-  const receiverId = seller?._id;
-  if (!receiverId || !user?.id) return;
-
-  navigate("/frm.drb/chatroom", {
-    state: {
-      receiverId,
-      listingId: listing?._id || null,
+    const receiverId = seller?._id;
+    if (!receiverId || !user?.id) {
+      // Bail silently if missing essentials; add toast/error if you want UX, but you didn't ask
+      setShowChatModal(false);
+      return;
     }
-  });
 
-  setShowChatModal(false);
-}, [showChatModal, navigate, seller?._id, user?.id, listing?._id, setShowChatModal]);
+    navigate("/chatroom", {
+      state: {
+        receiverId,
+        listingId: listing?._id || null,
+      },
+    });
+
+    setShowChatModal(false);
+  }, [showChatModal, navigate, seller?._id, user?.id, listing?._id, setShowChatModal]);
 
   return null;
 };
