@@ -6,7 +6,7 @@
 // FILE: /src/components/SUPERaDMIN/utils/api.js
 import { cacheUtils } from './cache';
 
-const API_BASE = process.env.REACT_APP_API_BASE || 'https://maziwasmart.onrender.com/api';
+const API_BASE = process.env.REACT_APP_API_BASE 
 
 export const apiRequest = async (endpoint, options = {}, cacheKey = null) => {
   const token = localStorage.getItem('token');

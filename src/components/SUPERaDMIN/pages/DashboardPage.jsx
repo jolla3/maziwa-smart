@@ -29,7 +29,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (!token) return;
 
-    const BASE_URL = process.env.REACT_APP_API_BASE?.replace('/api', '') || 'http://localhost:5000';
+    const BASE_URL = process.env.REACT_APP_API_BASE?.replace('/api', '')
 
     const socket = io(`${BASE_URL}/monitor`, {
       auth: { token },
