@@ -26,7 +26,7 @@ const AlertsPage = () => {
     setLoading(true);
     try {
       const data = await alertService.getAlerts(filters.status);
-      setAlerts(data);
+      setAlerts(data.alerts || []);  // <-- FIX: Extract alerts array from API response
     } catch (error) { console.error('Failed:', error); }
     finally { setLoading(false); }
   };

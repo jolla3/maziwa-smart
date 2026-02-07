@@ -1,4 +1,3 @@
-// marketviewpage/hooks/useMarketListings.js
 import { useState, useEffect, useCallback, useContext, useMemo } from "react";
 import { AuthContext } from "../../../../PrivateComponents/AuthContext";
 import { marketApi } from "../api/market.api";
@@ -98,7 +97,7 @@ export default function useMarketListings() {
         list.sort((a, b) => b.price - a.price);
         break;
       case "views_desc":
-        list.sort((a, b) => (b.views || 0) - (a.views || 0));
+        list.sort((a, b) => (b.views?.count || 0) - (a.views?.count || 0)); // ✅ Fixed: Use views.count
         break;
       default:
         list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

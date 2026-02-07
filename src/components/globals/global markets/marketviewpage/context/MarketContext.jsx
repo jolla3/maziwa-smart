@@ -1,4 +1,3 @@
-// marketviewpage/context/MarketContext.jsx
 import React, {
   createContext,
   useContext,
@@ -126,7 +125,7 @@ export const MarketProvider = ({ children }) => {
         list.sort((a, b) => b.price - a.price);
         break;
       case "views_desc":
-        list.sort((a, b) => (b.views || 0) - (a.views || 0));
+        list.sort((a, b) => (b.views?.count || 0) - (a.views?.count || 0)); // ✅ Fixed: Use views.count
         break;
       default:
         list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

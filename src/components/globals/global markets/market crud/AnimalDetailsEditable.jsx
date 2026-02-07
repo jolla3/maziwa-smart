@@ -14,12 +14,9 @@ const AnimalDetailsEditable = ({ animalDetails, onChange, animalType, stageOptio
 
   if (!animalDetails) return null;
 
+  
   const handleInputChange = (field, value) => {
     onChange({ ...animalDetails, [field]: value });
-  };
-
-  const handlePregnancyChange = (subfield, value) => {
-    onChange({ ...animalDetails, pregnancy: { ...animalDetails.pregnancy || {}, [subfield]: value } });
   };
 
   const SectionHeader = ({ title, icon: Icon, isExpanded, onToggle }) => (
@@ -103,18 +100,19 @@ const AnimalDetailsEditable = ({ animalDetails, onChange, animalType, stageOptio
           {expandedSections.breeding && (
             <div className="p-4 bg-white">
               <div className="row g-3">
-                <div className="col-12 col-sm-4 mb-3">
-                  <label className="text-muted small mb-1">Bull Code</label>
-                  <input type="text" className="form-control" value={animalDetails.bull_code || ""} onChange={(e) => handleInputChange("bull_code", e.target.value)} placeholder="Blank to hide" />
-                </div>
-                <div className="col-12 col-sm-4 mb-3">
-                  <label className="text-muted small mb-1">Bull Name</label>
-                  <input type="text" className="form-control" value={animalDetails.bull_name || ""} onChange={(e) => handleInputChange("bull_name", e.target.value)} placeholder="Blank to hide" />
-                </div>
-                <div className="col-12 col-sm-4 mb-3">
-                  <label className="text-muted small mb-1">Bull Breed</label>
-                  <input type="text" className="form-control" value={animalDetails.bull_breed || ""} onChange={(e) => handleInputChange("bull_breed", e.target.value)} placeholder="Blank to hide" />
-                </div>
+                {/* // In the Breeding section, add: */}
+  <div className="col-12 col-sm-4 mb-3">
+    <label className="text-muted small mb-1">Bull Code</label>
+    <input type="text" className="form-control" value={animalDetails.bull_code || ""} onChange={(e) => handleInputChange("bull_code", e.target.value)} placeholder="Blank to hide" />
+  </div>
+  <div className="col-12 col-sm-4 mb-3">
+    <label className="text-muted small mb-1">Bull Name</label>
+    <input type="text" className="form-control" value={animalDetails.bull_name || ""} onChange={(e) => handleInputChange("bull_name", e.target.value)} placeholder="Blank to hide" />
+  </div>
+  <div className="col-12 col-sm-4 mb-3">
+    <label className="text-muted small mb-1">Bull Breed</label>
+    <input type="text" className="form-control" value={animalDetails.bull_breed || ""} onChange={(e) => handleInputChange("bull_breed", e.target.value)} placeholder="Blank to hide" />
+  </div>
                 <div className="col-12 mb-3 form-check">
                   <input type="checkbox" className="form-check-input" checked={animalDetails.is_pregnant || false} onChange={(e) => handleInputChange("is_pregnant", e.target.checked)} />
                   <label className="form-check-label">Is Pregnant? (Uncheck to hide pregnancy info)</label>

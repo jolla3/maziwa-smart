@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ChevronDown, Info, Heart, Droplet } from "lucide-react";
 
 const AnimalDetailsCard = ({ animalDetails }) => {
-  
+
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
     breeding: true,
@@ -27,11 +27,11 @@ const AnimalDetailsCard = ({ animalDetails }) => {
     gender,
     stage,
     status,
-    breed,
+    breed, // ✅ Now matches backend 'breed'
     bull_code,
     bull_name,
     bull_breed,
-    calved_count,
+    calved_count, // ✅ Now matches backend 'calved_count' (was total_offspring)
     lifetime_milk,
     daily_average,
     pregnancy,
@@ -67,8 +67,8 @@ const AnimalDetailsCard = ({ animalDetails }) => {
   const SectionHeader = ({ title, icon: Icon, isExpanded, onToggle }) => (
     <div
       className="d-flex align-items-center justify-content-between p-3 bg-light cursor-pointer"
-      style={{ 
-        cursor: "pointer", 
+      style={{
+        cursor: "pointer",
         borderBottom: isExpanded ? "2px solid #dee2e6" : "none",
         transition: "background-color 0.2s"
       }}
@@ -80,7 +80,7 @@ const AnimalDetailsCard = ({ animalDetails }) => {
         {Icon && <Icon size={20} className="text-primary" />}
         <h6 className="mb-0 fw-bold">{title}</h6>
       </div>
-      <div style={{ 
+      <div style={{
         transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
         transition: "transform 0.3s"
       }}>
@@ -105,7 +105,7 @@ const AnimalDetailsCard = ({ animalDetails }) => {
   );
 
   return (
-    <div className="container-fluid p-0" style={{ 
+    <div className="container-fluid p-0" style={{
       opacity: 1,
       animation: "fadeIn 0.5s ease-in"
     }}>
@@ -115,7 +115,7 @@ const AnimalDetailsCard = ({ animalDetails }) => {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      
+
       <div className="card shadow-sm border-0 overflow-hidden">
         <div className="card-header bg-primary text-white py-3">
           <h5 className="mb-0 fw-bold">{name || "Animal Details"}</h5>

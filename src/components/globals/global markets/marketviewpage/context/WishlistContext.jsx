@@ -1,5 +1,5 @@
-// marketviewpage/context/WishlistContext.jsx
 import React, { createContext, useState, useCallback, useContext, useEffect } from "react";
+import { AuthContext } from "../../../../PrivateComponents/AuthContext"; // Assuming this provides user info
 
 const WishlistContext = createContext(null);
 
@@ -12,10 +12,14 @@ export const useWishlist = () => {
 };
 
 export const WishlistProvider = ({ children }) => {
+  const { user } = useContext(AuthContext); // Assuming AuthContext has user: { _id }
+  const userId = user?._id || "guest"; // Fallback for non-logged-in users
+  const storageKey = `favorites_${userId}`; // User-specific key
+
   const [wishlist, setWishlist] = useState([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("favorites");
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         setWishlist(JSON.parse(saved));
@@ -23,7 +27,7 @@ export const WishlistProvider = ({ children }) => {
         console.error("Error loading wishlist:", e);
       }
     }
-  }, []);
+  }, [storageKey]); // Re-load on user change
 
   const toggleWishlist = useCallback((listingId) => {
     setWishlist((prev) => {
@@ -31,10 +35,10 @@ export const WishlistProvider = ({ children }) => {
         ? prev.filter((id) => id !== listingId)
         : [...prev, listingId];
       
-      localStorage.setItem("favorites", JSON.stringify(newWishlist));
+      localStorage.setItem(storageKey, JSON.stringify(newWishlist));
       return newWishlist;
     });
-  }, []);
+  }, [storageKey]);
 
   const isInWishlist = useCallback(
     (listingId) => wishlist.includes(listingId),
@@ -43,8 +47,8 @@ export const WishlistProvider = ({ children }) => {
 
   const clearWishlist = useCallback(() => {
     setWishlist([]);
-    localStorage.removeItem("favorites");
-  }, []);
+    localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
   return (
     <WishlistContext.Provider

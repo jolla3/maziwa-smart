@@ -9,12 +9,13 @@ import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency, timeAgo } from "../../utils/currency.utils";
 
 const speciesConfig = {
-  cow: { color: "#10b981", emoji: "🐄" },
-  goat: { color: "#059669", emoji: "🐐" },
+  cow: { color: "#0d6efd", emoji: "🐄" },
+  goat: { color: "#198754", emoji: "🐐" },
   sheep: { color: "#f59e0b", emoji: "🐑" },
-  pig: { color: "#ef4444", emoji: "🐖" },
+  pig: { color: "#dc3545", emoji: "🐖" },
+  bull: { color: "#6c757d", emoji: "🐂" }, // ✅ Add bull
+  // Add more as needed
 };
-
 export default function ListingCard({ listing }) {
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
@@ -59,7 +60,7 @@ export default function ListingCard({ listing }) {
   const toggleWishlist = (e) => {
     e.stopPropagation();
     const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-    
+
     let newFavorites;
     if (favorites.includes(listing._id)) {
       newFavorites = favorites.filter(id => id !== listing._id);
@@ -68,7 +69,7 @@ export default function ListingCard({ listing }) {
       newFavorites = [...favorites, listing._id];
       setInWishlist(true);
     }
-    
+
     localStorage.setItem("favorites", JSON.stringify(newFavorites));
     window.dispatchEvent(new Event("storage"));
   };
@@ -78,7 +79,7 @@ export default function ListingCard({ listing }) {
     if (listing.status === "sold") return;
 
     const basket = JSON.parse(localStorage.getItem("basket") || "[]");
-    
+
     let newBasket;
     if (basket.some(item => item._id === listing._id)) {
       newBasket = basket.filter(item => item._id !== listing._id);
@@ -87,7 +88,7 @@ export default function ListingCard({ listing }) {
       newBasket = [...basket, { ...listing, addedAt: new Date().toISOString() }];
       setInBasket(true);
     }
-    
+
     localStorage.setItem("basket", JSON.stringify(newBasket));
     window.dispatchEvent(new Event("storage"));
   };
@@ -107,7 +108,7 @@ export default function ListingCard({ listing }) {
           <img
             src={imgUrl(getFirstImage(listing))}
             alt={listing.title}
-            style={{ 
+            style={{
               objectFit: "cover",
               transition: "transform 0.4s ease"
             }}
@@ -121,8 +122,8 @@ export default function ListingCard({ listing }) {
             onClick={toggleWishlist}
             style={{ border: "none" }}
           >
-            <Heart 
-              size={16} 
+            <Heart
+              size={16}
               fill={inWishlist ? "white" : "none"}
               color={inWishlist ? "white" : "#0f172a"}
             />
@@ -134,7 +135,7 @@ export default function ListingCard({ listing }) {
             disabled={listing.status === "sold"}
             style={{ border: "none" }}
           >
-            <ShoppingCart 
+            <ShoppingCart
               size={16}
               color={inBasket ? "white" : "#0f172a"}
             />
@@ -142,7 +143,7 @@ export default function ListingCard({ listing }) {
         </div>
 
         <div className="position-absolute bottom-0 start-0 m-2">
-          <span 
+          <span
             className="badge text-white"
             style={{ backgroundColor: speciesColor }}
           >

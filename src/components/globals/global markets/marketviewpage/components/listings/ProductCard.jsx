@@ -1,5 +1,4 @@
-// marketviewpage/components/listings/ModernProductCard.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react"; // Added useContext for AuthContext
 import {
   Card,
   CardMedia,
@@ -18,23 +17,79 @@ import {
   Calendar,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../../PrivateComponents/AuthContext"; // For user-specific storage
 import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency, timeAgo } from "../../utils/currency.utils";
 
 export default function ModernProductCard({ listing }) {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext); // For user-specific keys
+  // Ensure a per-device guest identifier
+  const ensureGuestId = () => {
+    try {
+      let id = localStorage.getItem('guestId');
+      if (!id) {
+        id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+        localStorage.setItem('guestId', id);
+      }
+      return id;
+    } catch (e) {
+      return 'noguest';
+    }
+  };
+
+  const guestId = ensureGuestId();
+  const isAuthenticated = !!user?._id;
+  const wishlistKey = isAuthenticated ? `favorites_${user._id}` : `favorites_guest_${guestId}`;
+  const basketKey = isAuthenticated ? `basket_${user._id}` : `basket_guest_${guestId}`;
+
+  // Migrate guest keys into authenticated user on login
+  useEffect(() => {
+    if (!user?._id) return;
+    try {
+      const guestFavKey = `favorites_guest_${guestId}`;
+      const guestBasketKey = `basket_guest_${guestId}`;
+      const userFavKey = `favorites_${user._id}`;
+      const userBasketKey = `basket_${user._id}`;
+
+      const guestFav = JSON.parse(localStorage.getItem(guestFavKey) || '[]');
+      const guestBasket = JSON.parse(localStorage.getItem(guestBasketKey) || '[]');
+      const userFav = JSON.parse(localStorage.getItem(userFavKey) || '[]');
+      const userBasket = JSON.parse(localStorage.getItem(userBasketKey) || '[]');
+
+      // Merge favorites (ids)
+      const mergedFav = Array.from(new Set([...(userFav || []), ...(guestFav || [])]));
+      localStorage.setItem(userFavKey, JSON.stringify(mergedFav));
+
+      // Merge basket items by _id
+      const map = {};
+      (userBasket || []).forEach(i => { if (i && i._id) map[i._id] = i; });
+      (guestBasket || []).forEach(i => { if (i && i._id) map[i._id] = i; });
+      const mergedBasket = Object.values(map);
+      localStorage.setItem(userBasketKey, JSON.stringify(mergedBasket));
+
+      // Remove guest keys
+      localStorage.removeItem(guestFavKey);
+      localStorage.removeItem(guestBasketKey);
+      window.dispatchEvent(new Event('storage'));
+    } catch (err) {
+      // Fail silently
+      console.error('Migration error:', err);
+    }
+  }, [user?._id]);
+
   const [inWishlist, setInWishlist] = useState(false);
   const [inBasket, setInBasket] = useState(false);
 
   useEffect(() => {
-    // Check if in wishlist
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+    // Check if in wishlist (user-specific)
+    const favorites = JSON.parse(localStorage.getItem(wishlistKey) || "[]");
     setInWishlist(favorites.includes(listing._id));
 
-    // Check if in basket
-    const basket = JSON.parse(localStorage.getItem("basket") || "[]");
+    // Check if in basket (user-specific)
+    const basket = JSON.parse(localStorage.getItem(basketKey) || "[]");
     setInBasket(basket.some(item => item._id === listing._id));
-  }, [listing._id]);
+  }, [listing._id, wishlistKey, basketKey]);
 
   const isSold = listing.status === "sold";
   const imageCount = listing.photos?.length || listing.images?.length || 0;
@@ -45,10 +100,10 @@ export default function ModernProductCard({ listing }) {
 
   const handleWishlist = (e) => {
     e.stopPropagation();
-    
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+
+    const favorites = JSON.parse(localStorage.getItem(wishlistKey) || "[]");
     let newFavorites;
-    
+
     if (favorites.includes(listing._id)) {
       newFavorites = favorites.filter(id => id !== listing._id);
       setInWishlist(false);
@@ -56,18 +111,18 @@ export default function ModernProductCard({ listing }) {
       newFavorites = [...favorites, listing._id];
       setInWishlist(true);
     }
-    
-    localStorage.setItem("favorites", JSON.stringify(newFavorites));
+
+    localStorage.setItem(wishlistKey, JSON.stringify(newFavorites));
     window.dispatchEvent(new Event('storage'));
   };
 
   const handleBasket = (e) => {
     e.stopPropagation();
     if (isSold) return;
-    
-    const basket = JSON.parse(localStorage.getItem("basket") || "[]");
+
+    const basket = JSON.parse(localStorage.getItem(basketKey) || "[]");
     let newBasket;
-    
+
     if (basket.some(item => item._id === listing._id)) {
       newBasket = basket.filter(item => item._id !== listing._id);
       setInBasket(false);
@@ -75,8 +130,8 @@ export default function ModernProductCard({ listing }) {
       newBasket = [...basket, { ...listing, addedAt: new Date().toISOString() }];
       setInBasket(true);
     }
-    
-    localStorage.setItem("basket", JSON.stringify(newBasket));
+
+    localStorage.setItem(basketKey, JSON.stringify(newBasket));
     window.dispatchEvent(new Event('storage'));
   };
 
@@ -320,7 +375,7 @@ export default function ModernProductCard({ listing }) {
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Eye size={14} color="#10b981" style={{ marginRight: 4 }} />
             <Typography variant="caption" sx={{ color: "#0f172a", fontWeight: 500 }}>
-              {listing.views || 0} views
+              {listing.views?.count || 0} views  {/* ✅ Fixed: Use views.count from listing */}
             </Typography>
           </Box>
         </Box>

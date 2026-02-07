@@ -1,5 +1,5 @@
-// marketviewpage/context/BasketContext.jsx
 import React, { createContext, useState, useCallback, useContext, useEffect } from "react";
+import { AuthContext } from "../../../../PrivateComponents/AuthContext";
 
 const BasketContext = createContext(null);
 
@@ -12,10 +12,14 @@ export const useBasket = () => {
 };
 
 export const BasketProvider = ({ children }) => {
+  const { user } = useContext(AuthContext);
+  const userId = user?._id || "guest";
+  const storageKey = `basket_${userId}`;
+
   const [basket, setBasket] = useState([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("basket");
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         setBasket(JSON.parse(saved));
@@ -23,7 +27,7 @@ export const BasketProvider = ({ children }) => {
         console.error("Error loading basket:", e);
       }
     }
-  }, []);
+  }, [storageKey]);
 
   const addToBasket = useCallback((listing) => {
     setBasket((prev) => {
@@ -31,18 +35,18 @@ export const BasketProvider = ({ children }) => {
       if (exists) return prev;
       
       const newBasket = [...prev, { ...listing, addedAt: new Date().toISOString() }];
-      localStorage.setItem("basket", JSON.stringify(newBasket));
+      localStorage.setItem(storageKey, JSON.stringify(newBasket));
       return newBasket;
     });
-  }, []);
+  }, [storageKey]);
 
   const removeFromBasket = useCallback((listingId) => {
     setBasket((prev) => {
       const newBasket = prev.filter((item) => item._id !== listingId);
-      localStorage.setItem("basket", JSON.stringify(newBasket));
+      localStorage.setItem(storageKey, JSON.stringify(newBasket));
       return newBasket;
     });
-  }, []);
+  }, [storageKey]);
 
   const isInBasket = useCallback(
     (listingId) => basket.some((item) => item._id === listingId),
@@ -51,8 +55,8 @@ export const BasketProvider = ({ children }) => {
 
   const clearBasket = useCallback(() => {
     setBasket([]);
-    localStorage.removeItem("basket");
-  }, []);
+    localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
   return (
     <BasketContext.Provider

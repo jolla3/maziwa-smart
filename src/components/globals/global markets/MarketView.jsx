@@ -28,6 +28,9 @@ const MarketView = () => {
 
   const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80";
 
+  // Client-side ObjectId validator (24 hex chars)
+  const isValidObjectId = (id) => typeof id === 'string' && /^[a-fA-F0-9]{24}$/.test(id);
+
   // Helper function to convert relative paths to full URLs
   const imgUrl = (path) => {
     if (!path) return DEFAULT_IMAGE;
@@ -56,7 +59,7 @@ const MarketView = () => {
       });
       if (res.data.success && res.data.listing) {
         const fetchedListing = res.data.listing;
-       
+
         setListing(fetchedListing);
         const images = getDisplayImages(fetchedListing);
         setMainPhoto(images[0] || DEFAULT_IMAGE);
@@ -69,22 +72,23 @@ const MarketView = () => {
         console.log("Retrying fetch...");
         fetchListingById(id, retryCount + 1);
       } else {
-        setError(err.response?.data?.message );
+        setError(err.response?.data?.message || "Failed to load listing");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Register view (fire-and-forget, only if auth)
+  // Register view (fire-and-forget, only if auth) - no API fetch for views, use listing data
   const registerView = async (id) => {
-    if (!token) return; // Silent skip for unauth—fix if you want guest views
+    if (!token || !id) return; // Silent skip for unauth or invalid ID
     try {
       await axios.post(`${API_BASE}/listing/views/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (err) {
-      console.error("View register failed:", err); // Silent to user
+      console.error("View register failed:", err); // Silent to user, but log for debugging
+      // No need to fetch views here - we use listing.views from the fetch
     }
   };
 
@@ -92,10 +96,10 @@ const MarketView = () => {
   useEffect(() => {
     const stateData = location.state;
     const id = stateData?.id || stateData?.listing?._id;
-    if (id) {
+    if (id && isValidObjectId(id)) {
       fetchListingById(id);
     } else {
-      setError("No listing ID provided—fix your navigation");
+      setError("Invalid listing ID");
       setLoading(false);
     }
   }, [location.state]);
@@ -243,11 +247,10 @@ const MarketView = () => {
           />
 
           <StatsBar
-  views={views || 0}
-  createdAt={createdAt}
-  location={loc}
-/>
-
+            views={views || 0}
+            createdAt={createdAt}
+            location={loc}
+          />
         </div>
 
         {/* Details Section */}

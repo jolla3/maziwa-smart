@@ -86,43 +86,49 @@ const CreateListing = () => {
     return `${years} year${years !== 1 ? "s" : ""} ${months} month${months !== 1 ? "s" : ""}`;
   };
 
+
   const handleChange = async (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
 
     if (name === "animal_id" && user?.role === "farmer" && value) {
-  try {
-    const res = await axios.get(`${API_BASE}/animals/${value}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.data.success) {
-      const animal = res.data.animal;
-      setForm((prev) => ({
-        ...prev,
-        animal_details: {
-          age: animal.age || calculateAge(animal.birth_date) || "",
-          breed_name: (animal.breed || "").trim() || "",
-          gender: animal.gender || "",
-          stage: animal.stage || "",
-          status: animal.status || "active",
-          bull_code: animal.sire?.code || "",
-          bull_name: animal.sire?.name || "",
-          bull_breed: animal.sire?.breed || "",  // if sire ever has breed
-          lifetime_milk: animal.lifetime_milk || "",
-          daily_average: animal.daily_average || "",
-          total_offspring: animal.total_offspring || "",
-          is_pregnant: animal.is_pregnant || false,  // if direct field exists
-          expected_due_date: animal.expected_due_date || "",
-          // Add pregnancy.insemination_id if your model has nested, but samples don't
-        },
-      }));
+      try {
+        const res = await axios.get(`${API_BASE}/animals/${value}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data.success) {
+          const animal = res.data.animal;
+          // ✅ Populate breed and sire from breed_id, insemination from pregnancy
+          const breedData = animal.breed_id || {};
+          const inseminationData = animal.pregnancy?.insemination_id || {};
+          setForm((prev) => ({
+            ...prev,
+            animal_details: {
+              age: calculateAge(animal.birth_date) || "",
+              birth_date: animal.birth_date || "",
+              breed_name: breedData.breed_name || animal.breed || "",
+              gender: animal.gender || "",
+              stage: animal.stage || "",
+              status: animal.status || "active",
+              bull_code: breedData.bull_code || inseminationData.bull_code || animal.bull_code || "",
+              bull_name: breedData.bull_name || inseminationData.bull_name || animal.bull_name || "",
+              bull_breed: breedData.bull_breed || inseminationData.bull_breed || "",
+              lifetime_milk: animal.lifetime_milk || "",
+              daily_average: animal.daily_average || "",
+              total_offspring: animal.total_offspring || "",
+              is_pregnant: animal.pregnancy?.is_pregnant || false,
+              expected_due_date: animal.pregnancy?.expected_due_date || "",
+              insemination_id: animal.pregnancy?.insemination_id || "",
+            },
+          }));
+        }
+      } catch (err) {
+        showToast("Failed to load animal details", "error");
+      }
     }
-  } catch (err) {
-    showToast("Failed to load animal details", "error");
-  }
-}
   };
 
+  // ... (rest of the file remains the same, but ensure AnimalDetailsEditable shows sire/insemination fields for farmers)
   const handleAnimalDetailsChange = (updatedDetails) => {
     setForm((prev) => ({ ...prev, animal_details: updatedDetails }));
   };
