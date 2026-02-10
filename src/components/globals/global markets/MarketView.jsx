@@ -4,9 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Heart, Share2 } from "lucide-react";
 import { AuthContext } from "../../PrivateComponents/AuthContext";
+import { useApiCache } from "../../../hooks/useApiCache"; // ✅ Import the hook
 import ImageGallery from "./market view/ImageGallery";
 import StatsBar from "./market view/StatsBar";
-import AnimalDetailsCard from "./market view/AnimalDetailsCard";
+import AnimalDetailsCard from "./market view/AnimalDetailsCard"; // ✅ Include the component
 import ActionButtons from "./market view/ActionButtons";
 import ChatModal from "./market view/ChatModal";
 import ContactModal from "./market view/ContactModal";
@@ -15,13 +16,10 @@ const API_BASE = process.env.REACT_APP_API_BASE;
 
 const MarketView = () => {
   const location = useLocation();
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [listing, setListing] = useState(null);
   const [mainPhoto, setMainPhoto] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -45,71 +43,39 @@ const MarketView = () => {
   // Get all available images from listing
   const getDisplayImages = (listing) => {
     if (!listing) return [];
-    const images = listing.images || listing.photos || listing.animal?.photos || [];
+    const images = listing.images || listing.photos || listing.animal_info?.photos || [];
     return images.length > 0 ? images.map(imgUrl) : [DEFAULT_IMAGE];
   };
 
-  // Fetch listing by ID with retry logic for bulletproof
-  const fetchListingById = async (id, retryCount = 0) => {
-    setLoading(true);
-    setError("");
-    try {
+  // Get listing ID from state
+  const stateData = location.state;
+  const id = stateData?.id || stateData?.listing?._id;
+
+  // ✅ Use useApiCache for the listing (caches for no reloads)
+  const { data: listing, loading, error } = useApiCache(
+    `cache_${user?.id}_market_listing_${id}`, // Unique key per user and listing
+    async () => {
+      if (!id || !isValidObjectId(id)) throw new Error("Invalid listing ID");
       const res = await axios.get(`${API_BASE}/market/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success && res.data.listing) {
-        const fetchedListing = res.data.listing;
-
-        setListing(fetchedListing);
-        const images = getDisplayImages(fetchedListing);
-        setMainPhoto(images[0] || DEFAULT_IMAGE);
-      } else {
-        setError(res.data.message || "Failed to fetch listing");
+        return res.data.listing;
       }
-    } catch (err) {
-      console.error("Fetch error:", err);
-      if (retryCount < 1) {
-        console.log("Retrying fetch...");
-        fetchListingById(id, retryCount + 1);
-      } else {
-        setError(err.response?.data?.message || "Failed to load listing");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+      throw new Error(res.data.message || "Failed to fetch listing");
+    },
+    [id, user?.id, token] // Refetch if ID, user, or token changes
+  );
 
-  // Register view (fire-and-forget, only if auth) - no API fetch for views, use listing data
-  const registerView = async (id) => {
-    if (!token || !id) return; // Silent skip for unauth or invalid ID
-    try {
-      await axios.post(`${API_BASE}/listing/views/${id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (err) {
-      console.error("View register failed:", err); // Silent to user, but log for debugging
-      // No need to fetch views here - we use listing.views from the fetch
-    }
-  };
-
-  // Initialize listing on mount—always fetch full by ID
+  // Set main photo when listing loads
   useEffect(() => {
-    const stateData = location.state;
-    const id = stateData?.id || stateData?.listing?._id;
-    if (id && isValidObjectId(id)) {
-      fetchListingById(id);
-    } else {
-      setError("Invalid listing ID");
-      setLoading(false);
-    }
-  }, [location.state]);
-
-  // Register view after listing set (once)
-  useEffect(() => {
-    if (listing?._id) {
-      registerView(listing._id);
+    if (listing) {
+      const images = getDisplayImages(listing);
+      setMainPhoto(images[0] || DEFAULT_IMAGE);
     }
   }, [listing]);
+
+  // ✅ Removed duplicate view increment (handled in market click)
 
   // Update favorites when listing changes
   useEffect(() => {
@@ -133,7 +99,7 @@ const MarketView = () => {
   };
 
   const handleShare = () => {
-    const species = listing?.animal?.species || "Livestock";
+    const species = listing?.animal_info?.species || "Livestock"; // ✅ Use animal_info
     const formattedPrice = new Intl.NumberFormat("en-KE", {
       style: "currency",
       currency: "KES",
@@ -189,7 +155,7 @@ const MarketView = () => {
     );
   }
 
-  const { title, price, location: loc, createdAt, views, animal, seller } = listing;
+  const { title, price, location: loc, createdAt, views, animal_info, seller } = listing; // ✅ Destructure animal_info
   const displayImages = getDisplayImages(listing);
 
   const formattedPrice = new Intl.NumberFormat("en-KE", {
@@ -247,7 +213,7 @@ const MarketView = () => {
           />
 
           <StatsBar
-            views={views || 0}
+            views={views?.count || 0} // ✅ Use embedded views from listing
             createdAt={createdAt}
             location={loc}
           />
@@ -267,9 +233,9 @@ const MarketView = () => {
             <div className="card-body p-4 text-white">
               <div className="d-flex align-items-center gap-2 mb-2">
                 <span className="badge bg-white text-primary">
-                  {animal?.species || "Livestock"}
+                  {animal_info?.species || "Livestock"} {/* ✅ Use animal_info */}
                 </span>
-                {animal?.pregnancy?.is_pregnant && (
+                {animal_info?.pregnancy?.is_pregnant && (
                   <span className="badge bg-warning text-dark">
                     Pregnant
                   </span>
@@ -285,7 +251,7 @@ const MarketView = () => {
             </div>
           </motion.div>
 
-          <AnimalDetailsCard animalDetails={animal || {}} />
+          <AnimalDetailsCard animalDetails={animal_info || {}} /> {/* ✅ Pass animal_info to the component */}
 
           <ActionButtons
             onChatClick={handleOpenChat}

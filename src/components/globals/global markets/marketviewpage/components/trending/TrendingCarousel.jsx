@@ -1,350 +1,383 @@
-// import React, { useState, useEffect, useContext } from 'react';
-// import { motion, AnimatePresence } from 'framer-motion';
-// import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
-// import { useNavigate } from 'react-router-dom';
-// import { AuthContext } from '../../../../../PrivateComponents/AuthContext';
-// import { imgUrl, getFirstImage } from '../../utils/image.utils';
-// import { formatCurrency, timeAgo } from '../../utils/currency.utils';
-// import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Eye, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { imgUrl, getFirstImage } from '../../utils/image.utils';
+import { formatCurrency } from '../../utils/currency.utils';
 
-// export default function TrendingCarousel({ listings = [] }) {
-//     const [current, setCurrent] = useState(0);
-//     const [auto, setAuto] = useState(true);
-//     const [views, setViews] = useState({});
-//     const [loading, setLoading] = useState(true);
-//     const navigate = useNavigate();
-//     const { token } = useContext(AuthContext);
-//     const API_BASE = process.env.REACT_APP_API_BASE;
+export default function TrendingCarousel({ listings = [] }) {
+  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
 
-//     // Filter only valid listings
-//     const validListings = listings.filter(l =>
-//         l._id && l.title && l.price > 0 && l.location
-//     );
+  // Filter valid listings
+  const validListings = listings.filter(
+    (l) => l._id && l.title && l.price > 0
+  );
 
-//     const item = validListings[current];
+  // Auto-slide every 5 seconds
+  useEffect(() => {
+    // Only start timer if there are valid listings
+    if (!validListings.length) return;
 
-//     // Fetch views for all listings
-//     useEffect(() => {
-//         if (!token || !validListings.length) {
-//             return;
-//         }
+    const timer = setInterval(() => {
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % validListings.length);
+    }, 5000);
 
-//         const fetchViews = async () => {
-//             setLoading(true);
-//             const viewsData = {};
+    return () => clearInterval(timer);
+  }, [validListings.length]);
 
-//             try {
-//                 await Promise.all(
-//                     validListings.map(listing =>
-//                         axios.get(`${API_BASE}/market/summary/${listing._id}`, {
-//                             headers: { Authorization: `Bearer ${token}` }
-//                         })
-//                             .then(res => {
-//                                 viewsData[listing._id] = res.data.total_views || 0;
-//                             })
-//                             .catch(err => {
-//                                 viewsData[listing._id] = 0;
-//                             })
-//                     )
-//                 );
-//                 setViews(viewsData);
-//             } catch (err) {
-//                 console.error('Failed to fetch views:', err);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
+  if (!validListings.length) return null;
 
-//         fetchViews();
-//     }, [token, validListings, API_BASE]);
+  const handlePrev = () => {
+    setDirection(-1);
+    setCurrentIndex(
+      (prev) => (prev - 1 + validListings.length) % validListings.length
+    );
+  };
 
-//     useEffect(() => {
-//         if (!auto || !validListings.length) return;
-//         const timer = setInterval(() => {
-//             setCurrent(prev => (prev + 1) % validListings.length);
-//         }, 5000);
-//         return () => clearInterval(timer);
-//     }, [auto, validListings.length]);
+  const handleNext = () => {
+    setDirection(1);
+    setCurrentIndex(
+      (prev) => (prev + 1) % validListings.length
+    );
+  };
 
-//     const prev = () => {
-//         setCurrent(prev => (prev - 1 + validListings.length) % validListings.length);
-//         setAuto(false);
-//     };
+  const currentListing = validListings[currentIndex];
 
-//     const next = () => {
-//         setCurrent(prev => (prev + 1) % validListings.length);
-//         setAuto(false);
-//     };
+  const slideVariants = {
+    enter: (dir) => ({
+      x: dir > 0 ? 1000 : -1000,
+      opacity: 0,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir) => ({
+      zIndex: 0,
+      x: dir > 0 ? -1000 : 1000,
+      opacity: 0,
+    }),
+  };
 
-//     const goToSlide = (idx) => {
-//         setCurrent(idx);
-//         setAuto(false);
-//     };
+  return (
+    <div
+      style={{
+        width: '100%',
+        maxWidth: '500px',
+        margin: '0 auto',
+        position: 'relative',
+      }}
+    >
+      {/* Cards Container */}
+      <div
+        style={{
+          position: 'relative',
+          height: '550px',
+          perspective: '1000px',
+        }}
+      >
+        <AnimatePresence initial={false} custom={direction} mode="wait">
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: 'spring', stiffness: 300, damping: 30 },
+              opacity: { duration: 0.4 },
+            }}
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+            }}
+          >
+            <div
+              onClick={() =>
+                navigate('/view-market', { state: { listing: currentListing } })
+              }
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                cursor: 'pointer',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow =
+                  '0 12px 32px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow =
+                  '0 8px 24px rgba(0, 0, 0, 0.12)';
+              }}
+            >
+              {/* Image Section */}
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '280px',
+                  overflow: 'hidden',
+                  background: '#f3f4f6',
+                }}
+              >
+                <motion.img
+                  src={imgUrl(getFirstImage(currentListing))}
+                  alt={currentListing.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                  whileHover={{ scale: 1.08 }}
+                  transition={{ duration: 0.4 }}
+                />
 
-//     if (!validListings.length) return null;
+                {/* Hot Badge */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    background: '#ef4444',
+                    color: 'white',
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.5px',
+                    backdropFilter: 'blur(4px)',
+                  }}
+                >
+                  🔥 TRENDING
+                </div>
+              </div>
 
-//     return (
-//         <div className="mb-4">
-//             <div className="d-flex align-items-center gap-2 mb-3">
-//                 <h5 className="fw-bold mb-0" style={{ color: '#0f172a', fontSize: '1.1rem' }}>
-//                     🔥 Trending
-//                 </h5>
-//                 <span className="badge bg-danger">HOT</span>
-//             </div>
+              {/* Details Section */}
+              <div
+                style={{
+                  flex: 1,
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                }}
+              >
+                {/* Title */}
+                <h5
+                  style={{
+                    margin: '0 0 12px 0',
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    lineHeight: '1.3',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {currentListing.title}
+                </h5>
 
-//             <div
-//                 style={{
-//                     position: 'relative',
-//                     borderRadius: '12px',
-//                     overflow: 'hidden',
-//                     backgroundColor: '#fff',
-//                     boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-//                 }}
-//                 onMouseEnter={() => setAuto(false)}
-//                 onMouseLeave={() => setAuto(true)}
-//             >
-//                 <AnimatePresence mode="wait">
-//                     <motion.div
-//                         key={current}
-//                         initial={{ opacity: 0, x: 100 }}
-//                         animate={{ opacity: 1, x: 0 }}
-//                         exit={{ opacity: 0, x: -100 }}
-//                         transition={{ duration: 0.4 }}
-//                         style={{
-//                             display: 'flex',
-//                             flexDirection: window.innerWidth < 768 ? 'column' : 'row',
-//                             minHeight: window.innerWidth < 768 ? 'auto' : '300px',
-//                         }}
-//                     >
-//                         {/* Image - Responsive */}
-//                         <div style={{
-//                             backgroundColor: '#f0fdfa',
-//                             overflow: 'hidden',
-//                             display: 'flex',
-//                             alignItems: 'center',
-//                             justifyContent: 'center',
-//                             width: window.innerWidth < 768 ? '100%' : '45%',
-//                             minHeight: window.innerWidth < 768 ? '200px' : '300px',
-//                             position: 'relative',
-//                         }}>
-//                             <img
-//                                 src={imgUrl(getFirstImage(item))}
-//                                 alt={item.title}
-//                                 style={{
-//                                     width: '100%',
-//                                     height: '100%',
-//                                     objectFit: 'cover',
-//                                     transition: 'transform 0.3s',
-//                                 }}
-//                             />
-//                             <div style={{
-//                                 position: 'absolute',
-//                                 top: '8px',
-//                                 right: '8px',
-//                                 backgroundColor: '#ef4444',
-//                                 color: '#fff',
-//                                 padding: '4px 12px',
-//                                 borderRadius: '20px',
-//                                 fontSize: '0.75rem',
-//                                 fontWeight: 700,
-//                             }}>
-//                                 Trending
-//                             </div>
-//                         </div>
+                {/* Price */}
+                <div style={{ marginBottom: '12px' }}>
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: '1.4rem',
+                      fontWeight: 700,
+                      color: '#10b981',
+                    }}
+                  >
+                    {formatCurrency(currentListing.price)}
+                  </h4>
+                </div>
 
-//                         {/* Content - Responsive */}
-//                         <div style={{
-//                             padding: window.innerWidth < 768 ? '1.5rem 1rem' : '2rem',
-//                             display: 'flex',
-//                             flexDirection: 'column',
-//                             justifyContent: 'space-between',
-//                             width: window.innerWidth < 768 ? '100%' : '55%',
-//                         }}>
-//                             <div>
-//                                 <h5 style={{
-//                                     fontWeight: 700,
-//                                     color: '#0f172a',
-//                                     fontSize: window.innerWidth < 768 ? '1rem' : '1.3rem',
-//                                     marginBottom: '0.5rem',
-//                                     margin: 0,
-//                                 }}>
-//                                     {item.title}
-//                                 </h5>
+                {/* Location */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '10px',
+                  }}
+                >
+                  <MapPin
+                    size={16}
+                    style={{ color: '#10b981', flexShrink: 0 }}
+                  />
+                  <span
+                    style={{
+                      fontSize: '0.9rem',
+                      color: '#475569',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {currentListing.location}
+                  </span>
+                </div>
 
-//                                 <div style={{ marginBottom: '1rem', fontSize: '0.85rem' }}>
-//                                     <span style={{ color: '#475569' }}>📍 {item.location}</span>
-//                                 </div>
+                {/* Views */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <Eye
+                    size={16}
+                    style={{ color: '#10b981', flexShrink: 0 }}
+                  />
+                  <span
+                    style={{
+                      fontSize: '0.9rem',
+                      color: '#475569',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {currentListing.views?.count || 0} views
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-//                                 <div style={{
-//                                     display: 'flex',
-//                                     gap: '0.5rem',
-//                                     marginBottom: '1rem',
-//                                     flexWrap: 'wrap',
-//                                 }}>
-//                                     {item.animal_id?.species && (
-//                                         <span style={{
-//                                             backgroundColor: '#10b98120',
-//                                             color: '#10b981',
-//                                             padding: '2px 8px',
-//                                             borderRadius: '4px',
-//                                             fontSize: '0.75rem',
-//                                             fontWeight: 600,
-//                                         }}>
-//                                             {item.animal_id.species}
-//                                         </span>
-//                                     )}
-//                                     {item.animal_id?.gender && (
-//                                         <span style={{
-//                                             backgroundColor: '#3b82f620',
-//                                             color: '#3b82f6',
-//                                             padding: '2px 8px',
-//                                             borderRadius: '4px',
-//                                             fontSize: '0.75rem',
-//                                             fontWeight: 600,
-//                                         }}>
-//                                             {item.animal_id.gender}
-//                                         </span>
-//                                     )}
-//                                     {item.animal_id?.stage && (
-//                                         <span style={{
-//                                             backgroundColor: '#8b5cf620',
-//                                             color: '#8b5cf6',
-//                                             padding: '2px 8px',
-//                                             borderRadius: '4px',
-//                                             fontSize: '0.75rem',
-//                                             fontWeight: 600,
-//                                         }}>
-//                                             {item.animal_id.stage}
-//                                         </span>
-//                                     )}
-//                                 </div>
+      {/* Navigation Buttons */}
+      <button
+        onClick={handlePrev}
+        style={{
+          position: 'absolute',
+          left: '-60px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          width: '44px',
+          height: '44px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          color: '#0f172a',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#10b981';
+          e.currentTarget.style.color = 'white';
+          e.currentTarget.style.borderColor = '#10b981';
+          e.currentTarget.style.boxShadow =
+            '0 4px 12px rgba(16, 185, 129, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'white';
+          e.currentTarget.style.color = '#0f172a';
+          e.currentTarget.style.borderColor = '#e5e7eb';
+          e.currentTarget.style.boxShadow =
+            '0 2px 8px rgba(0, 0, 0, 0.1)';
+        }}
+        aria-label="Previous"
+      >
+        <ChevronLeft size={20} />
+      </button>
 
-//                                 <div style={{
-//                                     display: 'flex',
-//                                     gap: '1rem',
-//                                     fontSize: '0.85rem',
-//                                     color: '#0f172a',
-//                                     marginBottom: '1rem',
-//                                 }}>
-//                                     <span>
-//                                         <Eye size={14} style={{ display: 'inline', marginRight: '4px' }} />
-//                                         {loading ? '-' : (views[item._id] || 0)} views
-//                                     </span>
-//                                     <span>⏰ {timeAgo(item.createdAt)}</span>
-//                                 </div>
-//                             </div>
+      <button
+        onClick={handleNext}
+        style={{
+          position: 'absolute',
+          right: '-60px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          width: '44px',
+          height: '44px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          color: '#0f172a',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#10b981';
+          e.currentTarget.style.color = 'white';
+          e.currentTarget.style.borderColor = '#10b981';
+          e.currentTarget.style.boxShadow =
+            '0 4px 12px rgba(16, 185, 129, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'white';
+          e.currentTarget.style.color = '#0f172a';
+          e.currentTarget.style.borderColor = '#e5e7eb';
+          e.currentTarget.style.boxShadow =
+            '0 2px 8px rgba(0, 0, 0, 0.1)';
+        }}
+        aria-label="Next"
+      >
+        <ChevronRight size={20} />
+      </button>
 
-//                             <div>
-//                                 <h4 style={{
-//                                     fontWeight: 900,
-//                                     color: '#10b981',
-//                                     fontSize: window.innerWidth < 768 ? '1.3rem' : '1.8rem',
-//                                     marginBottom: '1rem',
-//                                     margin: 0,
-//                                 }}>
-//                                     {formatCurrency(item.price)}
-//                                 </h4>
-//                                 <button
-//                                     onClick={() => navigate('/view-market', { state: { listing: item } })}
-//                                     style={{
-//                                         width: '100%',
-//                                         backgroundColor: '#10b981',
-//                                         color: '#fff',
-//                                         border: 'none',
-//                                         padding: window.innerWidth < 768 ? '0.75rem' : '0.85rem',
-//                                         borderRadius: '8px',
-//                                         fontWeight: 700,
-//                                         fontSize: '0.95rem',
-//                                         cursor: 'pointer',
-//                                     }}
-//                                 >
-//                                     View Details
-//                                 </button>
-//                             </div>
-//                         </div>
-//                     </motion.div>
-//                 </AnimatePresence>
-
-//                 {/* Nav Buttons */}
-//                 <button
-//                     onClick={prev}
-//                     style={{
-//                         position: 'absolute',
-//                         left: '8px',
-//                         top: '50%',
-//                         transform: 'translateY(-50%)',
-//                         backgroundColor: 'rgba(255,255,255,0.9)',
-//                         border: 'none',
-//                         width: '36px',
-//                         height: '36px',
-//                         borderRadius: '50%',
-//                         cursor: 'pointer',
-//                         zIndex: 10,
-//                         display: 'flex',
-//                         alignItems: 'center',
-//                         justifyContent: 'center',
-//                     }}
-//                 >
-//                     <ChevronLeft size={20} color="#10b981" />
-//                 </button>
-
-//                 <button
-//                     onClick={next}
-//                     style={{
-//                         position: 'absolute',
-//                         right: '8px',
-//                         top: '50%',
-//                         transform: 'translateY(-50%)',
-//                         backgroundColor: 'rgba(255,255,255,0.9)',
-//                         border: 'none',
-//                         width: '36px',
-//                         height: '36px',
-//                         borderRadius: '50%',
-//                         cursor: 'pointer',
-//                         zIndex: 10,
-//                         display: 'flex',
-//                         alignItems: 'center',
-//                         justifyContent: 'center',
-//                     }}
-//                 >
-//                     <ChevronRight size={20} color="#10b981" />
-//                 </button>
-//             </div>
-
-//             {/* Dots */}
-//             <div style={{
-//                 display: 'flex',
-//                 justifyContent: 'center',
-//                 gap: '8px',
-//                 marginTop: '1rem',
-//                 flexWrap: 'wrap',
-//             }}>
-//                 {validListings.map((_, idx) => (
-//                     <button
-//                         key={idx}
-//                         onClick={() => goToSlide(idx)}
-//                         style={{
-//                             width: current === idx ? '20px' : '8px',
-//                             height: '8px',
-//                             borderRadius: '4px',
-//                             backgroundColor: current === idx ? '#10b981' : '#d1d5db',
-//                             border: 'none',
-//                             cursor: 'pointer',
-//                             transition: 'all 0.3s',
-//                         }}
-//                     />
-//                 ))}
-//             </div>
-
-//             {/* Counter */}
-//             <div style={{
-//                 textAlign: 'center',
-//                 marginTop: '0.5rem',
-//                 color: '#475569',
-//                 fontSize: '0.85rem',
-//             }}>
-//                 {current + 1} / {validListings.length}
-//             </div>
-//         </div>
-//     );
-// }
+      {/* Indicators */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '8px',
+          marginTop: '24px',
+          flexWrap: 'wrap',
+        }}
+      >
+        {validListings.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => {
+              setDirection(idx > currentIndex ? 1 : -1);
+              setCurrentIndex(idx);
+            }}
+            style={{
+              width: idx === currentIndex ? '32px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              background: idx === currentIndex ? '#10b981' : '#d1d5db',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+            onMouseEnter={(e) => {
+              if (idx !== currentIndex) {
+                e.currentTarget.style.background = '#9ca3af';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (idx !== currentIndex) {
+                e.currentTarget.style.background = '#d1d5db';
+              }
+            }}
+            aria-label={`Go to slide ${idx + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

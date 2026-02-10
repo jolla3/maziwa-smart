@@ -20,16 +20,21 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../../PrivateComponents/AuthContext"; // For user-specific storage
 import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency, timeAgo } from "../../utils/currency.utils";
+import useListingViews from "../../hooks/useListingViews"; // ✅ Import the new views hook
 
 export default function ModernProductCard({ listing }) {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext); // For user-specific keys
+
+  // ✅ Use the new useListingViews hook for instant, cached views
+  const { views, loading: viewsLoading } = useListingViews(listing._id);
+
   // Ensure a per-device guest identifier
   const ensureGuestId = () => {
     try {
       let id = localStorage.getItem('guestId');
       if (!id) {
-        id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+        id = (typeof crypto !== '' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
         localStorage.setItem('guestId', id);
       }
       return id;
@@ -373,11 +378,11 @@ export default function ModernProductCard({ listing }) {
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Eye size={14} color="#10b981" style={{ marginRight: 4 }} />
-            <Typography variant="caption" sx={{ color: "#0f172a", fontWeight: 500 }}>
-              {listing.views?.count || 0} views  {/* ✅ Fixed: Use views.count from listing */}
-            </Typography>
-          </Box>
+    <Eye size={14} color="#10b981" style={{ marginRight: 4 }} />
+    <Typography variant="caption" sx={{ color: "#0f172a", fontWeight: 500 }}>
+      {listing.views?.count || 0} views {/* ✅ Use views directly from listing prop */}
+    </Typography>
+  </Box>
         </Box>
       </CardContent>
     </Card>

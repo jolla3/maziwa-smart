@@ -14,6 +14,9 @@ const getImageUrl = (url) => {
   return url.startsWith("http") ? url : `${API_BASE.replace("/api", "")}/${url}`;
 };
 
+const CACHE_KEY_PREFIX = "animals_cache_";
+const CACHE_EXPIRY_HOURS = 1; // Cache for 1 hour
+
 const CreateListing = () => {
   const { user, token } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -57,20 +60,78 @@ const CreateListing = () => {
     pig: ["piglet", "gilt", "sow", "boar"],
   };
 
+  // ✅ Helper to get cache key
+  const getCacheKey = () => `${CACHE_KEY_PREFIX}${user?.id || "guest"}`;
+
+  // ✅ Helper to check if cache is valid
+  const isCacheValid = (cache) => {
+    if (!cache || !cache.timestamp) return false;
+    const now = Date.now();
+    const expiry = CACHE_EXPIRY_HOURS * 60 * 60 * 1000; // Convert hours to ms
+    return now - cache.timestamp < expiry;
+  };
+
+  // ✅ Helper to get cached animals
+  const getCachedAnimals = () => {
+    try {
+      const cache = JSON.parse(localStorage.getItem(getCacheKey()));
+      if (isCacheValid(cache)) {
+        return cache.animals;
+      }
+    } catch (err) {
+      console.warn("Failed to load animals from cache:", err);
+    }
+    return null;
+  };
+
+  // ✅ Helper to set cached animals
+  const setCachedAnimals = (animals) => {
+    try {
+      const cache = {
+        animals,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(getCacheKey(), JSON.stringify(cache));
+    } catch (err) {
+      console.warn("Failed to cache animals:", err);
+    }
+  };
+
+  // ✅ Helper to clear cache (call after creating a listing)
+  const clearCache = () => {
+    try {
+      localStorage.removeItem(getCacheKey());
+    } catch (err) {
+      console.warn("Failed to clear cache:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchAnimals = async () => {
+    const loadAnimals = async () => {
+      if (user?.role !== "farmer" || !token) return;
+
+      // ✅ Check cache first
+      const cached = getCachedAnimals();
+      if (cached) {
+        setAnimals(cached);
+        return;
+      }
+
+      // ✅ Fetch from API if no valid cache
       try {
         const res = await axios.get(`${API_BASE}/animals`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.success) {
-          setAnimals(res.data.animals || []);
+          const fetchedAnimals = res.data.animals || [];
+          setAnimals(fetchedAnimals);
+          setCachedAnimals(fetchedAnimals); // ✅ Cache the result
         }
       } catch (err) {
         showToast("Failed to load animals", "error");
       }
     };
-    if (user?.role === "farmer" && token) fetchAnimals();
+    loadAnimals();
   }, [user, token]);
 
   const calculateAge = (birthDate) => {
@@ -86,7 +147,6 @@ const CreateListing = () => {
     return `${years} year${years !== 1 ? "s" : ""} ${months} month${months !== 1 ? "s" : ""}`;
   };
 
-
   const handleChange = async (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -98,27 +158,24 @@ const CreateListing = () => {
         });
         if (res.data.success) {
           const animal = res.data.animal;
-          // ✅ Populate breed and sire from breed_id, insemination from pregnancy
-          const breedData = animal.breed_id || {};
-          const inseminationData = animal.pregnancy?.insemination_id || {};
           setForm((prev) => ({
             ...prev,
             animal_details: {
               age: calculateAge(animal.birth_date) || "",
               birth_date: animal.birth_date || "",
-              breed_name: breedData.breed_name || animal.breed || "",
+              breed_name: animal.breed || "",
               gender: animal.gender || "",
               stage: animal.stage || "",
               status: animal.status || "active",
-              bull_code: breedData.bull_code || inseminationData.bull_code || animal.bull_code || "",
-              bull_name: breedData.bull_name || inseminationData.bull_name || animal.bull_name || "",
-              bull_breed: breedData.bull_breed || inseminationData.bull_breed || "",
+              bull_code: animal.sire?.bull_code || animal.pregnancy?.insemination?.bull_code || "",
+              bull_name: animal.sire?.bull_name || animal.pregnancy?.insemination?.bull_name || "",
+              bull_breed: animal.sire?.bull_breed || animal.pregnancy?.insemination?.bull_breed || "",
               lifetime_milk: animal.lifetime_milk || "",
               daily_average: animal.daily_average || "",
-              total_offspring: animal.total_offspring || "",
+              total_offspring: animal.total_offspring || 0,
               is_pregnant: animal.pregnancy?.is_pregnant || false,
               expected_due_date: animal.pregnancy?.expected_due_date || "",
-              insemination_id: animal.pregnancy?.insemination_id || "",
+              insemination_id: animal.pregnancy?.insemination?._id || "",
             },
           }));
         }
@@ -128,7 +185,6 @@ const CreateListing = () => {
     }
   };
 
-  // ... (rest of the file remains the same, but ensure AnimalDetailsEditable shows sire/insemination fields for farmers)
   const handleAnimalDetailsChange = (updatedDetails) => {
     setForm((prev) => ({ ...prev, animal_details: updatedDetails }));
   };
@@ -211,6 +267,7 @@ const CreateListing = () => {
 
       if (res.data.success) {
         showToast("✅ Listing created successfully!", "success");
+        clearCache(); // ✅ Clear cache after creation to refresh on next load
         setTimeout(() => navigate("/fmr.drb/my-listings"), 2000);
       } else {
         showToast(res.data.message || "Failed to create listing", "error");
@@ -224,7 +281,15 @@ const CreateListing = () => {
   };
 
   const filteredAnimals = form.animal_type
-    ? animals.filter((a) => a?.species?.toLowerCase() === form.animal_type?.toLowerCase())
+    ? animals.filter((a) => {
+      if (form.animal_type === "cow") {
+        return a?.species?.toLowerCase() === "cow" && a?.gender?.toLowerCase() === "female";
+      }
+      if (form.animal_type === "bull") {
+        return a?.species?.toLowerCase() === "bull" || (a?.species?.toLowerCase() === "cow" && a?.gender?.toLowerCase() === "male" && ["bull_calf", "young_bull", "mature_bull"].includes(a.stage));
+      }
+      return a?.species?.toLowerCase() === form.animal_type?.toLowerCase();
+    })
     : [];
 
   return (
@@ -299,7 +364,7 @@ const CreateListing = () => {
                   </option>
                   {filteredAnimals.map((a) => {
                     const animalId = a._id || a.id;
-                    const displayName = `${a.cow_name || a.name || "Unnamed"} (${a.species}) - ${a.breed?.name || a.breed || "Unknown"}`;
+                    const displayName = `${a.cow_name || a.name || "Unnamed"} (${a.species}) - ${a.breed || "Unknown"}`;
                     return (
                       <option key={animalId} value={animalId}>
                         {displayName}

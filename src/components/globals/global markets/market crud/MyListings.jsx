@@ -1,13 +1,13 @@
-// src/pages/listings/MyListings.jsx
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { AuthContext } from "../../../PrivateComponents/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Edit, Trash2, Plus, X } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useApiCache } from "../../../../hooks/useApiCache"; // ✅ Import the reusable hook
 
-const API_BASE =     process.env.REACT_APP_API_BASE
+const API_BASE = process.env.REACT_APP_API_BASE;
 const CARD_BG = "linear-gradient(135deg,#f0fbff,#e6f7ff)";
 
 const Toast = ({ id, message, type = "info", onClose }) => {
@@ -83,66 +83,27 @@ const ConfirmModal = ({ open, title, message, onCancel, onConfirm, busy }) => (
 );
 
 const MyListings = () => {
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
   const [confirm, setConfirm] = useState({ open: false, id: null });
   const [deletingId, setDeletingId] = useState(null);
-  const [error, setError] = useState("");
 
-  // Setup axios defaults
-  useEffect(() => {
-    if (token) {
-      axios.defaults.baseURL = API_BASE;
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    }
-  }, [token]);
+  // ✅ Use the reusable useApiCache hook for listings
+  const { data, loading, error, clearCache } = useApiCache(
+    `cache_${user?.id}_listings`, // Unique key per user
+    async () => {
+      const res = await axios.get(`${API_BASE}/listing/mylistings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.data.success ? res.data.listings || [] : [];
+    },
+    [user, token] // Refetch if user or token changes
+  );
 
-  // Fetch user's listings with in-memory caching
-  useEffect(() => {
-    let mounted = true;
-    const CACHE_KEY = "myListings_cache";
-    const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
-
-    const fetchListings = async () => {
-      setLoading(true);
-
-      // Try to load from memory cache first
-      const cached = window[CACHE_KEY];
-      if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_MS) {
-        setListings(cached.data);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await axios.get("/listing/mylistings");
-        if (!mounted) return;
-        if (res?.data?.success) {
-          const fetchedListings = res.data.listings || [];
-          setListings(fetchedListings);
-          // Cache in memory
-          window[CACHE_KEY] = {
-            data: fetchedListings,
-            timestamp: Date.now()
-          };
-        } else {
-          setError("Failed to load listings.");
-        }
-      } catch (err) {
-        console.error("Error loading listings:", err);
-        setError("Failed to load your listings.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    if (token) fetchListings();
-    return () => (mounted = false);
-  }, [token]);
+  // ✅ Safety check: Ensure listings is always an array
+  const listings = data || [];
 
   // Toast helpers
   const pushToast = (message, type = "info") => {
@@ -163,13 +124,12 @@ const MyListings = () => {
     if (!id) return;
     setDeletingId(id);
     try {
-      setListings((prev) => prev.map(l => l._id === id ? { ...l, deleting: true } : l));
-
-      const res = await axios.delete(`/listing/${id}`);
+      const res = await axios.delete(`${API_BASE}/listing/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res?.data?.success) {
-        setListings((prev) => prev.filter((l) => l._id !== id));
-        // Clear cache when deleting
-        delete window.myListings_cache;
+        // ✅ Clear cache after delete to refresh on next load
+        clearCache();
         pushToast("Listing deleted", "success");
       } else {
         throw new Error(res?.data?.message || "Delete failed");
@@ -178,7 +138,6 @@ const MyListings = () => {
       console.error("Delete error:", err);
       const errorMsg = err.response?.data?.message || err.message || "Failed to delete listing";
       pushToast(errorMsg, "error");
-      setListings((prev) => prev.map(l => l._id === id ? { ...l, deleting: false } : l));
     } finally {
       setDeletingId(null);
       setConfirm({ open: false, id: null });

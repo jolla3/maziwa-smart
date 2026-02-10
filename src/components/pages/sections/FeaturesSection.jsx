@@ -1,7 +1,6 @@
-// /src/pages/LandingPage/sections/FeaturesSection.jsx
 import React from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Box, Container, Grid, Typography, Card, CardContent, Chip } from '@mui/material';
+import { Box, Container, Typography, Card, CardContent, Chip, useMediaQuery } from '@mui/material';
 import Activity from 'lucide-react/dist/esm/icons/activity';
 import ShoppingCart from 'lucide-react/dist/esm/icons/shopping-cart';
 import MessageCircle from 'lucide-react/dist/esm/icons/message-circle';
@@ -33,24 +32,25 @@ const WaveSeparator = ({ flip = false, color = '#fafafa' }) => (
 const FeaturesSection = () => {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
   const features = [
     {
-      icon: <Activity size={48} />,
+      icon: <Activity size={isMobile ? 32 : 48} />,
       title: "Farm Data & Analytics",
       description: "Real-time monitoring of milk production, animal health metrics, breeding cycles, and farm performance. Get AI-powered insights to optimize yields and reduce costs.",
       color: '#10b981',
       highlights: ["Milk Yield Tracking", "Health Monitoring", "Breeding Records", "Performance Analytics"]
     },
     {
-      icon: <ShoppingCart size={48} />,
+      icon: <ShoppingCart size={isMobile ? 32 : 48} />,
       title: "Marketplace Access",
       description: "Buy and sell livestock, dairy products, and farm supplies on Kenya's most trusted agricultural marketplace. Connect directly with verified buyers and sellers.",
       color: '#3b82f6',
       highlights: ["Verified Listings", "Secure Transactions", "Price Discovery", "Direct Trading"]
     },
     {
-      icon: <MessageCircle size={48} />,
+      icon: <MessageCircle size={isMobile ? 32 : 48} />,
       title: "Smart Farm Management",
       description: "Manage your entire farm from one dashboard. Track inventory, schedule tasks, coordinate with porters, and get expert advice from our AI assistant and vet network.",
       color: '#8b5cf6',
@@ -77,14 +77,36 @@ const FeaturesSection = () => {
           </motion.div>
         </Box>
 
-        <Grid container spacing={4}>
-          {features.map((feature, index) => (
-            <Grid item xs={12} md={4} key={index}>
+        {/* Horizontal Carousel with Slow Auto-Scroll - No Duplication */}
+        <Box sx={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+          <motion.div
+            initial={{ x: 0 }}
+            animate={{ x: '-100%' }}  // Scrolls to end, then jumps back
+            transition={{
+              duration: 50,  // Very slow for readability
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+            whileHover={{ animationPlayState: 'paused' }}  // Pauses on hover
+            drag="x"  // Manual drag
+            dragConstraints={{ left: -100, right: 100 }}
+            style={{
+              display: 'flex',
+              gap: 2,
+              width: '100%',  // No duplication, just the 3 features
+            }}
+          >
+            {features.map((feature, index) => (
               <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                whileHover={{ y: -8 }}
+                key={`${feature.title}-${index}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                style={{
+                  width: 300,  // Fixed box width
+                  flexShrink: 0,
+                  height: isMobile ? 400 : 450,
+                }}
               >
                 <Card
                   elevation={0}
@@ -99,7 +121,7 @@ const FeaturesSection = () => {
                     },
                   }}
                 >
-                  <CardContent sx={{ p: 3.5 }}>
+                  <CardContent sx={{ p: 3.5, textAlign: 'center' }}>
                     <Box
                       sx={{
                         display: 'inline-flex',
@@ -112,13 +134,13 @@ const FeaturesSection = () => {
                     >
                       {feature.icon}
                     </Box>
-                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+                    <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
                       {feature.title}
                     </Typography>
                     <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7, mb: 2.5 }}>
                       {feature.description}
                     </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
                       {feature.highlights.map((highlight, i) => (
                         <Chip
                           key={i}
@@ -136,9 +158,9 @@ const FeaturesSection = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            </Grid>
-          ))}
-        </Grid>
+            ))}
+          </motion.div>
+        </Box>
       </Container>
       <WaveSeparator color="#ffffff" />
     </Box>

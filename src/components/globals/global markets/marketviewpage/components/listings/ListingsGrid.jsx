@@ -1,14 +1,13 @@
-// marketviewpage/components/listings/ListingsGrid.jsx
 import React from "react";
 import { motion } from "framer-motion";
 import { AlertCircle } from "lucide-react";
 import ListingCard from "./ListingCard";
 
 export default function ListingsGrid({ listings, onClearFilters }) {
-  // Remove duplicates
+  // Remove duplicates and filter out invalid listings
   const uniqueListings = Array.from(
     new Map(listings.map(item => [item._id, item])).values()
-  );
+  ).filter(listing => listing && listing._id); // ✅ Filter out undefined/null listings
 
   if (uniqueListings.length === 0) {
     return (

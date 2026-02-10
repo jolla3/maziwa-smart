@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronDown, Info, Heart, Droplet } from "lucide-react";
 
 const AnimalDetailsEditable = ({ animalDetails, onChange, animalType, stageOptions }) => {
-  const [expandedSections, setExpandedSections] = React.useState({
+  const [expandedSections, setExpandedSections] = useState({
     basic: true,
     breeding: true,
     production: true,
@@ -12,14 +12,10 @@ const AnimalDetailsEditable = ({ animalDetails, onChange, animalType, stageOptio
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  if (!animalDetails) return null;
+  if (!animalDetails) return null;  
 
   const handleInputChange = (field, value) => {
     onChange({ ...animalDetails, [field]: value });
-  };
-
-  const handlePregnancyChange = (subfield, value) => {
-    onChange({ ...animalDetails, pregnancy: { ...animalDetails.pregnancy || {}, [subfield]: value } });
   };
 
   const SectionHeader = ({ title, icon: Icon, isExpanded, onToggle }) => (

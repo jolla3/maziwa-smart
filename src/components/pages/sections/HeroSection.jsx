@@ -1,4 +1,3 @@
-// /src/pages/LandingPage/sections/HeroSection.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Box, Typography, Button, Container, Grid, Chip, useMediaQuery } from '@mui/material';
@@ -17,11 +16,12 @@ const HeroSection = ({ navigate }) => {
     <Box
       sx={{
         background: 'linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 50%, #f0fdf4 100%)',
-        minHeight: '92vh',
+        minHeight: '80vh',
         display: 'flex',
         alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
+        pt: isMobile ? 1 : 2,
       }}
     >
       {/* Animated Background Pattern */}
@@ -137,9 +137,9 @@ const HeroSection = ({ navigate }) => {
         </>
       )}
 
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: 8 }}>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: isMobile ? 2 : 4 }}>
         <Grid container spacing={6} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>  {/* Updated to Grid v2: removed 'item', used 'size' */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -249,8 +249,6 @@ const HeroSection = ({ navigate }) => {
                 </motion.div>
               </Box>
 
-             
-
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                 {['Free to join', 'Verified marketplace', '24/7 AI support'].map((text, i) => (
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -265,7 +263,7 @@ const HeroSection = ({ navigate }) => {
           </Grid>
 
           {!isMobile && (
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>  {/* Updated to Grid v2 */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -303,13 +301,13 @@ const HeroSection = ({ navigate }) => {
                     </Typography>
                   </Box>
                   <Grid container spacing={2} sx={{ width: '100%', maxWidth: 400 }}>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>  {/* Updated to Grid v2 */}
                       <Box sx={{ bgcolor: 'rgba(59, 130, 246, 0.1)', p: 2, borderRadius: 2, textAlign: 'center' }}>
                         <Typography variant="h5" sx={{ fontWeight: 700, color: 'secondary.main' }}>24</Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>Active Animals</Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>  {/* Updated to Grid v2 */}
                       <Box sx={{ bgcolor: 'rgba(139, 92, 246, 0.1)', p: 2, borderRadius: 2, textAlign: 'center' }}>
                         <Typography variant="h5" sx={{ fontWeight: 700, color: '#8b5cf6' }}>98%</Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>Herd Health</Typography>

@@ -1,5 +1,4 @@
-// src/pages/EditListing.jsx
-import React, { useEffect, useState, useRef, useCallback, useContext } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -7,16 +6,17 @@ import {
   ArrowLeft,
   Save,
   Trash2,
-  Image,
-  X,
   CheckCircle,
   AlertCircle,
   Loader,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../../PrivateComponents/AuthContext";
+import EditListingForm from "./EditListingForm"; // ✅ Import separated form
+import EditListingPhotos from "./EditListingPhotos"; // ✅ Import separated photos
 
-const API_BASE = process.env.REACT_APP_API_BASE
+const API_BASE = process.env.REACT_APP_API_BASE;
+
 export default function EditListing() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,14 +44,32 @@ export default function EditListing() {
     age: "",
     breed_name: "",
     gender: "",
+    bull_code: "",
+    bull_name: "",
+    bull_breed: "",
+    status: "active",
+    stage: "",
+    lifetime_milk: "",
+    daily_average: "",
+    total_offspring: "",
+    is_pregnant: false,
+    expected_due_date: "",
+    insemination_id: "",
   });
 
   const [existingPhotos, setExistingPhotos] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
 
-  const fileRef = useRef();
   const MAX_PHOTOS = 10;
+
+  const stageOptions = {
+    cow: ["calf", "heifer", "cow"],
+    bull: ["bull_calf", "young_bull", "mature_bull"],
+    goat: ["kid", "doeling", "buckling", "nanny", "buck"],
+    sheep: ["lamb", "ewe", "ram"],
+    pig: ["piglet", "gilt", "sow", "boar"],
+  };
 
   useEffect(() => {
     if (!listingData && location.state?.listingId) {
@@ -60,7 +78,7 @@ export default function EditListing() {
       prefill(listingData);
     } else {
       showToast("error", "No listing data provided");
-      setTimeout(() => navigate("/slr.drb/my-listings"), 2000)
+      setTimeout(() => navigate("/slr.drb/my-listings"), 2000);
     }
   }, []);
 
@@ -75,11 +93,23 @@ export default function EditListing() {
       location: data.location || "",
     });
     setExistingPhotos(data.photos || []);
-    if (data.animal_info) {
+    // ✅ Prefill animal_details from listing (already populated from animal for farmers)
+    if (data.animal_details) {
       setAnimalDetails({
-        age: calculateAge(data.animal_info.birth_date),
-        breed_name: data.animal_info.breed?.name || "",
-        gender: data.animal_info.gender || "",
+        age: data.animal_details.age || "",
+        breed_name: data.animal_details.breed_name || "",
+        gender: data.animal_details.gender || "",
+        bull_code: data.animal_details.bull_code || "",
+        bull_name: data.animal_details.bull_name || "",
+        bull_breed: data.animal_details.bull_breed || "",
+        status: data.animal_details.status || "active",
+        stage: data.animal_details.stage || "",
+        lifetime_milk: data.animal_details.lifetime_milk || "",
+        daily_average: data.animal_details.daily_average || "",
+        total_offspring: data.animal_details.total_offspring || "",
+        is_pregnant: data.animal_details.pregnancy?.is_pregnant || false,
+        expected_due_date: data.animal_details.pregnancy?.expected_due_date || "",
+        insemination_id: data.animal_details.pregnancy?.insemination_id || "",
       });
     }
     setLoading(false);
@@ -105,19 +135,11 @@ export default function EditListing() {
     }
   };
 
-  const calculateAge = (birthDate) => {
-    if (!birthDate) return "";
-    const birth = new Date(birthDate);
-    const now = new Date();
-    const years = now.getFullYear() - birth.getFullYear();
-    const months = now.getMonth() - birth.getMonth();
-    const totalMonths = years * 12 + months;
-    const displayYears = Math.floor(totalMonths / 12);
-    const displayMonths = totalMonths % 12;
-    return `${displayYears}y ${displayMonths}m`;
-  };
-
   const handleChange = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+
+  const handleAnimalDetailsChange = (updatedDetails) => {
+    setAnimalDetails(updatedDetails);
+  };
 
   const handleNewFiles = useCallback((files) => {
     const currentTotal = existingPhotos.length + newFiles.length;
@@ -194,8 +216,6 @@ export default function EditListing() {
     }
   };
 
-  // duplicate handleSave removed — consolidated save logic is kept later in the file
-
   const validateForm = () => {
     if (!form.title.trim()) {
       showToast("error", "Title is required");
@@ -220,7 +240,6 @@ export default function EditListing() {
     return true;
   };
 
-  // src/pages/EditListing.jsx - handleSave function only
   const handleSave = async () => {
     if (!validateForm()) return;
 
@@ -242,10 +261,8 @@ export default function EditListing() {
       formData.append(`photos[${index}]`, photo);
     });
 
-    // Add animal details if seller
-    if (user?.role === "seller" && animalDetails.age) {
-      formData.append("animal_details", JSON.stringify(animalDetails));
-    }
+    // ✅ Add animal_details for both farmers and sellers
+    formData.append("animal_details", JSON.stringify(animalDetails));
 
     // Add new image files
     newFiles.forEach((file) => {
@@ -274,7 +291,7 @@ export default function EditListing() {
         setPreviews([]);
 
         setTimeout(() => {
-          navigate("/slr.drb/my-listings") 
+          navigate("/slr.drb/my-listings");
         }, 1500);
       } else {
         showToast("error", res.data.message || "Failed to update listing");
@@ -287,6 +304,7 @@ export default function EditListing() {
       setSaving(false);
     }
   };
+
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
     setTimeout(() => setToast({ show: false, type: "", message: "" }), 3000);
@@ -304,12 +322,6 @@ export default function EditListing() {
       return `${API_BASE.replace("/api", "")}${photo}`;
     }
     return photo;
-  };
-
-  const handleNavigateBack = () => {
-   
-      navigate("/slr.drb/my-listings");
-    
   };
 
   return (
@@ -331,7 +343,7 @@ export default function EditListing() {
           <div className="d-flex align-items-center mb-4">
             <button
               className="btn btn-outline-secondary me-3"
-              onClick={handleNavigateBack}
+              onClick={() => navigate("/slr.drb/my-listings")}
             >
               <ArrowLeft size={18} /> Back
             </button>
@@ -341,250 +353,33 @@ export default function EditListing() {
           <div className="row g-4">
             {/* Left: Form */}
             <div className="col-lg-7">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">
-                      Title <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      value={form.title}
-                      onChange={(e) => handleChange("title", e.target.value)}
-                      className="form-control"
-                      placeholder="Enter listing title"
-                    />
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label fw-semibold">
-                        Price <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={form.price}
-                        onChange={(e) => handleChange("price", e.target.value)}
-                        className="form-control"
-                        placeholder="0"
-                        min="0"
-                      />
-                      <small className="text-muted">{currency(form.price)}</small>
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label fw-semibold">
-                        Animal Type <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        value={form.animal_type}
-                        onChange={(e) => handleChange("animal_type", e.target.value)}
-                        className="form-control"
-                        placeholder="e.g., Cow, Goat, Chicken"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">
-                      Location <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      value={form.location}
-                      onChange={(e) => handleChange("location", e.target.value)}
-                      className="form-control"
-                      placeholder="City, County"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">Description</label>
-                    <textarea
-                      value={form.description}
-                      onChange={(e) => handleChange("description", e.target.value)}
-                      rows={4}
-                      className="form-control"
-                      placeholder="Describe your listing..."
-                    />
-                  </div>
-
-                  {user?.role === "seller" && (
-                    <div className="border rounded p-3 bg-light">
-                      <h6 className="fw-semibold mb-3">Animal Details (Optional)</h6>
-                      <div className="row g-3">
-                        <div className="col-md-4">
-                          <label className="form-label">Age</label>
-                          <input
-                            value={animalDetails.age}
-                            onChange={(e) =>
-                              setAnimalDetails((d) => ({ ...d, age: e.target.value }))
-                            }
-                            className="form-control"
-                            placeholder="e.g., 2y 6m"
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label">Breed</label>
-                          <input
-                            value={animalDetails.breed_name}
-                            onChange={(e) =>
-                              setAnimalDetails((d) => ({ ...d, breed_name: e.target.value }))
-                            }
-                            className="form-control"
-                            placeholder="Enter breed"
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label">Gender</label>
-                          <select
-                            value={animalDetails.gender}
-                            onChange={(e) =>
-                              setAnimalDetails((d) => ({ ...d, gender: e.target.value }))
-                            }
-                            className="form-select"
-                          >
-                            <option value="">Select</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <EditListingForm
+                form={form}
+                handleChange={handleChange}
+                animalDetails={animalDetails}
+                handleAnimalDetailsChange={handleAnimalDetailsChange}
+                stageOptions={stageOptions}
+                user={user}
+              />
             </div>
 
             {/* Right: Photos */}
             <div className="col-lg-5">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="fw-semibold mb-0">
-                      Photos <span className="text-danger">*</span>
-                    </h6>
-                    <div>
-                      <span className="badge bg-secondary me-2">
-                        {totalPhotos}/{MAX_PHOTOS}
-                      </span>
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => fileRef.current?.click()}
-                        disabled={totalPhotos >= MAX_PHOTOS}
-                      >
-                        <Image size={16} className="me-1" /> Add Photos
-                      </button>
-                    </div>
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      hidden
-                      onChange={(e) => handleNewFiles(e.target.files)}
-                    />
-                  </div>
-
-                  {/* Existing Photos */}
-                  {existingPhotos.length > 0 && (
-                    <div className="mb-3">
-                      <small className="text-muted d-block mb-2">Existing Photos</small>
-                      <div className="row g-2">
-                        {existingPhotos.map((p, i) => (
-                          <div key={i} className="col-6 col-md-4">
-                            <motion.div
-                              whileHover={{ scale: 1.05 }}
-                              className="position-relative"
-                              style={{ height: 120 }}
-                            >
-                              <img
-                                src={getImageUrl(p)}
-                                alt={`${i + 1}`}
-                                className="rounded w-100 h-100"
-                                style={{ objectFit: "cover" }}
-                                onError={(e) => {
-                                  e.target.style.backgroundColor = "#e9ecef";
-                                  e.target.alt = "Failed to load";
-                                }}
-                              />
-                              <button
-                                className="btn btn-sm btn-danger position-absolute"
-                                style={{
-                                  top: 4,
-                                  right: 4,
-                                  padding: "4px 8px",
-                                  borderRadius: "4px"
-                                }}
-                                onClick={() => deleteExistingPhoto(i)}
-                                title="Delete photo"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </motion.div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* New Previews */}
-                  {previews.length > 0 && (
-                    <div>
-                      <small className="text-muted d-block mb-2">New Photos to Upload</small>
-                      <div className="row g-2">
-                        {previews.map((p, i) => (
-                          <div key={i} className="col-6 col-md-4">
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              whileHover={{ scale: 1.05 }}
-                              className="position-relative"
-                              style={{ height: 120 }}
-                            >
-                              <img
-                                src={p}
-                                alt={`Listing preview ${i + 1}`}
-                                className="rounded w-100 h-100"
-                                style={{ objectFit: "cover" }}
-                              />
-                              <button
-                                className="btn btn-sm btn-secondary position-absolute"
-                                style={{
-                                  top: 4,
-                                  right: 4,
-                                  padding: "4px 8px",
-                                  borderRadius: "4px"
-                                }}
-                                onClick={() => removePreview(i)}
-                                title="Remove preview"
-                              >
-                                <X size={14} />
-                              </button>
-                              <span
-                                className="badge bg-info position-absolute"
-                                style={{ bottom: 4, left: 4, fontSize: "0.65rem" }}
-                              >
-                                New
-                              </span>
-                            </motion.div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {totalPhotos === 0 && (
-                    <div className="text-center py-5 text-muted">
-                      <Image size={48} className="mb-2 opacity-50" />
-                      <p className="mb-0">No photos added yet</p>
-                      <small>Click "Add Photos" to upload images</small>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <EditListingPhotos
+                existingPhotos={existingPhotos}
+                previews={previews}
+                newFiles={newFiles}
+                MAX_PHOTOS={MAX_PHOTOS}
+                handleNewFiles={handleNewFiles}
+                removePreview={removePreview}
+                deleteExistingPhoto={deleteExistingPhoto}
+                getImageUrl={getImageUrl}  // ✅ Pass getImageUrl as prop
+              />
 
               <div className="d-flex gap-2 mt-3">
                 <button
                   className="btn btn-outline-secondary w-50"
-                  onClick={handleNavigateBack}
+                  onClick={() => navigate("/slr.drb/my-listings")}
                   disabled={saving}
                 >
                   <ArrowLeft size={16} className="me-1" /> Cancel

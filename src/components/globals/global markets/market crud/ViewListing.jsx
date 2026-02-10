@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import {
@@ -16,9 +16,9 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../../PrivateComponents/AuthContext";
 import { FaCow } from "react-icons/fa6";
+import { useApiCache } from "../../../../hooks/useApiCache"; // ✅ Import the reusable hook
 
-const API_BASE =
-  process.env.REACT_APP_API_BASE 
+const API_BASE = process.env.REACT_APP_API_BASE;
 
 // 🧮 Helper: calculate age from birth_date
 const calculateAge = (birthDate) => {
@@ -37,36 +37,24 @@ export default function ViewListing() {
   const navigate = useNavigate();
   const location = useLocation();
   const { listing: passedListing } = location.state || {};
+  const listingId = passedListing?._id;
 
-  const [listing, setListing] = useState(
-    passedListing ||
-    JSON.parse(localStorage.getItem("currentListing") || "null")
-  );
-  const [loading, setLoading] = useState(!listing);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchListing = async () => {
-      try {
-        if (!passedListing?._id) return;
-        const res = await axios.get(`${API_BASE}/listing/${passedListing._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data.success) {
-          setListing(res.data.listing);
-          localStorage.setItem("currentListing", JSON.stringify(res.data.listing));
-        } else {
-          setError(res.data.message || "Failed to fetch listing");
-        }
-      } catch (err) {
-        console.error("Error fetching listing:", err);
-        setError("Server error fetching listing");
-      } finally {
-        setLoading(false);
+  // ✅ Use the reusable useApiCache hook for the listing
+  const { data: listing, loading, error } = useApiCache(
+    `cache_${user?.id}_listing_${listingId}`, // Unique key per user and listing
+    async () => {
+      if (!listingId) throw new Error("No listing ID provided");
+      const res = await axios.get(`${API_BASE}/listing/${listingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success) {
+        return res.data.listing;
+      } else {
+        throw new Error(res.data.message || "Failed to fetch listing");
       }
-    };
-    if (!listing && token) fetchListing();
-  }, [passedListing, token, listing]);
+    },
+    [listingId, user, token] // Refetch if listingId, user, or token changes
+  );
 
   const formatCurrency = (val) =>
     new Intl.NumberFormat("en-KE", {
@@ -294,7 +282,7 @@ export default function ViewListing() {
                     <ul className="list-unstyled small mb-0">
                       {animal_info.offspring.map((o, i) => (
                         <li key={i}>
-                          • {o.name || "Unnamed"} ({o.stage}, {o.gender}) —{" "}
+                          - {o.name || "Unnamed"} ({o.stage}, {o.gender}) —{" "}
                           {new Date(o.birth_date).toLocaleDateString()}
                         </li>
                       ))}

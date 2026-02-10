@@ -35,7 +35,7 @@ export const marketApi = {
   incrementViews: async (listingId, token) => {
     try {
       const response = await axios.post(
-        `${API_BASE}/market/${listingId}/view`,
+        `${API_BASE}/listing/views/${listingId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

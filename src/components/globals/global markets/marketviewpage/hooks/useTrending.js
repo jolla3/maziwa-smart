@@ -1,14 +1,15 @@
-// marketviewpage/hooks/useTrending.js
-import { useState, useEffect, useCallback, useContext } from "react";
+import { useContext } from "react";
 import { AuthContext } from "../../../../PrivateComponents/AuthContext";
 import { marketApi } from "../api/market.api";
+import { useApiCache } from "../../../../../hooks/useApiCache"; // ✅ Import the hook
 
 export default function useTrending() {
-  const { token } = useContext(AuthContext);
-  const [trendingListings, setTrendingListings] = useState([]);
+  const { token, user } = useContext(AuthContext);
 
-  const fetchTrending = useCallback(async () => {
-    try {
+  // ✅ Use useApiCache for trending listings
+  const { data: trendingListings } = useApiCache(
+    `cache_${user?.id}_market_trending`, // Unique key per user
+    async () => {
       const data = await marketApi.fetchTrending(token);
       if (data.success) {
         // Remove duplicates AND filter out invalid listings
@@ -22,16 +23,12 @@ export default function useTrending() {
           new Map(validListings.map(item => [item._id, item])).values()
         );
         
-        setTrendingListings(uniqueListings);
+        return uniqueListings;
       }
-    } catch (err) {
-      console.error("Fetch trending error:", err);
-    }
-  }, [token]);
+      return [];
+    },
+    [user?.id, token] // Stable dependencies
+  );
 
-  useEffect(() => {
-    fetchTrending();
-  }, [fetchTrending]);
-
-  return { trendingListings };
+  return { trendingListings: trendingListings || [] }; // ✅ Safety check
 }

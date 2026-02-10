@@ -1,4 +1,3 @@
-// marketviewpage/components/listings/ListingCard.jsx
 import React, { useState, useEffect, useContext } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Eye, Heart, ShoppingCart, Calendar } from "lucide-react";
@@ -13,29 +12,14 @@ const speciesConfig = {
   goat: { color: "#198754", emoji: "🐐" },
   sheep: { color: "#f59e0b", emoji: "🐑" },
   pig: { color: "#dc3545", emoji: "🐖" },
-  bull: { color: "#6c757d", emoji: "🐂" }, // ✅ Add bull
-  // Add more as needed
+  bull: { color: "#6c757d", emoji: "🐂" },
 };
+
 export default function ListingCard({ listing }) {
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
   const [inWishlist, setInWishlist] = useState(false);
   const [inBasket, setInBasket] = useState(false);
-  const [viewCount, setViewCount] = useState(0);
-
-  // Fetch actual view count from API
-  useEffect(() => {
-    const fetchViews = async () => {
-      try {
-        const data = await marketApi.getListingViews(listing._id, token);
-        setViewCount(data.total_views || 0);
-      } catch (err) {
-        setViewCount(0);
-      }
-    };
-
-    fetchViews();
-  }, [listing._id, token]);
 
   useEffect(() => {
     const checkStatus = () => {
@@ -53,7 +37,6 @@ export default function ListingCard({ listing }) {
 
   const handleView = async () => {
     await marketApi.incrementViews(listing._id, token);
-    setViewCount(prev => prev + 1);
     navigate("/view-market", { state: { listing } });
   };
 
@@ -168,10 +151,12 @@ export default function ListingCard({ listing }) {
           <h5 className="fw-bold mb-0" style={{ color: "#10b981" }}>
             {formatCurrency(listing.price)}
           </h5>
-          <div className="d-flex align-items-center" style={{ color: "#0f172a" }}>
-            <Eye size={14} className="me-1" />
-            <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{viewCount}</span>
-          </div>
+           <div className="d-flex align-items-center" style={{ color: "#0f172a" }}>
+    <Eye size={14} className="me-1" />
+    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+      {listing.views?.count || 0} views {/* ✅ Use views directly from listing prop */}
+    </span>
+  </div>
         </div>
 
         <div className="d-flex gap-1 flex-wrap mb-2">

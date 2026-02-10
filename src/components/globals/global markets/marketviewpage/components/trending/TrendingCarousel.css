@@ -1,0 +1,327 @@
+/* Trending Carousel Container */
+.trending-carousel-container {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+/* Carousel Wrapper */
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+/* Carousel Track */
+.carousel-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+}
+
+/* Carousel Item */
+.carousel-item {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Trending Card */
+.trending-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.trending-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Card Image */
+.card-image {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.listing-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.trending-card:hover .listing-img {
+  transform: scale(1.08);
+}
+
+/* Trending Badge */
+.trending-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ef4444;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Card Content */
+.card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  gap: 6px;
+}
+
+/* Listing Title */
+.listing-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Listing Price */
+.listing-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #10b981;
+  line-height: 1;
+}
+
+/* Listing Meta */
+.listing-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+  font-size: 0.75rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #6b7280;
+}
+
+.meta-item svg {
+  flex-shrink: 0;
+  color: #10b981;
+}
+
+.meta-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Navigation Buttons */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #e5e7eb;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.carousel-btn:hover {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.carousel-btn-prev {
+  left: -18px;
+}
+
+.carousel-btn-next {
+  right: -18px;
+}
+
+/* Indicators */
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator.active {
+  width: 24px;
+  border-radius: 4px;
+  background: #10b981;
+}
+
+.indicator:hover {
+  background: #9ca3af;
+}
+
+.indicator.active:hover {
+  background: #059669;
+}
+
+/* ==================== TABLET (768px) ==================== */
+@media (max-width: 1024px) {
+  .carousel-track {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .card-image {
+    height: 120px;
+  }
+
+  .listing-title {
+    font-size: 0.85rem;
+  }
+
+  .listing-price {
+    font-size: 1rem;
+  }
+
+  .carousel-btn-prev {
+    left: -16px;
+  }
+
+  .carousel-btn-next {
+    right: -16px;
+  }
+}
+
+/* ==================== MOBILE (640px) ==================== */
+@media (max-width: 768px) {
+  .carousel-track {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .card-image {
+    height: 160px;
+  }
+
+  .card-content {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .listing-title {
+    font-size: 0.9rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .listing-price {
+    font-size: 1.15rem;
+  }
+
+  .listing-meta {
+    gap: 6px;
+  }
+
+  .carousel-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .carousel-btn-prev {
+    left: -20px;
+  }
+
+  .carousel-btn-next {
+    right: -20px;
+  }
+}
+
+/* ==================== SMALL MOBILE (480px) ==================== */
+@media (max-width: 480px) {
+  .trending-carousel-container {
+    margin-bottom: 1.5rem;
+  }
+
+  .carousel-track {
+    gap: 6px;
+  }
+
+  .card-image {
+    height: 140px;
+  }
+
+  .card-content {
+    padding: 10px;
+  }
+
+  .listing-title {
+    font-size: 0.85rem;
+  }
+
+  .listing-price {
+    font-size: 1rem;
+  }
+
+  .carousel-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .carousel-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .carousel-indicators {
+    gap: 4px;
+    margin-top: 12px;
+  }
+
+  .indicator {
+    width: 6px;
+    height: 6px;
+  }
+
+  .indicator.active {
+    width: 20px;
+  }
+}   

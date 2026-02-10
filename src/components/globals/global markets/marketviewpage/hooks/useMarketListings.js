@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useContext, useMemo } from "react";
 import { AuthContext } from "../../../../PrivateComponents/AuthContext";
 import { marketApi } from "../api/market.api";
+import { useApiCache } from "../../../../../hooks/useApiCache"; // ✅ Import the hook
 
 const INITIAL_FILTERS = {
   species: "",
@@ -13,43 +14,34 @@ const INITIAL_FILTERS = {
 };
 
 export default function useMarketListings() {
-  const { token } = useContext(AuthContext);
-  const [allListings, setAllListings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { token, user } = useContext(AuthContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
 
-  useEffect(() => {
-    const fetchListings = async () => {
-      setLoading(true);
-      try {
-        const data = await marketApi.fetchListings({}, token);
-        if (data.success) {
-          // Remove duplicates AND filter out invalid listings
-          const validListings = data.listings.filter(item => 
-            item._id && 
-            item.title && 
-            item.price > 0
-          );
-          
-          const uniqueListings = Array.from(
-            new Map(validListings.map(item => [item._id, item])).values()
-          );
-          
-          setAllListings(uniqueListings);
-        }
-      } catch (err) {
-        console.error("Fetch listings error:", err);
-      } finally {
-        setLoading(false);
+  // ✅ Use useApiCache for listings (replaces custom fetch logic)
+  const { data: allListings, loading, error, clearCache } = useApiCache(
+    `cache_${user?.id}_market_listings`, // Unique key per user
+    async () => {
+      const data = await marketApi.fetchListings({}, token);
+      if (data.success) {
+        // Remove duplicates AND filter out invalid listings
+        const validListings = data.listings.filter(item => 
+          item && item._id && item.title && item.price > 0 // ✅ Extra check for undefined items
+        );
+        
+        const uniqueListings = Array.from(
+          new Map(validListings.map(item => [item._id, item])).values()
+        );
+        
+        return uniqueListings;
       }
-    };
-
-    fetchListings();
-  }, [token]);
+      return [];
+    },
+    [user?.id, token] // Stable dependencies
+  );
 
   const filteredListings = useMemo(() => {
-    let list = [...allListings];
+    let list = allListings || []; // ✅ Safety check
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -97,7 +89,7 @@ export default function useMarketListings() {
         list.sort((a, b) => b.price - a.price);
         break;
       case "views_desc":
-        list.sort((a, b) => (b.views?.count || 0) - (a.views?.count || 0)); // ✅ Fixed: Use views.count
+        list.sort((a, b) => (b.views?.count || 0) - (a.views?.count || 0));
         break;
       default:
         list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -118,10 +110,12 @@ export default function useMarketListings() {
   return {
     listings: filteredListings,
     loading,
+    error, // ✅ Now available for error handling
     searchQuery,
     setSearchQuery,
     filters,
     updateFilter,
     clearFilters,
+    refetch: clearCache, // ✅ To manually refresh if needed
   };
-}
+} 

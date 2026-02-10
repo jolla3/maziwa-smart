@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, ThemeProvider, CssBaseline } from '@mui/material';
+import { Box, ThemeProvider, CssBaseline, useMediaQuery } from '@mui/material';  // Added useMediaQuery
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import AppNavbar from '../../scenes/AppNavbar';
@@ -17,6 +17,7 @@ import Footer from '../sections/Footer';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));  // Added for dynamic padding
   const [navbarBg, setNavbarBg] = useState(false);
 
   useEffect(() => {
@@ -68,9 +69,9 @@ const LandingPage = () => {
         <AppNavbar />
       </Box>
 
-      {/* Main content - Clean and concise */}
-      <Box sx={{ pt: '64px', backgroundColor: '#ffffff' }}>
-        <HeroSection navigate={navigate} />
+      {/* Main content - Adjusted padding to prevent collision and white space */}
+      <Box sx={{ pt: isMobile ? '48px' : '64px', backgroundColor: '#ffffff' }}>  
+         <HeroSection navigate={navigate} />
         <FeaturesSection />
         <HowItWorksSection />
         <MarketSection navigate={navigate} />

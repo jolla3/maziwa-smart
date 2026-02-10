@@ -16,22 +16,36 @@ import {
   Typography,
   Divider,
   alpha,
-  useTheme,
 } from '@mui/material';
 import { Bell, Check, CheckCheck, Trash2, Filter, AlertCircle, Info, Calendar, ArrowLeft } from 'lucide-react';
 import { AuthContext } from '../PrivateComponents/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { tokens } from '../../theme';
+import { useApiCache } from '../../hooks/useApiCache';
 
 const Notifications = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
-  const { token } = useContext(AuthContext);
+  const { token, logout } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // CUSTOM AQUA COLORS - NO GREY ANYWHERE
+  const customColors = {
+    background: '#e0f7fa',           // Light cyan/aqua background
+    cardBackground: '#ffffff',        // Pure white
+    text: '#000000',                 // Pure black text
+    textSecondary: '#006064',        // Dark cyan
+    textLight: '#00838f',            // Medium cyan
+    primary: '#00bcd4',              // Bright aqua/cyan
+    primaryHover: '#00acc1',         // Darker cyan
+    success: '#00e676',              // Bright green
+    successHover: '#00c853',         // Darker green
+    error: '#ff1744',                // Bright red
+    errorHover: '#d50000',           // Darker red
+    border: '#80deea',               // Light cyan border
+    borderDark: '#4dd0e1',           // Medium cyan border
+    searchBg: '#b2ebf2',             // Light cyan for search
+    shadow: 'rgba(0, 188, 212, 0.2)', // Aqua shadow
+  };
+  
   const [filterType, setFilterType] = useState('all');
   const [filterRead, setFilterRead] = useState('all');
   const [showToast, setShowToast] = useState(false);
@@ -49,48 +63,73 @@ const Notifications = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      
-      let url = `${API_URL}/notifications?`;
-      if (filterType !== 'all') url += `type=${filterType}&`;
-      if (filterRead !== 'all') url += `is_read=${filterRead === 'read'}`;
-
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch');
-
-      const result = await response.json();
-      if (result.success) {
-        setNotifications(result.data);
-        
-        const selectedId = location.state?.selectedId;
-        if (selectedId) {
-          setHighlightId(selectedId);
-          setTimeout(() => {
-            document.getElementById(`notif-${selectedId}`)?.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'center' 
-            });
-          }, 100);
-        }
+  // Define fetch function for cache with better error handling
+  const fetchNotificationsData = async () => {
+    let url = `${API_URL}/notifications?`;
+    if (filterType !== 'all') url += `type=${filterType}&`;
+    if (filterRead !== 'all') url += `is_read=${filterRead === 'read'}&`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
-      setLoading(false);
-    } catch (error) {
-      showToastMessage('Failed to load notifications', 'error');
-      setLoading(false);
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        logout();
+        throw new Error('Unauthorized. Please log in again.');
+      }
+      throw new Error(`Failed to fetch: ${response.statusText}`);
     }
+
+    const result = await response.json();
+    if (!result.success || !result.data) {
+      throw new Error('Invalid API response');
+    }
+    
+    // Save to localStorage for Topbar to read
+    localStorage.setItem('notifications', JSON.stringify({
+      data: result.data,
+      timestamp: Date.now()
+    }));
+    
+    // Trigger custom event so Topbar updates
+    window.dispatchEvent(new Event('notificationCacheUpdated'));
+    
+    return result.data;
   };
 
+  // Use cache hook with dependencies for filters
+  const { data: notifications, loading, error, clearCache } = useApiCache(
+    'notifications',
+    fetchNotificationsData,
+    [filterType, filterRead, token]
+  );
+
+  // Handle scroll to highlighted notification
   useEffect(() => {
-    if (token) fetchNotifications();
-  }, [token, filterType, filterRead]);
+    if (notifications && !loading) {
+      const selectedId = location.state?.selectedId;
+      if (selectedId && notifications.some(n => n._id === selectedId)) {
+        setHighlightId(selectedId);
+        setTimeout(() => {
+          document.getElementById(`notif-${selectedId}`)?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }, 100);
+      }
+    }
+  }, [notifications, loading, location.state?.selectedId]);
+
+  // Handle errors
+  useEffect(() => {
+    if (error) {
+      showToastMessage(error, 'error');
+    }
+  }, [error]);
 
   const markAsRead = async (id) => {
     try {
@@ -104,8 +143,10 @@ const Notifications = () => {
 
       const result = await response.json();
       if (result.success) {
-        setNotifications(prev => prev.map(n => n._id === id ? { ...n, is_read: true } : n));
+        clearCache();
         showToastMessage('Marked as read', 'success');
+      } else {
+        throw new Error('Failed to mark as read');
       }
     } catch (error) {
       showToastMessage('Failed to mark as read', 'error');
@@ -124,8 +165,10 @@ const Notifications = () => {
 
       const result = await response.json();
       if (result.success) {
-        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        clearCache();
         showToastMessage('All notifications marked as read', 'success');
+      } else {
+        throw new Error('Failed to mark all as read');
       }
     } catch (error) {
       showToastMessage('Failed to mark all as read', 'error');
@@ -145,8 +188,10 @@ const Notifications = () => {
 
       const result = await response.json();
       if (result.success) {
-        setNotifications(prev => prev.filter(n => n._id !== id));
+        clearCache();
         showToastMessage('Notification deleted', 'success');
+      } else {
+        throw new Error('Failed to delete notification');
       }
     } catch (error) {
       showToastMessage('Failed to delete notification', 'error');
@@ -155,15 +200,15 @@ const Notifications = () => {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
 
   const getNotificationIcon = (type) => {
     const iconProps = { size: 28, style: { width: 28, height: 28 } };
     switch (type) {
-      case 'alert': return <AlertCircle {...iconProps} style={{ ...iconProps.style, color: colors.redAccent[500] }} />;
-      case 'info': return <Info {...iconProps} style={{ ...iconProps.style, color: colors.blueAccent[500] }} />;
-      case 'reminder': return <Calendar {...iconProps} style={{ ...iconProps.style, color: colors.greenAccent[500] }} />;
-      default: return <Bell {...iconProps} style={{ ...iconProps.style, color: colors.greenAccent[500] }} />;
+      case 'alert': return <AlertCircle {...iconProps} style={{ ...iconProps.style, color: customColors.error }} />;
+      case 'info': return <Info {...iconProps} style={{ ...iconProps.style, color: customColors.primary }} />;
+      case 'reminder': return <Calendar {...iconProps} style={{ ...iconProps.style, color: customColors.success }} />;
+      default: return <Bell {...iconProps} style={{ ...iconProps.style, color: customColors.success }} />;
     }
   };
 
@@ -191,27 +236,27 @@ const Notifications = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
   };
 
-  if (loading) {
+  if (loading && !notifications) {
     return (
       <Box
         display="flex"
         alignItems="center"
         justifyContent="center"
         minHeight="100vh"
-        backgroundColor={colors.primary[400]}
+        backgroundColor={customColors.background}
       >
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
         >
-          <Bell size={48} style={{ color: colors.greenAccent[500] }} />
+          <Bell size={48} style={{ color: customColors.success }} />
         </motion.div>
       </Box>
     );
   }
 
   return (
-    <Box minHeight="100vh" backgroundColor={colors.primary[400]} py={4}>
+    <Box minHeight="100vh" backgroundColor={customColors.background} py={4}>
       <Container maxWidth="md">
         {/* Toast Notification */}
         <AnimatePresence>
@@ -230,9 +275,9 @@ const Notifications = () => {
             >
               <Card
                 sx={{
-                  backgroundColor: toastType === 'success' ? colors.greenAccent[500] : colors.redAccent[500],
+                  backgroundColor: toastType === 'success' ? customColors.success : customColors.error,
                   color: '#fff',
-                  boxShadow: `0 8px 24px ${alpha(colors.grey[900], 0.3)}`,
+                  boxShadow: `0 8px 24px ${customColors.shadow}`,
                 }}
               >
                 <CardContent sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -258,11 +303,11 @@ const Notifications = () => {
                   onClick={() => navigate(-1)}
                   variant="outlined"
                   sx={{
-                    borderColor: colors.grey[700],
-                    color: colors.grey[100],
+                    borderColor: customColors.border,
+                    color: customColors.text,
                     '&:hover': {
-                      backgroundColor: alpha(colors.greenAccent[500], 0.1),
-                      borderColor: colors.greenAccent[500],
+                      backgroundColor: alpha(customColors.success, 0.1),
+                      borderColor: customColors.success,
                     },
                   }}
                 >
@@ -271,8 +316,8 @@ const Notifications = () => {
               </motion.div>
               <Box>
                 <Box display="flex" alignItems="center" gap={2}>
-                  <Bell size={32} style={{ color: colors.greenAccent[500] }} />
-                  <Typography variant="h3" fontWeight={800} color={colors.grey[100]}>
+                  <Bell size={32} style={{ color: customColors.success }} />
+                  <Typography variant="h3" fontWeight={800} color={customColors.text}>
                     Notifications
                   </Typography>
                 </Box>
@@ -281,13 +326,13 @@ const Notifications = () => {
                     <Chip
                       label={`${unreadCount} unread`}
                       sx={{
-                        backgroundColor: colors.redAccent[500],
+                        backgroundColor: customColors.error,
                         color: '#fff',
                         fontWeight: 700,
                       }}
                     />
                   ) : (
-                    <Typography variant="body2" sx={{ color: colors.greenAccent[400], fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ color: customColors.success, fontWeight: 600 }}>
                       ✓ All caught up!
                     </Typography>
                   )}
@@ -303,11 +348,11 @@ const Notifications = () => {
                   onClick={markAllAsRead}
                   startIcon={<CheckCheck size={18} />}
                   sx={{
-                    backgroundColor: colors.greenAccent[500],
+                    backgroundColor: customColors.success,
                     color: '#fff',
                     fontWeight: 700,
                     '&:hover': {
-                      backgroundColor: colors.greenAccent[600],
+                      backgroundColor: customColors.successHover,
                     },
                   }}
                 >
@@ -327,9 +372,9 @@ const Notifications = () => {
         >
           <Card
             sx={{
-              backgroundColor: colors.primary[500],
-              border: `1px solid ${colors.grey[700]}`,
-              boxShadow: `0 4px 12px ${alpha(colors.grey[900], 0.1)}`,
+              backgroundColor: customColors.cardBackground,
+              border: `1px solid ${customColors.border}`,
+              boxShadow: `0 4px 12px ${customColors.shadow}`,
             }}
           >
             <CardContent>
@@ -338,8 +383,8 @@ const Notifications = () => {
                   <FormControl fullWidth size="small">
                     <InputLabel
                       sx={{
-                        color: colors.grey[100],
-                        '&.Mui-focused': { color: colors.greenAccent[500] },
+                        color: customColors.text,
+                        '&.Mui-focused': { color: customColors.success },
                       }}
                     >
                       Filter by Type
@@ -349,14 +394,14 @@ const Notifications = () => {
                       onChange={(e) => setFilterType(e.target.value)}
                       label="Filter by Type"
                       sx={{
-                        backgroundColor: colors.primary[400],
-                        color: colors.grey[100],
-                        border: `1px solid ${colors.grey[700]}`,
+                        backgroundColor: customColors.searchBg,
+                        color: customColors.text,
+                        border: `1px solid ${customColors.border}`,
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: colors.grey[700],
+                          borderColor: customColors.border,
                         },
                         '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: colors.greenAccent[500],
+                          borderColor: customColors.success,
                         },
                       }}
                     >
@@ -371,8 +416,8 @@ const Notifications = () => {
                   <FormControl fullWidth size="small">
                     <InputLabel
                       sx={{
-                        color: colors.grey[100],
-                        '&.Mui-focused': { color: colors.greenAccent[500] },
+                        color: customColors.text,
+                        '&.Mui-focused': { color: customColors.success },
                       }}
                     >
                       Filter by Status
@@ -382,14 +427,14 @@ const Notifications = () => {
                       onChange={(e) => setFilterRead(e.target.value)}
                       label="Filter by Status"
                       sx={{
-                        backgroundColor: colors.primary[400],
-                        color: colors.grey[100],
-                        border: `1px solid ${colors.grey[700]}`,
+                        backgroundColor: customColors.searchBg,
+                        color: customColors.text,
+                        border: `1px solid ${customColors.border}`,
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: colors.grey[700],
+                          borderColor: customColors.border,
                         },
                         '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: colors.greenAccent[500],
+                          borderColor: customColors.success,
                         },
                       }}
                     >
@@ -410,7 +455,7 @@ const Notifications = () => {
           initial="hidden"
           animate="visible"
         >
-          {notifications.length === 0 ? (
+          {!notifications || notifications.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -418,21 +463,21 @@ const Notifications = () => {
             >
               <Card
                 sx={{
-                  backgroundColor: colors.primary[500],
+                  backgroundColor: customColors.cardBackground,
                   textAlign: 'center',
                   py: 6,
-                  border: `2px dashed ${colors.grey[700]}`,
+                  border: `2px dashed ${customColors.border}`,
                 }}
               >
                 <CardContent>
                   <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                    <Bell size={64} style={{ color: alpha(colors.grey[100], 0.3), marginBottom: '1rem' }} />
+                    <Bell size={64} style={{ color: alpha(customColors.primary, 0.3), marginBottom: '1rem' }} />
                   </motion.div>
-                  <Typography variant="h5" fontWeight={700} color={colors.grey[100]} mb={1}>
-                    No notifications found
+                  <Typography variant="h5" fontWeight={700} color={customColors.text} mb={1}>
+                    {loading ? 'Loading notifications...' : 'No notifications found'}
                   </Typography>
-                  <Typography variant="body2" color={colors.grey[300]}>
-                    You're all caught up! Check back later for new notifications.
+                  <Typography variant="body2" color={customColors.textSecondary}>
+                    {loading ? 'Please wait.' : "You're all caught up! Check back later for new notifications."}
                   </Typography>
                 </CardContent>
               </Card>
@@ -451,14 +496,14 @@ const Notifications = () => {
                   style={{ marginBottom: '1rem' }}
                 >
                   <motion.div
-                    whileHover={{ scale: 1.02, boxShadow: `0 12px 32px ${alpha(colors.greenAccent[500], 0.2)}` }}
+                    whileHover={{ scale: 1.02, boxShadow: `0 12px 32px ${alpha(customColors.success, 0.2)}` }}
                     transition={{ type: 'spring', damping: 15 }}
                   >
                     <Card
                       sx={{
-                        backgroundColor: colors.primary[500],
-                        border: `2px solid ${!notification.is_read ? colors.greenAccent[500] : colors.grey[700]}`,
-                        boxShadow: highlightId === notification._id ? `0 0 0 4px ${alpha(colors.blueAccent[500], 0.3)}` : `0 4px 12px ${alpha(colors.grey[900], 0.1)}`,
+                        backgroundColor: customColors.cardBackground,
+                        border: `2px solid ${!notification.is_read ? customColors.success : customColors.border}`,
+                        boxShadow: highlightId === notification._id ? `0 0 0 4px ${alpha(customColors.primary, 0.3)}` : `0 4px 12px ${customColors.shadow}`,
                         transition: 'all 0.3s ease',
                         position: 'relative',
                         overflow: 'hidden',
@@ -473,7 +518,7 @@ const Notifications = () => {
                             top: 0,
                             bottom: 0,
                             width: '4px',
-                            backgroundColor: colors.greenAccent[500],
+                            backgroundColor: customColors.success,
                           }}
                         />
                       )}
@@ -492,7 +537,7 @@ const Notifications = () => {
                           <Box flex={1}>
                             <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                               <Box display="flex" alignItems="center" gap={1.5}>
-                                <Typography variant="h6" fontWeight={700} color={colors.grey[100]}>
+                                <Typography variant="h6" fontWeight={700} color={customColors.text}>
                                   {notification.title}
                                 </Typography>
                                 {!notification.is_read && (
@@ -501,7 +546,7 @@ const Notifications = () => {
                                       label="New"
                                       size="small"
                                       sx={{
-                                        backgroundColor: colors.redAccent[500],
+                                        backgroundColor: customColors.error,
                                         color: '#fff',
                                         fontWeight: 700,
                                         height: 24,
@@ -510,11 +555,11 @@ const Notifications = () => {
                                   </motion.div>
                                 )}
                               </Box>
-                              <Typography variant="caption" color={colors.grey[400]} fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
+                              <Typography variant="caption" color={customColors.textLight} fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
                                 {formatDate(notification.created_at)}
                               </Typography>
                             </Box>
-                            <Typography variant="body2" color={colors.grey[300]} mb={1.5}>
+                            <Typography variant="body2" color={customColors.textSecondary} mb={1.5}>
                               {notification.message}
                             </Typography>
                             {notification.cow && (
@@ -523,8 +568,8 @@ const Notifications = () => {
                                   label={`🐄 ${notification.cow.cow_name || notification.cow.animal_code}`}
                                   size="small"
                                   sx={{
-                                    backgroundColor: alpha(colors.blueAccent[500], 0.2),
-                                    color: colors.blueAccent[400],
+                                    backgroundColor: alpha(customColors.primary, 0.2),
+                                    color: customColors.primary,
                                     fontWeight: 600,
                                   }}
                                 />
@@ -541,12 +586,12 @@ const Notifications = () => {
                                   variant="contained"
                                   onClick={() => markAsRead(notification._id)}
                                   sx={{
-                                    backgroundColor: colors.greenAccent[500],
+                                    backgroundColor: customColors.success,
                                     color: '#fff',
                                     minWidth: 'auto',
                                     p: 1,
                                     '&:hover': {
-                                      backgroundColor: colors.greenAccent[600],
+                                      backgroundColor: customColors.successHover,
                                     },
                                   }}
                                 >
@@ -561,12 +606,12 @@ const Notifications = () => {
                                 disabled={deletingId === notification._id}
                                 onClick={() => deleteNotification(notification._id)}
                                 sx={{
-                                  borderColor: colors.redAccent[500],
-                                  color: colors.redAccent[500],
+                                  borderColor: customColors.error,
+                                  color: customColors.error,
                                   minWidth: 'auto',
                                   p: 1,
                                   '&:hover': {
-                                    backgroundColor: alpha(colors.redAccent[500], 0.1),
+                                    backgroundColor: alpha(customColors.error, 0.1),
                                   },
                                 }}
                               >

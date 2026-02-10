@@ -13,10 +13,10 @@ import {
   Tooltip,
   alpha
 } from "@mui/material";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ColorModeContext, tokens } from "../../theme";
+import { ColorModeContext } from "../../theme";
 import { AuthContext } from "../../components/PrivateComponents/AuthContext";
 import InputBase from "@mui/material/InputBase";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
@@ -29,13 +29,32 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 
-const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
+const Topbar = ({ onSearch, onSettingsClick }) => {
   const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
-  const { user, logout, token } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  // CUSTOM AQUA COLORS - NO GREY ANYWHERE
+  const customColors = {
+    background: '#e0f7fa',
+    cardBackground: '#ffffff',
+    text: '#000000',
+    textSecondary: '#006064',
+    textLight: '#00838f',
+    primary: '#00bcd4',
+    primaryHover: '#00acc1',
+    success: '#00e676',
+    successHover: '#00c853',
+    error: '#ff1744',
+    errorHover: '#d50000',
+    border: '#80deea',
+    borderDark: '#4dd0e1',
+    searchBg: '#b2ebf2',
+    shadow: 'rgba(0, 188, 212, 0.2)',
+  };
   
   const [searchValue, setSearchValue] = useState("");
   const [notificationAnchor, setNotificationAnchor] = useState(null);
@@ -46,41 +65,53 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pulseNotification, setPulseNotification] = useState(false);
 
-  const API_URL = process.env.REACT_APP_API_BASE;
+  // Refs for IconButtons to fix anchorEl issues
+  const notificationButtonRef = useRef(null);
+  const profileButtonRef = useRef(null);
+  const settingsButtonRef = useRef(null);
 
-  const fetchNotifications = async () => {
-    if (!token) return;
-    
+  // Helper to read from shared cache with error handling
+  const readFromCache = () => {
     try {
-      const response = await fetch(`${API_URL}/notifications?is_read=false`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        const newCount = result.count;
-        
-        // Trigger pulse animation when new notifications arrive
-        if (newCount > unreadCount) {
-          setPulseNotification(true);
-          setTimeout(() => setPulseNotification(false), 1500);
-        }
-        
-        setNotifications(result.data.slice(0, 5));
-        setUnreadCount(newCount);
+      const cache = JSON.parse(localStorage.getItem('notifications'));
+      if (cache && cache.data) {
+        const unread = cache.data.filter(n => !n.is_read);
+        setNotifications(cache.data.slice(0, 5));
+        setUnreadCount(unread.length);
+      } else {
+        setNotifications([]);
+        setUnreadCount(0);
       }
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+    } catch (err) {
+      console.warn("Failed to read notifications cache:", err);
+      setNotifications([]);
+      setUnreadCount(0);
     }
   };
 
+  // Read cache on mount and listen for updates
   useEffect(() => {
-    if (token) {
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
+    readFromCache();
+    const handleStorageChange = () => readFromCache();
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom event in case of same-tab updates
+    const handleCacheUpdate = () => readFromCache();
+    window.addEventListener('notificationCacheUpdated', handleCacheUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('notificationCacheUpdated', handleCacheUpdate);
+    };
+  }, []);
+
+  // Pulse for new notifications
+  useEffect(() => {
+    if (unreadCount > 0) {
+      setPulseNotification(true);
+      setTimeout(() => setPulseNotification(false), 1500);
     }
-  }, [token]);
+  }, [unreadCount]);
 
   const handleSearch = () => {
     if (searchValue.trim() && onSearch) {
@@ -102,16 +133,16 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
   };
 
   const DesktopIcons = () => (
-    <Box display="flex" alignItems="center" gap={0.5}>
+    <Box display="flex" alignItems="center" gap={0.5} flexWrap="wrap">
       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
         <Tooltip title="Toggle theme">
           <IconButton 
             onClick={colorMode.toggleColorMode} 
             sx={{ 
-              color: colors.grey[100],
+              color: customColors.text,
               transition: 'all 0.3s ease',
               '&:hover': {
-                backgroundColor: alpha(colors.greenAccent[500], 0.1),
+                backgroundColor: alpha(customColors.success, 0.1),
                 transform: 'rotate(20deg)',
               }
             }}
@@ -124,13 +155,18 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
         <Tooltip title="Notifications">
           <IconButton 
-            onClick={(e) => setNotificationAnchor(e.currentTarget)}
+            ref={notificationButtonRef}
+            onClick={(e) => {
+              if (notificationButtonRef.current) {
+                setNotificationAnchor(e.currentTarget);
+              }
+            }}
             sx={{ 
-              color: colors.grey[100],
+              color: customColors.text,
               position: 'relative',
               transition: 'all 0.3s ease',
               '&:hover': {
-                backgroundColor: alpha(colors.blueAccent[500], 0.1),
+                backgroundColor: alpha(customColors.primary, 0.1),
               }
             }}
           >
@@ -149,12 +185,17 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
         <Tooltip title="Settings">
           <IconButton 
-            onClick={(e) => setSettingsAnchor(e.currentTarget)}
+            ref={settingsButtonRef}
+            onClick={(e) => {
+              if (settingsButtonRef.current) {
+                setSettingsAnchor(e.currentTarget);
+              }
+            }}
             sx={{ 
-              color: colors.grey[100],
+              color: customColors.text,
               transition: 'all 0.3s ease',
               '&:hover': {
-                backgroundColor: alpha(colors.blueAccent[500], 0.1),
+                backgroundColor: alpha(customColors.primary, 0.1),
                 transform: 'rotate(-20deg)',
               }
             }}
@@ -167,9 +208,14 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
         <Tooltip title="Profile">
           <IconButton 
-            onClick={(e) => setProfileAnchor(e.currentTarget)}
+            ref={profileButtonRef}
+            onClick={(e) => {
+              if (profileButtonRef.current) {
+                setProfileAnchor(e.currentTarget);
+              }
+            }}
             sx={{ 
-              color: colors.grey[100],
+              color: customColors.text,
               transition: 'all 0.3s ease',
             }}
           >
@@ -197,10 +243,11 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
           display="flex" 
           justifyContent="space-between" 
           alignItems="center" 
-          p={2}
+          p={isSmallScreen ? 0.25 : 1}  // Reduced padding on small screens to eliminate white space
           sx={{
-            backgroundColor: colors.primary[400],
-            boxShadow: `0 2px 8px ${alpha(colors.grey[900], 0.1)}`,
+            backgroundColor: customColors.background,
+            boxShadow: `0 2px 8px ${customColors.shadow}`,
+            flexWrap: 'wrap',
           }}
         >
           {/* Search Bar */}
@@ -208,25 +255,25 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: isMobile ? '150px' : '200px' }}
           >
             <Box
               display="flex"
-              backgroundColor={alpha(colors.grey[700], 0.3)}
+              backgroundColor={customColors.searchBg}
               borderRadius="8px"
-              minWidth={isMobile ? "200px" : "300px"}
-              maxWidth={isMobile ? "250px" : "400px"}
-              border={`2px solid ${colors.grey[700]}`}
+              minWidth={isMobile ? "150px" : "300px"}
+              maxWidth={isMobile ? "200px" : "400px"}
+              border={`2px solid ${customColors.border}`}
               transition="all 0.3s ease"
               sx={{
                 '&:hover': {
-                  backgroundColor: alpha(colors.greenAccent[500], 0.1),
-                  borderColor: colors.greenAccent[500],
+                  backgroundColor: alpha(customColors.success, 0.1),
+                  borderColor: customColors.success,
                 },
                 '&:focus-within': {
-                  backgroundColor: alpha(colors.greenAccent[500], 0.15),
-                  borderColor: colors.greenAccent[500],
-                  boxShadow: `0 0 0 3px ${alpha(colors.greenAccent[500], 0.1)}`,
+                  backgroundColor: alpha(customColors.success, 0.15),
+                  borderColor: customColors.success,
+                  boxShadow: `0 0 0 3px ${alpha(customColors.success, 0.1)}`,
                 },
               }}
             >
@@ -234,9 +281,9 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
                 sx={{ 
                   ml: 2, 
                   flex: 1, 
-                  color: colors.grey[100],
+                  color: customColors.text,
                   '& input::placeholder': {
-                    color: alpha(colors.grey[100], 0.5),
+                    color: customColors.textSecondary,
                     opacity: 1,
                   }
                 }} 
@@ -247,7 +294,7 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
               />
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
                 <IconButton 
-                  sx={{ p: 1, color: colors.greenAccent[500] }} 
+                  sx={{ p: 1, color: customColors.success }} 
                   onClick={handleSearch}
                 >
                   <SearchIcon />
@@ -261,25 +308,36 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            style={{ marginLeft: '1rem' }}
+            style={{ marginLeft: isMobile ? '0.5rem' : '1rem' }}
           >
             {isMobile ? (
-              <Box display="flex" alignItems="center">
+              <Box display="flex" alignItems="center" gap={0.5}>
                 <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
                   <IconButton 
                     onClick={colorMode.toggleColorMode} 
-                    sx={{ color: colors.grey[100] }}
+                    sx={{ color: customColors.text }}
                   >
                     {theme.palette.mode === "dark" ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
                   </IconButton>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                  <IconButton 
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-                    sx={{ color: colors.grey[100] }}
-                  >
-                    {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
-                  </IconButton>
+                  <Badge badgeContent={unreadCount} color="error">  {/* Badge on hamburger for count visibility */}
+                    <IconButton 
+                      onClick={() => {
+                        const newOpen = !mobileMenuOpen;
+                        setMobileMenuOpen(newOpen);
+                        // Close all menus when closing mobile menu to prevent invalid anchorEl
+                        if (!newOpen) {
+                          setNotificationAnchor(null);
+                          setProfileAnchor(null);
+                          setSettingsAnchor(null);
+                        }
+                      }} 
+                      sx={{ color: customColors.text }}
+                    >
+                      {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+                    </IconButton>
+                  </Badge>
                 </motion.div>
               </Box>
             ) : (
@@ -289,7 +347,7 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
         </Box>
       </motion.div>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU - Added zIndex to prevent collisions */}
       <AnimatePresence>
         {isMobile && mobileMenuOpen && (
           <motion.div
@@ -297,27 +355,56 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
+            style={{ zIndex: 1000, position: 'relative' }}  // High zIndex to avoid overlapping content
           >
             <Box 
-              p={2} 
-              backgroundColor={colors.primary[400]} 
-              borderTop={`1px solid ${colors.grey[700]}`}
+              p={1}  // Reduced padding for compactness
+              backgroundColor={customColors.background}
+              borderTop={`1px solid ${customColors.border}`}
             >
-              <Box display="flex" flexDirection="column" gap={2}>
+              <Box display="flex" flexDirection="column" gap={1}>  // Reduced gap
                 <motion.div whileHover={{ x: 5 }} whileTap={{ scale: 0.95 }}>
                   <Box 
                     display="flex" 
                     alignItems="center" 
                     gap={2} 
                     onClick={(e) => setNotificationAnchor(e.currentTarget)}
-                    sx={{ cursor: 'pointer', p: 1, borderRadius: 1, transition: 'all 0.3s ease', '&:hover': { backgroundColor: alpha(colors.blueAccent[500], 0.1) } }}
+                    sx={{ cursor: 'pointer', p: 1, borderRadius: 1, transition: 'all 0.3s ease', '&:hover': { backgroundColor: alpha(customColors.primary, 0.1) } }}
                   >
-                    <IconButton sx={{ color: colors.grey[100] }}>
+                    <IconButton sx={{ color: customColors.text }}>
                       <Badge badgeContent={unreadCount} color="error">
                         <NotificationsOutlinedIcon />
                       </Badge>
                     </IconButton>
-                    <Typography color={colors.grey[100]}>Notifications</Typography>
+                    <Typography color={customColors.text}>Notifications</Typography>
+                  </Box>
+                </motion.div>
+                <motion.div whileHover={{ x: 5 }} whileTap={{ scale: 0.95 }}>
+                  <Box 
+                    display="flex" 
+                    alignItems="center" 
+                    gap={2} 
+                    onClick={(e) => setProfileAnchor(e.currentTarget)}
+                    sx={{ cursor: 'pointer', p: 1, borderRadius: 1, transition: 'all 0.3s ease', '&:hover': { backgroundColor: alpha(customColors.success, 0.1) } }}
+                  >
+                    <IconButton sx={{ color: customColors.text }}>
+                      {user?.avatar ? <Avatar src={user.avatar} alt={user.name} sx={{ width: 24, height: 24 }} /> : <PersonOutlinedIcon />}
+                    </IconButton>
+                    <Typography color={customColors.text}>Profile</Typography>
+                  </Box>
+                </motion.div>
+                                <motion.div whileHover={{ x: 5 }} whileTap={{ scale: 0.95 }}>
+                  <Box 
+                    display="flex" 
+                    alignItems="center" 
+                    gap={2} 
+                    onClick={(e) => setSettingsAnchor(e.currentTarget)}
+                    sx={{ cursor: 'pointer', p: 1, borderRadius: 1, transition: 'all 0.3s ease', '&:hover': { backgroundColor: alpha(customColors.primary, 0.1) } }}
+                  >
+                    <IconButton sx={{ color: customColors.text }}>
+                      <SettingsOutlinedIcon />
+                    </IconButton>
+                    <Typography color={customColors.text}>Settings</Typography>
                   </Box>
                 </motion.div>
               </Box>
@@ -326,35 +413,51 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
         )}
       </AnimatePresence>
 
-      {/* NOTIFICATIONS MENU */}
+      {/* NOTIFICATIONS MENU - Fixed Fragment and removed TransitionComponent */}
       <Menu
         anchorEl={notificationAnchor}
         open={Boolean(notificationAnchor)}
         onClose={() => setNotificationAnchor(null)}
-        TransitionComponent={motion.div}
         PaperProps={{
           sx: {
-            backgroundColor: colors.primary[400],
-            color: colors.grey[100],
-            minWidth: 320,
+            backgroundColor: customColors.cardBackground,
+            color: customColors.text,
+            minWidth: isSmallScreen ? 280 : 320,
             maxHeight: 450,
-            boxShadow: `0 8px 32px ${alpha(colors.grey[900], 0.2)}`,
-            border: `1px solid ${colors.grey[700]}`,
+            boxShadow: `0 8px 32px ${customColors.shadow}`,
+            border: `1px solid ${customColors.border}`,
           }
         }}
       >
-        <MenuItem disabled sx={{ backgroundColor: colors.primary[400] }}>
+        <MenuItem disabled sx={{ backgroundColor: customColors.cardBackground }}>
           <Typography variant="h6" fontWeight="bold">
             Notifications {unreadCount > 0 && `(${unreadCount})`}
           </Typography>
         </MenuItem>
-        <Divider sx={{ backgroundColor: colors.grey[700] }} />
+        <Divider sx={{ backgroundColor: customColors.border }} />
         
-        {notifications.length === 0 ? (
-          <MenuItem disabled>
-            <Typography variant="body2" color={colors.grey[300]}>No new notifications</Typography>
-          </MenuItem>
-        ) : (
+        {notifications.length === 0 ? [
+          <MenuItem key="no-notifications" disabled>
+            <Typography variant="body2" color={customColors.textSecondary}>No notifications cached yet.</Typography>
+          </MenuItem>,
+          <motion.div key="load-button" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <MenuItem 
+              onClick={() => {
+                setNotificationAnchor(null);
+                navigate('/notifications');
+              }}
+              sx={{ 
+                justifyContent: 'center', 
+                color: customColors.success, 
+                fontWeight: 'bold',
+                py: 1.5,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Load Notifications
+            </MenuItem>
+          </motion.div>
+        ] : (
           notifications.map((notif, index) => (
             <motion.div
               key={notif._id}
@@ -368,22 +471,22 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
                   navigate('/notifications', { state: { selectedId: notif._id } });
                 }}
                 sx={{
-                  backgroundColor: colors.blueAccent[800],
+                  backgroundColor: alpha(customColors.primary, 0.05),
                   '&:hover': { 
-                    backgroundColor: colors.blueAccent[700],
+                    backgroundColor: alpha(customColors.primary, 0.15),
                     transform: 'translateX(4px)',
                   },
                   py: 1.5,
-                  borderBottom: `1px solid ${colors.grey[700]}`,
+                  borderBottom: `1px solid ${customColors.border}`,
                   transition: 'all 0.2s ease',
                 }}
               >
                 <Box width="100%">
                   <Box display="flex" justifyContent="space-between" mb={0.5}>
-                    <Typography variant="body2" fontWeight="bold">{notif.title}</Typography>
-                    <Typography variant="caption" color={colors.grey[400]}>{formatDate(notif.created_at)}</Typography>
+                    <Typography variant="body2" fontWeight="bold" color={customColors.text}>{notif.title}</Typography>
+                    <Typography variant="caption" color={customColors.textLight}>{formatDate(notif.created_at)}</Typography>
                   </Box>
-                  <Typography variant="caption" color={colors.grey[300]}>
+                  <Typography variant="caption" color={customColors.textSecondary}>
                     {notif.message?.substring(0, 60)}{notif.message?.length > 60 ? '...' : ''}
                   </Typography>
                 </Box>
@@ -392,7 +495,7 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
           ))
         )}
         
-        <Divider sx={{ backgroundColor: colors.grey[700] }} />
+        <Divider sx={{ backgroundColor: customColors.border }} />
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <MenuItem 
             onClick={() => {
@@ -401,7 +504,7 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
             }}
             sx={{ 
               justifyContent: 'center', 
-              color: colors.greenAccent[400], 
+              color: customColors.success, 
               fontWeight: 'bold',
               py: 1.5,
               transition: 'all 0.2s ease',
@@ -412,59 +515,59 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
         </motion.div>
       </Menu>
 
-      {/* PROFILE MENU */}
+      {/* PROFILE MENU - Made responsive */}
       <Menu
         anchorEl={profileAnchor}
         open={Boolean(profileAnchor)}
         onClose={() => setProfileAnchor(null)}
         PaperProps={{ 
           sx: { 
-            backgroundColor: colors.primary[400], 
-            color: colors.grey[100], 
-            minWidth: 200,
-            boxShadow: `0 8px 32px ${alpha(colors.grey[900], 0.2)}`,
-            border: `1px solid ${colors.grey[700]}`,
+            backgroundColor: customColors.cardBackground, 
+            color: customColors.text, 
+            minWidth: isSmallScreen ? 180 : 200,
+            boxShadow: `0 8px 32px ${customColors.shadow}`,
+            border: `1px solid ${customColors.border}`,
           } 
         }}
       >
         {user && (
-          <MenuItem disabled sx={{ backgroundColor: colors.primary[400] }}>
+          <MenuItem disabled sx={{ backgroundColor: customColors.cardBackground }}>
             <motion.div whileHover={{ scale: 1.05 }} style={{ width: '100%' }}>
               <Box display="flex" alignItems="center" gap={2}>
                 {user.avatar ? <Avatar src={user.avatar} alt={user.name} sx={{ width: 32, height: 32 }} /> : <PersonOutlinedIcon />}
                 <Box>
-                  <Typography variant="body2">{user.name || 'User'}</Typography>
-                  <Typography variant="caption" color={colors.grey[300]}>{user.email || 'user@example.com'}</Typography>
+                  <Typography variant="body2" color={customColors.text}>{user.name || 'User'}</Typography>
+                  <Typography variant="caption" color={customColors.textSecondary}>{user.email || 'user@example.com'}</Typography>
                 </Box>
               </Box>
             </motion.div>
           </MenuItem>
         )}
-        <Divider sx={{ backgroundColor: colors.grey[700] }} />
+        <Divider sx={{ backgroundColor: customColors.border }} />
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
-            onClick={() => { setProfileAnchor(null); onProfileAction?.('/profile'); }}
-            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(colors.greenAccent[500], 0.1) } }}
+            onClick={() => { setProfileAnchor(null); navigate('/profile'); }}
+            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(customColors.success, 0.1) } }}
           >
             <PersonOutlinedIcon sx={{ mr: 2 }} />View Profile
           </MenuItem>
         </motion.div>
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
-            onClick={() => { setProfileAnchor(null); onProfileAction?.('/profile'); }}
-            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(colors.greenAccent[500], 0.1) } }}
+            onClick={() => { setProfileAnchor(null); navigate('/profile'); }}
+            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(customColors.success, 0.1) } }}
           >
             <SettingsOutlinedIcon sx={{ mr: 2 }} />Account Settings
           </MenuItem>
         </motion.div>
-        <Divider sx={{ backgroundColor: colors.grey[700] }} />
+        <Divider sx={{ backgroundColor: customColors.border }} />
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
             onClick={() => { setProfileAnchor(null); logout(); }} 
             sx={{ 
-              color: colors.redAccent[400],
+              color: customColors.error,
               transition: 'all 0.2s ease',
-              '&:hover': { backgroundColor: alpha(colors.redAccent[500], 0.1) }
+              '&:hover': { backgroundColor: alpha(customColors.error, 0.1) }
             }}
           >
             <LogoutIcon sx={{ mr: 2 }} />Logout
@@ -472,25 +575,25 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
         </motion.div>
       </Menu>
 
-      {/* SETTINGS MENU */}
+      {/* SETTINGS MENU - Made responsive */}
       <Menu
         anchorEl={settingsAnchor}
         open={Boolean(settingsAnchor)}
         onClose={() => setSettingsAnchor(null)}
         PaperProps={{ 
           sx: { 
-            backgroundColor: colors.primary[400], 
-            color: colors.grey[100], 
-            minWidth: 200,
-            boxShadow: `0 8px 32px ${alpha(colors.grey[900], 0.2)}`,
-            border: `1px solid ${colors.grey[700]}`,
+            backgroundColor: customColors.cardBackground, 
+            color: customColors.text, 
+            minWidth: isSmallScreen ? 180 : 200,
+            boxShadow: `0 8px 32px ${customColors.shadow}`,
+            border: `1px solid ${customColors.border}`,
           } 
         }}
       >
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
             onClick={() => { setSettingsAnchor(null); onSettingsClick?.('general'); }}
-            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(colors.blueAccent[500], 0.1) } }}
+            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(customColors.primary, 0.1) } }}
           >
             General Settings
           </MenuItem>
@@ -498,7 +601,7 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
             onClick={() => { setSettingsAnchor(null); onSettingsClick?.('privacy'); }}
-            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(colors.blueAccent[500], 0.1) } }}
+            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(customColors.primary, 0.1) } }}
           >
             Privacy Settings
           </MenuItem>
@@ -506,16 +609,16 @@ const Topbar = ({ onSearch, onSettingsClick, onProfileAction }) => {
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
             onClick={() => { setSettingsAnchor(null); onSettingsClick?.('notifications'); }}
-            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(colors.blueAccent[500], 0.1) } }}
+            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(customColors.primary, 0.1) } }}
           >
             Notification Settings
           </MenuItem>
         </motion.div>
-        <Divider sx={{ backgroundColor: colors.grey[700] }} />
+        <Divider sx={{ backgroundColor: customColors.border }} />
         <motion.div whileHover={{ x: 5 }}>
           <MenuItem 
             onClick={() => { setSettingsAnchor(null); onSettingsClick?.('help'); }}
-            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(colors.blueAccent[500], 0.1) } }}
+            sx={{ transition: 'all 0.2s ease', '&:hover': { backgroundColor: alpha(customColors.primary, 0.1) } }}
           >
             Help & Support
           </MenuItem>

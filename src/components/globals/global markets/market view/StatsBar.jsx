@@ -29,11 +29,11 @@ const StatsBar = ({ views, createdAt, location }) => {
         }
       `}</style>
 
-      <div className="col-4">
+       <div className="col-4">
         <div className="card border-0 shadow-sm rounded-4 stat-card">
           <div className="card-body text-center py-3">
             <Eye className="text-primary mb-2" size={24} />
-            <h5 className="fw-bold mb-0">{views || 0}</h5>
+            <h5 className="fw-bold mb-0">{views || 0}</h5> {/* ✅ Views from prop (already a number) */}
             <small className="text-muted">Views</small>
           </div>
         </div>
