@@ -74,12 +74,11 @@ const TopListings = ({ listings, loading }) => {
               <p className="mb-1 fw-semibold text-truncate" style={{ color: '#0f172a' }}>
                 {listing.title || `Listing ${listing.listing_id.substring(0, 8)}`}
               </p>
-              <div className="d-flex align-items-center gap-2 flex-wrap">
-                {listing.price && (
-                  <span className="badge bg-success">
-                    KSh {listing.price.toLocaleString()}
-                  </span>
-                )}
+              {/* Fixed category line to use animal_type */}
+              <small style={{ color: '#64748b' }}>
+                {listing.animal_type || 'Uncategorized'} • KSh {listing.price?.toLocaleString() || 'N/A'}
+              </small>
+              <div className="d-flex align-items-center gap-2 flex-wrap mt-1">
                 {topRole && (
                   <span 
                     className="badge"

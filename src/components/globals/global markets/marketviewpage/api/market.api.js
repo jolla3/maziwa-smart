@@ -24,13 +24,13 @@ export const marketApi = {
     return response.data;
   },
 
-  getListingViews: async (listingId, token) => {
-    const response = await axios.get(`${API_BASE}/listing/summary/${listingId}`, {  // ✅ Fixed: Corrected endpoint to match backend (/api/listing/summary/:id)
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  // getListingViews: async (listingId, token) => {
+  //   const response = await axios.get(`${API_BASE}/listing/summary/${listingId}`, {  // ✅ Fixed: Corrected endpoint to match backend (/api/listing/summary/:id)
+  //     headers: { Authorization: `Bearer ${token}` },
+  //   });
     
-    return response.data;
-  },
+  //   return response.data;
+  // },
 
   incrementViews: async (listingId, token) => {
     try {
@@ -47,3 +47,5 @@ export const marketApi = {
     }
   },
 };
+
+export default marketApi;  // ✅ Added default export to support both named and default imports

@@ -26,7 +26,7 @@ const Notifications = () => {
   const { token, logout } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // CUSTOM AQUA COLORS - NO GREY ANYWHERE
   const customColors = {
     background: '#e0f7fa',           // Light cyan/aqua background
@@ -45,7 +45,7 @@ const Notifications = () => {
     searchBg: '#b2ebf2',             // Light cyan for search
     shadow: 'rgba(0, 188, 212, 0.2)', // Aqua shadow
   };
-  
+
   const [filterType, setFilterType] = useState('all');
   const [filterRead, setFilterRead] = useState('all');
   const [showToast, setShowToast] = useState(false);
@@ -53,6 +53,7 @@ const Notifications = () => {
   const [toastType, setToastType] = useState('success');
   const [highlightId, setHighlightId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [notifications, setNotifications] = useState([]);  // Local state for immediate updates
 
   const API_URL = process.env.REACT_APP_API_BASE;
 
@@ -68,7 +69,7 @@ const Notifications = () => {
     let url = `${API_URL}/notifications?`;
     if (filterType !== 'all') url += `type=${filterType}&`;
     if (filterRead !== 'all') url += `is_read=${filterRead === 'read'}&`;
-    
+
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -88,25 +89,34 @@ const Notifications = () => {
     if (!result.success || !result.data) {
       throw new Error('Invalid API response');
     }
-    
-    // Save to localStorage for Topbar to read
+
+    // Update local state and save to localStorage for Topbar
+    setNotifications(result.data);
     localStorage.setItem('notifications', JSON.stringify({
       data: result.data,
       timestamp: Date.now()
     }));
-    
+
     // Trigger custom event so Topbar updates
     window.dispatchEvent(new Event('notificationCacheUpdated'));
-    
+
     return result.data;
   };
 
   // Use cache hook with dependencies for filters
-  const { data: notifications, loading, error, clearCache } = useApiCache(
+  const { loading, error, clearCache } = useApiCache(
     'notifications',
     fetchNotificationsData,
     [filterType, filterRead, token]
   );
+
+  // Sync local state with cache on initial load
+  useEffect(() => {
+    const cached = JSON.parse(localStorage.getItem('notifications'));
+    if (cached && cached.data) {
+      setNotifications(cached.data);
+    }
+  }, []);
 
   // Handle scroll to highlighted notification
   useEffect(() => {
@@ -115,9 +125,9 @@ const Notifications = () => {
       if (selectedId && notifications.some(n => n._id === selectedId)) {
         setHighlightId(selectedId);
         setTimeout(() => {
-          document.getElementById(`notif-${selectedId}`)?.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
+          document.getElementById(`notif-${selectedId}`)?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
           });
         }, 100);
       }
@@ -143,7 +153,15 @@ const Notifications = () => {
 
       const result = await response.json();
       if (result.success) {
-        clearCache();
+        // Update local state immediately for instant UI feedback
+        setNotifications(prev => prev.map(n => n._id === id ? { ...n, is_read: true } : n));
+        // Update localStorage
+        const updated = notifications.map(n => n._id === id ? { ...n, is_read: true } : n);
+        localStorage.setItem('notifications', JSON.stringify({
+          data: updated,
+          timestamp: Date.now()
+        }));
+        window.dispatchEvent(new Event('notificationCacheUpdated'));
         showToastMessage('Marked as read', 'success');
       } else {
         throw new Error('Failed to mark as read');
@@ -165,7 +183,15 @@ const Notifications = () => {
 
       const result = await response.json();
       if (result.success) {
-        clearCache();
+        // Update local state immediately
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        // Update localStorage
+        const updated = notifications.map(n => ({ ...n, is_read: true }));
+        localStorage.setItem('notifications', JSON.stringify({
+          data: updated,
+          timestamp: Date.now()
+        }));
+        window.dispatchEvent(new Event('notificationCacheUpdated'));
         showToastMessage('All notifications marked as read', 'success');
       } else {
         throw new Error('Failed to mark all as read');
@@ -188,7 +214,15 @@ const Notifications = () => {
 
       const result = await response.json();
       if (result.success) {
-        clearCache();
+        // Update local state immediately
+        setNotifications(prev => prev.filter(n => n._id !== id));
+        // Update localStorage
+        const updated = notifications.filter(n => n._id !== id);
+        localStorage.setItem('notifications', JSON.stringify({
+          data: updated,
+          timestamp: Date.now()
+        }));
+        window.dispatchEvent(new Event('notificationCacheUpdated'));
         showToastMessage('Notification deleted', 'success');
       } else {
         throw new Error('Failed to delete notification');
@@ -215,7 +249,7 @@ const Notifications = () => {
   const formatDate = (date) => {
     const d = new Date(date);
     const diff = Math.floor((Date.now() - d) / 1000);
-    
+
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -236,7 +270,7 @@ const Notifications = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
   };
 
-  if (loading && !notifications) {
+  if (loading && notifications.length === 0) {
     return (
       <Box
         display="flex"
@@ -433,10 +467,13 @@ const Notifications = () => {
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: customColors.border,
                         },
+
+
+
                         '&:hover .MuiOutlinedInput-notchedOutline': {
                           borderColor: customColors.success,
                         },
-                      }}
+                      
                     >
                       <MenuItem value="all">All Status</MenuItem>
                       <MenuItem value="unread">⭕ Unread</MenuItem>

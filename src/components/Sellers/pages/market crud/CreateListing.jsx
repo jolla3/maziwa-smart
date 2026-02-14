@@ -5,17 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Save, ArrowLeft, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
-import AnimalDetailsEditable from "./AnimalDetailsEditable";
+import AnimalDetailsEditable from './AnimalDetailsEditable'; // Add this
 
 const API_BASE = process.env.REACT_APP_API_BASE;
-
+// ✅ Image URL fixer (Cloudinary already returns full URLs)
 const getImageUrl = (url) => {
   if (!url) return "https://placehold.co/600x400?text=No+Image";
   return url.startsWith("http") ? url : `${API_BASE.replace("/api", "")}/${url}`;
 };
-
-const CACHE_KEY_PREFIX = "animals_cache_";
-const CACHE_EXPIRY_HOURS = 1; // Cache for 1 hour
 
 const CreateListing = () => {
   const { user, token } = useContext(AuthContext);
@@ -28,6 +25,7 @@ const CreateListing = () => {
     price: "",
     description: "",
     location: "",
+    farmer_id: "",
     animal_details: {
       age: "",
       breed_name: "",
@@ -47,6 +45,7 @@ const CreateListing = () => {
   });
 
   const [animals, setAnimals] = useState([]);
+  const [previewAnimal, setPreviewAnimal] = useState(null); // For optional read-only if needed
   const [images, setImages] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
   const [loading, setLoading] = useState(false);
@@ -60,133 +59,74 @@ const CreateListing = () => {
     pig: ["piglet", "gilt", "sow", "boar"],
   };
 
-  // ✅ Helper to get cache key
-  const getCacheKey = () => `${CACHE_KEY_PREFIX}${user?.id || "guest"}`;
-
-  // ✅ Helper to check if cache is valid
-  const isCacheValid = (cache) => {
-    if (!cache || !cache.timestamp) return false;
-    const now = Date.now();
-    const expiry = CACHE_EXPIRY_HOURS * 60 * 60 * 1000; // Convert hours to ms
-    return now - cache.timestamp < expiry;
-  };
-
-  // ✅ Helper to get cached animals
-  const getCachedAnimals = () => {
-    try {
-      const cache = JSON.parse(localStorage.getItem(getCacheKey()));
-      if (isCacheValid(cache)) {
-        return cache.animals;
-      }
-    } catch (err) {
-      console.warn("Failed to load animals from cache:", err);
-    }
-    return null;
-  };
-
-  // ✅ Helper to set cached animals
-  const setCachedAnimals = (animals) => {
-    try {
-      const cache = {
-        animals,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(getCacheKey(), JSON.stringify(cache));
-    } catch (err) {
-      console.warn("Failed to cache animals:", err);
-    }
-  };
-
-  // ✅ Helper to clear cache (call after creating a listing)
-  const clearCache = () => {
-    try {
-      localStorage.removeItem(getCacheKey());
-    } catch (err) {
-      console.warn("Failed to clear cache:", err);
-    }
-  };
-
   useEffect(() => {
-    const loadAnimals = async () => {
-      if (user?.role !== "farmer" || !token) return;
-
-      // ✅ Check cache first
-      const cached = getCachedAnimals();
-      if (cached) {
-        setAnimals(cached);
-        return;
-      }
-
-      // ✅ Fetch from API if no valid cache
+    const fetchAnimals = async () => {
       try {
         const res = await axios.get(`${API_BASE}/animals`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.success) {
-          const fetchedAnimals = res.data.animals || [];
-          setAnimals(fetchedAnimals);
-          setCachedAnimals(fetchedAnimals); // ✅ Cache the result
+          setAnimals(res.data.animals || []);
         }
       } catch (err) {
         showToast("Failed to load animals", "error");
       }
     };
-    loadAnimals();
+    if (user?.role === "farmer" && token) fetchAnimals();
   }, [user, token]);
 
-  const calculateAge = (birthDate) => {
-    if (!birthDate) return "";
-    const birth = new Date(birthDate);
-    const today = new Date();
-    let years = today.getFullYear() - birth.getFullYear();
-    let months = today.getMonth() - birth.getMonth();
-    if (months < 0 || (months === 0 && today.getDate() < birth.getDate())) {
-      years--;
-      months += 12;
-    }
-    return `${years} year${years !== 1 ? "s" : ""} ${months} month${months !== 1 ? "s" : ""}`;
-  };
-
   const handleChange = async (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-
-    if (name === "animal_id" && user?.role === "farmer" && value) {
-      try {
-        const res = await axios.get(`${API_BASE}/animals/${value}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data.success) {
-          const animal = res.data.animal;
-          setForm((prev) => ({
-            ...prev,
-            animal_details: {
-              age: calculateAge(animal.birth_date) || "",
-              birth_date: animal.birth_date || "",
-              breed_name: animal.breed || "",
-              gender: animal.gender || "",
-              stage: animal.stage || "",
-              status: animal.status || "active",
-              bull_code: animal.sire?.bull_code || animal.pregnancy?.insemination?.bull_code || "",
-              bull_name: animal.sire?.bull_name || animal.pregnancy?.insemination?.bull_name || "",
-              bull_breed: animal.sire?.bull_breed || animal.pregnancy?.insemination?.bull_breed || "",
-              lifetime_milk: animal.lifetime_milk || "",
-              daily_average: animal.daily_average || "",
-              total_offspring: animal.total_offspring || 0,
-              is_pregnant: animal.pregnancy?.is_pregnant || false,
-              expected_due_date: animal.pregnancy?.expected_due_date || "",
-              insemination_id: animal.pregnancy?.insemination?._id || "",
-            },
-          }));
+    const { name, value, type, checked } = e.target;
+    if (name.startsWith("animal_details.")) {
+      const key = name.split(".")[1];
+      setForm((prev) => ({
+        ...prev,
+        animal_details: {
+          ...prev.animal_details,
+          [key]: type === "checkbox" ? checked : value,
+        },
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+      if (name === "animal_id" && user?.role === "farmer") {
+        try {
+          const res = await axios.get(`${API_BASE}/animals/${value}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.data.success) {
+            const animal = res.data.animal;
+            // Map to form.animal_details for editing
+            setForm(prev => ({
+              ...prev,
+              animal_details: {
+                age: animal.age || "", // Assume calculated or from birth_date
+                breed_name: animal.breed_id?.breed_name || animal.bull_breed || "",
+                gender: animal.gender || "",
+                bull_code: animal.pregnancy?.insemination_id?.bull_code || "",
+                bull_name: animal.pregnancy?.insemination_id?.bull_name || "",
+                bull_breed: animal.pregnancy?.insemination_id?.bull_breed || "",
+                status: animal.status || "active",
+                stage: animal.stage || "",
+                lifetime_milk: animal.lifetime_milk || "",
+                daily_average: animal.daily_average || "",
+                total_offspring: animal.total_offspring || "",
+                is_pregnant: animal.pregnancy?.is_pregnant || false,
+                expected_due_date: animal.pregnancy?.expected_due_date || "",
+                insemination_id: animal.pregnancy?.insemination_id || "",
+              }
+            }));
+            setPreviewAnimal(animal); // Optional if still want read-only preview too
+          }
+        } catch (err) {
+          showToast("Failed to load animal details", "error");
+          setForm(prev => ({ ...prev, animal_details: {} }));
         }
-      } catch (err) {
-        showToast("Failed to load animal details", "error");
       }
     }
   };
 
   const handleAnimalDetailsChange = (updatedDetails) => {
-    setForm((prev) => ({ ...prev, animal_details: updatedDetails }));
+    setForm(prev => ({ ...prev, animal_details: updatedDetails }));
   };
 
   const handleImageChange = (e) => {
@@ -195,10 +135,13 @@ const CreateListing = () => {
       showToast("Maximum 10 images allowed", "error");
       return;
     }
+
+    // ✅ Ensure images preview locally before Cloudinary upload
     const previews = files.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
     }));
+
     setImages((prev) => [...prev, ...previews]);
   };
 
@@ -217,6 +160,7 @@ const CreateListing = () => {
 
   useEffect(() => {
     return () => {
+      // Revoke local image object URLs to avoid memory leaks
       images.forEach((img) => {
         if (img.preview) URL.revokeObjectURL(img.preview);
       });
@@ -251,46 +195,50 @@ const CreateListing = () => {
       if (user?.role === "farmer") {
         formData.append("animal_id", form.animal_id);
       }
-      formData.append("animal_details", JSON.stringify(form.animal_details));
+      formData.append("animal_details", JSON.stringify(form.animal_details)); // Always send for merge/overrides
 
+      // ✅ Append actual File objects (not preview URLs)
       images.forEach((img) => {
-        formData.append("images", img.file);
+        formData.append("images", img.file); // keep `images` as field name!
       });
 
       const res = await axios.post(`${API_BASE}/listing`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Do not set Content-Type! Let Axios handle it.
+        },
         onUploadProgress: (progressEvent) => {
-          const percent = Math.round((progressEvent.loaded / (progressEvent.total || 1)) * 100);
+          const percent = Math.round(
+            (progressEvent.loaded / (progressEvent.total || 1)) * 100
+          );
           setUploadProgress({ total: percent });
         },
       });
 
       if (res.data.success) {
         showToast("✅ Listing created successfully!", "success");
-        clearCache(); // ✅ Clear cache after creation to refresh on next load
-        setTimeout(() => navigate("/slr.drb/my-listings"), 2000);
+        setTimeout(() => navigate("/slr.drb/my-listings"), 2000); // Navigate after toast
       } else {
         showToast(res.data.message || "Failed to create listing", "error");
       }
     } catch (err) {
       console.error("❌ Upload error:", err.response?.data || err.message);
-      showToast(err.response?.data?.message || "Server error during listing creation", "error");
+      showToast(
+        err.response?.data?.message || "Server error during listing creation",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const filteredAnimals = form.animal_type
-    ? animals.filter((a) => {
-      if (form.animal_type === "cow") {
-        return a?.species?.toLowerCase() === "cow" && a?.gender?.toLowerCase() === "female";
-      }
-      if (form.animal_type === "bull") {
-        return a?.species?.toLowerCase() === "bull" || (a?.species?.toLowerCase() === "cow" && a?.gender?.toLowerCase() === "male" && ["bull_calf", "young_bull", "mature_bull"].includes(a.stage));
-      }
-      return a?.species?.toLowerCase() === form.animal_type?.toLowerCase();
-    })
+    ? animals.filter(
+        (a) => a?.species?.toLowerCase() === form.animal_type?.toLowerCase()
+      )
     : [];
+
+  // Removed sellerPreview as it's no longer needed (unified with AnimalDetailsEditable)
 
   return (
     <div className="container-fluid px-3 py-4" style={{ background: "#f8fdff", minHeight: "100vh" }}>
@@ -335,7 +283,13 @@ const CreateListing = () => {
                   name="animal_type"
                   className="form-select"
                   value={form.animal_type}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      animal_type: e.target.value,
+                      animal_id: "",
+                    }))
+                  }
                   required
                 >
                   <option value="">Select type</option>
@@ -360,11 +314,13 @@ const CreateListing = () => {
                   required
                 >
                   <option value="">
-                    {!form.animal_type ? "Select animal type first" : `Choose from your ${form.animal_type}s`}
+                    {!form.animal_type
+                      ? "Select animal type first"
+                      : `Choose from your ${form.animal_type}s`}
                   </option>
                   {filteredAnimals.map((a) => {
                     const animalId = a._id || a.id;
-                    const displayName = `${a.cow_name || a.name || "Unnamed"} (${a.species}) - ${a.breed || "Unknown"}`;
+                    const displayName = `${a.cow_name || a.name || "Unnamed"} (${a.species}) - ${a.breed?.name || a.breed || "Unknown"}`;
                     return (
                       <option key={animalId} value={animalId}>
                         {displayName}
@@ -372,24 +328,24 @@ const CreateListing = () => {
                     );
                   })}
                 </select>
-
-                {form.animal_id && (
-                  <AnimalDetailsEditable
-                    animalDetails={form.animal_details}
-                    onChange={handleAnimalDetailsChange}
-                    animalType={form.animal_type}
-                    stageOptions={stageOptions[form.animal_type] || []}
+                {user?.role === "farmer" && form.animal_id && (
+                  <AnimalDetailsEditable 
+                    animalDetails={form.animal_details} 
+                    onChange={handleAnimalDetailsChange} 
+                    animalType={form.animal_type} 
+                    stageOptions={stageOptions[form.animal_type] || []} // Pass for dropdown
                   />
                 )}
               </>
             )}
 
-            {user?.role === "seller" && (
-              <div className="border rounded p-3 mb-3" style={{ background: "#f0f9ff" }}>
-                <h5 className="fw-semibold text-primary mb-3">Animal Details</h5>
-                {/* Your existing seller manual inputs here - unchanged for now */}
-                {/* ... (keep your original seller form fields) */}
-              </div>
+            {user?.role === "seller" && form.animal_type && (
+              <AnimalDetailsEditable 
+                animalDetails={form.animal_details} 
+                onChange={handleAnimalDetailsChange} 
+                animalType={form.animal_type} 
+                stageOptions={stageOptions[form.animal_type] || []} // Pass for dropdown
+              />
             )}
 
             <div className="row">
@@ -447,8 +403,14 @@ const CreateListing = () => {
                       src={img.preview || getImageUrl(img.url)}
                       alt={`preview-${i}`}
                       className="rounded border"
-                      style={{ width: 120, height: 120, objectFit: "cover", boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }}
+                      style={{
+                        width: 120,
+                        height: 120,
+                        objectFit: "cover",
+                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                      }}
                     />
+
                     <button
                       type="button"
                       className="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle"
@@ -457,6 +419,28 @@ const CreateListing = () => {
                     >
                       <XCircle size={14} />
                     </button>
+
+                    {/* 🩵 Progress overlay bar */}
+                    {loading && (
+                      <div
+                        className="position-absolute bottom-0 start-0 w-100 bg-light rounded-bottom overflow-hidden"
+                        style={{ height: "6px" }}
+                      >
+                        <div
+                          className="bg-primary"
+                          style={{
+                            width: `${uploadProgress.total || 0}%`,
+                            height: "100%",
+                            transition: "width 0.3s ease",
+                          }}
+                        />
+                        {loading && (
+                          <small className="text-primary fw-semibold d-block text-center mt-1">
+                            {uploadProgress.total || 0}%
+                          </small>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
@@ -469,7 +453,10 @@ const CreateListing = () => {
                 type="submit"
                 disabled={loading}
                 className="btn text-white px-4 py-2 rounded-pill shadow"
-                style={{ background: "linear-gradient(90deg,#00bcd4,#00d4ff)", border: "none" }}
+                style={{
+                  background: "linear-gradient(90deg,#00bcd4,#00d4ff)",
+                  border: "none",
+                }}
               >
                 {loading ? "Saving..." : (<><Save size={18} className="me-2" /> Save Listing</>)}
               </motion.button>
@@ -484,7 +471,12 @@ const CreateListing = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`position-fixed top-0 end-0 mt-4 me-4 px-4 py-3 rounded text-white shadow ${toast.type === "success" ? "bg-success" : toast.type === "error" ? "bg-danger" : "bg-info"}`}
+            className={`position-fixed top-0 end-0 mt-4 me-4 px-4 py-3 rounded text-white shadow ${toast.type === "success"
+              ? "bg-success"
+              : toast.type === "error"
+                ? "bg-danger"
+                : "bg-info"
+              }`}
             style={{ zIndex: 9999 }}
           >
             {toast.message}

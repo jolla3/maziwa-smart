@@ -17,7 +17,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../../../PrivateComponents/AuthContext"; // For user-specific storage
+import { AuthContext } from "../../../../../PrivateComponents/AuthContext"; // For user-specific storage
 import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency, timeAgo } from "../../utils/currency.utils";
 import useListingViews from "../../hooks/useListingViews"; // ✅ Import the new views hook

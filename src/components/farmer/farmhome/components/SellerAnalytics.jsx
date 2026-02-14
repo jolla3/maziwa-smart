@@ -3,6 +3,9 @@ import React from 'react';
 import { Eye, Package, ShoppingCart, TrendingUp, Users, MessageSquare, Plus, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useListingViews from '../hooks/useListingViews';
+import ViewsChart from '../../../Sellers/components/ViewsChart'; // Added import
+import TopListings from '../../../Sellers/components/TopListings'; // Added import
+
 
 const formatNumber = (num) => {
   return new Intl.NumberFormat().format(num || 0);
@@ -94,6 +97,7 @@ const MarketplaceAnalytics = () => {
 
   return (
     <div style={{ marginBottom: '2rem' }}>
+      {/* Header */}
       <div className="mb-4 d-flex justify-content-between align-items-start">
         <div>
           <h2 className="mb-2 fw-bold" style={{ color: '#0f172a', fontSize: '2rem' }}>
@@ -119,12 +123,14 @@ const MarketplaceAnalytics = () => {
         </button>
       </div>
 
+      {/* Error Alert */}
       {error && (
         <div className="alert alert-warning mb-4" role="alert">
           <strong>Warning:</strong> {error}. Showing cached data if available.
         </div>
       )}
 
+      {/* Stats Cards */}
       <div className="row g-4 mb-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
@@ -168,7 +174,9 @@ const MarketplaceAnalytics = () => {
         })}
       </div>
 
+      {/* Main Content */}
       <div className="row g-4">
+        {/* Top Listings */}
         <div className="col-lg-8">
           <div className="bg-white rounded-3 border-0 shadow-sm overflow-hidden h-100">
             <div className="p-4 border-bottom d-flex justify-content-between align-items-center" 
@@ -190,115 +198,18 @@ const MarketplaceAnalytics = () => {
                 Add Listing
               </button>
             </div>
-            <div className="p-4">
-              {loading ? (
-                <div>
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="mb-3 p-3 bg-light rounded">
-                      <div className="placeholder-glow">
-                        <span className="placeholder col-6"></span>
-                        <span className="placeholder col-4 mt-2"></span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : topListings.length === 0 ? (
-                <div className="text-center py-5">
-                  <Package size={48} color="#cbd5e1" className="mb-3" />
-                  <p className="text-muted">No listings found</p>
-                </div>
-              ) : (
-                topListings.map((listing, index) => (
-                  <div 
-                    key={listing.listing_id || index}
-                    className="mb-3 p-3 rounded-3 d-flex justify-content-between align-items-center"
-                    style={{
-                      backgroundColor: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f1f5f9';
-                      e.currentTarget.style.transform = 'translateX(4px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f8fafc';
-                      e.currentTarget.style.transform = 'translateX(0)';
-                    }}
-                  >
-                    <div>
-                      <h6 className="mb-1 fw-bold" style={{ color: '#0f172a' }}>
-                        {listing.title || 'Untitled Listing'}
-                      </h6>
-                      <small style={{ color: '#64748b' }}>
-                        {listing.category || 'Uncategorized'} • KES {formatNumber(listing.price || 0)}
-                      </small>
-                    </div>
-                    <span 
-                      className="badge rounded-pill px-3 py-2"
-                      style={{ 
-                        backgroundColor: '#3b82f6',
-                        color: '#ffffff',
-                        fontWeight: 600
-                      }}
-                    >
-                      {listing.total_views || 0} views
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
+            <TopListings listings={topListings} loading={loading} />
           </div>
         </div>
 
+        {/* Sidebar */}
         <div className="col-lg-4">
+          {/* Views by Role Chart */}
           <div className="bg-white rounded-3 border-0 shadow-sm overflow-hidden mb-4">
-            <div className="p-4 border-bottom" style={{ borderColor: '#e2e8f0' }}>
-              <h5 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>
-                Views by User Type
-              </h5>
-            </div>
-            <div className="p-4">
-              {loading ? (
-                <div>
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="mb-3">
-                      <div className="placeholder-glow">
-                        <span className="placeholder col-12"></span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : Object.keys(byRole).length === 0 ? (
-                <p className="text-muted text-center mb-0">No view data available</p>
-              ) : (
-                Object.entries(byRole).map(([role, count]) => (
-                  <div key={role} className="mb-3">
-                    <div className="d-flex justify-content-between mb-1">
-                      <small className="fw-semibold text-capitalize" style={{ color: '#0f172a' }}>
-                        {role}
-                      </small>
-                      <small className="fw-bold" style={{ color: '#6366f1' }}>
-                        {count}
-                      </small>
-                    </div>
-                    <div style={{ height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px' }}>
-                      <div 
-                        style={{ 
-                          height: '100%',
-                          width: `${totalViews > 0 ? (count / totalViews) * 100 : 0}%`,
-                          background: 'linear-gradient(90deg, #6366f1 0%, #3b82f6 100%)',
-                          borderRadius: '4px',
-                          transition: 'width 0.3s'
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            <ViewsChart byRole={byRole} totalViews={totalViews} />
           </div>
 
+          {/* Quick Actions */}
           <div className="bg-white rounded-3 border-0 shadow-sm overflow-hidden">
             <div className="p-4 border-bottom" style={{ borderColor: '#e2e8f0' }}>
               <h5 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>

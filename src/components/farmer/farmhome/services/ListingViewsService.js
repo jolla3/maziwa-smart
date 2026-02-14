@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE
-const CACHE_KEY = 'seller_views_summary';
+const CACHE_KEY = 'farmer_views_summary';
 const CACHE_DURATION = 5 * 60 * 1000;
 
 class ListingViewsService {

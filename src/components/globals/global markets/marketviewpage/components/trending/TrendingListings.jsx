@@ -6,16 +6,31 @@ import { AuthContext } from "../../../../../PrivateComponents/AuthContext";
 import { marketApi } from "../../api/market.api";
 import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency } from "../../utils/currency.utils";
-import useListingViews from "../../hooks/useListingViews";
 
 // Vertical card component
 const TrendingCard = ({ listing }) => {
   const navigate = useNavigate();
-  const { token } = useContext(AuthContext);
-  const { views, loading: viewsLoading } = useListingViews(listing._id);
+  const { token, user } = useContext(AuthContext);
+
+  // Function to register view with deduplication
+  const registerView = async (listingId) => {
+    const viewedKey = user?._id ? `viewed_${user._id}_${listingId}` : `viewed_guest_${listingId}`;
+    if (localStorage.getItem(viewedKey)) {
+      console.log('View already registered for listing:', listingId);
+      return; // Skip if already viewed in this session
+    }
+
+    try {
+      await marketApi.incrementViews(listingId, token);
+      localStorage.setItem(viewedKey, 'true'); // Mark as viewed
+      console.log('View registered for listing:', listingId);
+    } catch (error) {
+      console.error('Failed to register view:', error);
+    }
+  };
 
   const handleView = async () => {
-    await marketApi.incrementViews(listing._id, token);
+    await registerView(listing._id); // Register view only once per session
     navigate("/view-market", { state: { listing } });
   };
 
@@ -91,7 +106,7 @@ const TrendingCard = ({ listing }) => {
       >
         {/* Title */}
         <h6
-          className="fw-bold mb-0"
+          className="mb-0 fw-bold"
           style={{
             color: "#0f172a",
             fontSize: "0.95rem",
@@ -161,7 +176,7 @@ const TrendingCard = ({ listing }) => {
         <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "#0f172a" }}>
           <Eye size={13} style={{ color: "#10b981" }} />
           <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
-            {viewsLoading ? "..." : views}
+            {listing.views?.count || 0} {/* ✅ Use embedded views - no caching */}
           </span>
         </div>
       </div>

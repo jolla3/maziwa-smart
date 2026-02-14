@@ -749,7 +749,7 @@ import MarketHero from "./components/hero/MarketHero";
 import MarketStatsBar from "./components/stats/MarketStatsBar";
 import MarketFiltersPanel from "./components/filters/MarketFiltersPanel";
 import TrendingListings from "./components/trending/TrendingListings";
-import ListingsGrid from "./components/listings/ListingsGrid";
+import ListingsGrid from "./components/listings/MainListingsGrid";
 import MarketLoader from "./components/states/MarketLoader";
 import WishlistPage from "./pages/WishlistPage";
 import BasketPage from "./pages/BasketPage";

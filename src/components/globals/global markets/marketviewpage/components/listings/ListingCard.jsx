@@ -2,10 +2,12 @@ import React, { useState, useEffect, useContext } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Eye, Heart, ShoppingCart, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useMediaQuery } from "@mui/material"; // ✅ Added for dynamic sizing
 import { AuthContext } from "../../../../../PrivateComponents/AuthContext";
 import { marketApi } from "../../api/market.api";
 import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency, timeAgo } from "../../utils/currency.utils";
+import useListingViews from "../../hooks/useListingViews";
 
 const speciesConfig = {
   cow: { color: "#0d6efd", emoji: "🐄" },
@@ -18,8 +20,18 @@ const speciesConfig = {
 export default function ListingCard({ listing }) {
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
+  const { incrementView } = useListingViews(listing._id);
   const [inWishlist, setInWishlist] = useState(false);
   const [inBasket, setInBasket] = useState(false);
+
+  // ✅ Dynamic sizing based on device dimensions
+  const isMobile = useMediaQuery("(max-width: 600px)"); // Mobile: <600px
+  const isTablet = useMediaQuery("(min-width: 601px) and (max-width: 960px)"); // Tablet: 601-960px
+  const isDesktop = useMediaQuery("(min-width: 961px)"); // Desktop: >960px
+
+  // Set dynamic heights based on screen size
+  const imageHeight = isMobile ? 150 : isTablet ? 180 : 200; // Smaller on mobile, larger on desktop
+  const cardMinHeight = isMobile ? 350 : isTablet ? 380 : 400; // Adjust card height accordingly
 
   useEffect(() => {
     const checkStatus = () => {
@@ -36,7 +48,7 @@ export default function ListingCard({ listing }) {
   }, [listing._id]);
 
   const handleView = async () => {
-    await marketApi.incrementViews(listing._id, token);
+    await incrementView();
     navigate("/view-market", { state: { listing } });
   };
 
@@ -84,16 +96,29 @@ export default function ListingCard({ listing }) {
     <motion.div
       whileHover={{ y: -10 }}
       className="card border-0 shadow-sm rounded-4 overflow-hidden h-100"
-      style={{ cursor: "pointer" }}
+      style={{
+        cursor: "pointer",
+        minHeight: `${cardMinHeight}px`, // ✅ Dynamic card height
+      }}
     >
       <div className="position-relative" onClick={handleView}>
-        <div className="ratio ratio-4x3 bg-light overflow-hidden">
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: `${imageHeight}px`, // ✅ Dynamic image height
+            overflow: "hidden",
+            backgroundColor: "#f9fafb",
+          }}
+        >
           <img
             src={imgUrl(getFirstImage(listing))}
             alt={listing.title}
             style={{
+              width: "100%",
+              height: "100%",
               objectFit: "cover",
-              transition: "transform 0.4s ease"
+              transition: "transform 0.4s ease",
             }}
             className="card-zoom-img"
           />
@@ -151,12 +176,12 @@ export default function ListingCard({ listing }) {
           <h5 className="fw-bold mb-0" style={{ color: "#10b981" }}>
             {formatCurrency(listing.price)}
           </h5>
-           <div className="d-flex align-items-center" style={{ color: "#0f172a" }}>
-    <Eye size={14} className="me-1" />
-    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
-      {listing.views?.count || 0} views {/* ✅ Use views directly from listing prop */}
-    </span>
-  </div>
+          <div className="d-flex align-items-center" style={{ color: "#0f172a" }}>
+            <Eye size={14} className="me-1" />
+            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+              {listing.views?.count || 0} views
+            </span>
+          </div>
         </div>
 
         <div className="d-flex gap-1 flex-wrap mb-2">

@@ -1,18 +1,44 @@
-
-// ============================================
-// FILE: /src/superadmin/utils/cache.js
-// ============================================
-const CACHE_PREFIX = 'sa_cache_';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+// FILE: /src/components/SUPERaDMIN/utils/cache.js
+const CACHE_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+const MAX_CACHE_KEYS = 10; // Reduced to 10
 
 export const cacheUtils = {
   set: (key, data) => {
     try {
-      const cacheData = {
-        data,
+      // Limit data size
+      let limitedData = data;
+      if (Array.isArray(data) && data.length > 20) limitedData = data.slice(0, 20);
+      if (typeof data === 'object' && data !== null) {
+        limitedData = Object.fromEntries(Object.entries(data).slice(0, 5));
+      }
+
+      // Check for changes
+      const existing = localStorage.getItem(`cache_${key}`);
+      if (existing) {
+        const parsed = JSON.parse(existing);
+        if (JSON.stringify(parsed.data) === JSON.stringify(limitedData)) {
+          console.log(`Data unchanged for '${key}', skipping cache update.`);
+          return;
+        }
+      }
+
+      localStorage.setItem(`cache_${key}`, JSON.stringify({
+        data: limitedData,
         timestamp: Date.now()
-      };
-      localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(cacheData));
+      }));
+
+      // Aggressive cleanup
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('cache_'));
+      if (keys.length > MAX_CACHE_KEYS) {
+        keys.sort((a, b) => {
+          const aTime = JSON.parse(localStorage.getItem(a))?.timestamp || 0;
+          const bTime = JSON.parse(localStorage.getItem(b))?.timestamp || 0;
+          return aTime - bTime;
+        }).slice(0, keys.length - MAX_CACHE_KEYS).forEach(k => {
+          localStorage.removeItem(k);
+          console.log(`Removed old cache: ${k}`);
+        });
+      }
     } catch (err) {
       console.warn('Cache set failed:', err);
     }
@@ -20,35 +46,39 @@ export const cacheUtils = {
 
   get: (key) => {
     try {
-      const cached = localStorage.getItem(CACHE_PREFIX + key);
-      if (!cached) return null;
-
-      const { data, timestamp } = JSON.parse(cached);
-      const age = Date.now() - timestamp;
-
-      if (age > CACHE_DURATION) {
-        localStorage.removeItem(CACHE_PREFIX + key);
-        return null;
+      const cached = localStorage.getItem(`cache_${key}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.timestamp < CACHE_EXPIRY_MS) {
+          return parsed.data;
+        } else {
+          localStorage.removeItem(`cache_${key}`);
+          console.log(`Removed expired cache: cache_${key}`);
+        }
       }
-
-      return data;
     } catch (err) {
       console.warn('Cache get failed:', err);
-      return null;
     }
+    return null;
   },
 
-  clear: (key) => {
+  // Manual cleanup function
+  cleanup: () => {
     try {
-      if (key) {
-        localStorage.removeItem(CACHE_PREFIX + key);
-      } else {
-        Object.keys(localStorage)
-          .filter(k => k.startsWith(CACHE_PREFIX))
-          .forEach(k => localStorage.removeItem(k));
-      }
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('cache_'));
+      keys.forEach(k => {
+        const cached = localStorage.getItem(k);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Date.now() - parsed.timestamp >= CACHE_EXPIRY_MS) {
+            localStorage.removeItem(k);
+            console.log(`Manually removed expired cache: ${k}`);
+          }
+        }
+      });
+      console.log('Manual cache cleanup completed.');
     } catch (err) {
-      console.warn('Cache clear failed:', err);
+      console.warn('Manual cleanup failed:', err);
     }
   }
 };
