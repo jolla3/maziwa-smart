@@ -467,13 +467,10 @@ const Notifications = () => {
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: customColors.border,
                         },
-
-
-
                         '&:hover .MuiOutlinedInput-notchedOutline': {
                           borderColor: customColors.success,
                         },
-                      
+                      }}
                     >
                       <MenuItem value="all">All Status</MenuItem>
                       <MenuItem value="unread">⭕ Unread</MenuItem>
