@@ -247,16 +247,17 @@ const Notifications = () => {
   };
 
   const formatDate = (date) => {
-    const d = new Date(date);
-    const diff = Math.floor((Date.now() - d) / 1000);
-
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-    return d.toLocaleDateString();
-  };
-
+  const d = new Date(date);
+  // Adjust for timezone if needed (e.g., assume UTC)
+  const localDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  const diff = Math.floor((Date.now() - localDate) / 1000);
+  
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return localDate.toLocaleDateString();  // Use local date for past dates
+};
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
