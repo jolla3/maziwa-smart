@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
-const CACHE_EXPIRY_HOURS = 1; // Default 1 hour
+const CACHE_EXPIRY_HOURS = 0.25; // ✅ Reduced to 15 minutes for more frequent updates
 
 export const useApiCache = (key, fetchFunction, dependencies = []) => {
   const [data, setData] = useState(null);
@@ -110,6 +110,12 @@ export const useApiCache = (key, fetchFunction, dependencies = []) => {
     }
   }, [cacheKey]);
 
+  // ✅ New: Force refresh function to manually clear and re-fetch
+  const forceRefresh = useCallback(async () => {
+    clearCache(); // Clear cache
+    await memoizedFetch(); // Re-fetch immediately
+  }, [clearCache]);
+
   // Use useRef to store the fetch function stably (prevents re-creation)
   const fetchRef = useRef(fetchFunction);
   fetchRef.current = fetchFunction; // Update ref on changes, but doesn't cause re-renders
@@ -146,5 +152,5 @@ export const useApiCache = (key, fetchFunction, dependencies = []) => {
     memoizedFetch();
   }, [memoizedFetch, ...dependencies]); // Include dependencies to re-fetch when they change
 
-  return { data, loading, error, clearCache };
+  return { data, loading, error, clearCache, forceRefresh }; // ✅ Added forceRefresh
 };

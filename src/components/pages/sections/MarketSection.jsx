@@ -16,6 +16,9 @@ import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 import Star from 'lucide-react/dist/esm/icons/star';
 import MapPin from 'lucide-react/dist/esm/icons/map-pin';
 import Heart from 'lucide-react/dist/esm/icons/heart';
+import { imgUrl, getFirstImage } from '../../globals/global markets/marketviewpage/utils/image.utils'; // ✅ Import for image handling
+import { formatCurrency } from '../../globals/global markets/marketviewpage/utils/currency.utils'; // ✅ Import for price formatting
+import useTrending from '../../globals/global markets/marketviewpage/hooks/useTrending'; // ✅ Import the trending hook
 
 const WaveSeparator = ({ flip = false, color = '#fafafa' }) => (
   <Box
@@ -41,63 +44,29 @@ const MarketSection = ({ navigate }) => {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
-  const listings = [
-  {
-    image: "https://source.unsplash.com/400x300/?boer-goat,farm",
-    title: "Healthy Boer Goat – Ready for Breeding",
-    description:
-      "Mature female Boer goat, excellent for breeding and meat production. Suitable for small-scale and commercial farmers.",
-    price: "KES 15,000",
-    location: "Kiambu County",
-    seller: "John Kamau",
-    rating: 4.8,
-    tag: "Verified",
-  },
-  {
-    image: "https://source.unsplash.com/400x300/?large-pig,farm",
-    title: "Large Pig – Ready for Fattening",
-    description:
-      "Well-fed pig ready for fattening, ideal for butcheries and small-scale pork production.",
-    price: "KES 20,000",
-    location: "Nakuru County",
-    seller: "Mary Njeri",
-    rating: 5.0,
-    tag: "Featured",
-  },
-  {
-    image: "https://source.unsplash.com/400x300/?ayrshire-bull,cattle",
-    title: "Strong Ayrshire Bull – 3 Years",
-    description:
-      "High-quality Ayrshire bull for breeding and herd improvement. Healthy, vaccinated, and ready for service.",
-    price: "KES 130,000",
-    location: "Meru County",
-    seller: "Peter Ochieng",
-    rating: 4.9,
-    tag: "Hot Deal",
-  },
-  {
-    image: "https://source.unsplash.com/400x300/?friesian-cow,dairy",
-    title: "Premium Friesian Cow – Milking",
-    description:
-      "High-yielding Friesian cow in full lactation. Ideal for dairy farmers looking to boost milk production.",
-    price: "KES 90,000",
-    location: "Uasin Gishu County",
-    seller: "Grace Wambui",
-    rating: 4.7,
-    tag: "New",
-  },
-  {
-    image: "https://source.unsplash.com/400x300/?holstein-cow,dairy",
-    title: "Holstein Cow – High Yield",
-    description:
-      "Holstein cow with proven high milk output. Suitable for commercial dairy operations and cooperatives.",
-    price: "KES 110,000",
-    location: "Kiambu County",
-    seller: "David Kiprop",
-    rating: 4.9,
-    tag: "Premium",
-  },
-];
+  // ✅ Use trending hook instead of mock data
+  const { trendingListings, loading } = useTrending();
+
+  // ✅ Map real trending data to component structure
+  const listings = trendingListings.map((listing) => ({
+    image: imgUrl(getFirstImage(listing)), // Use real image
+    title: listing.title, // Real title
+    description: `A healthy ${listing.animal_id?.species || 'livestock'} for your farm.`, // Derived description
+    price: formatCurrency(listing.price), // Formatted real price
+location: listing.location?.county || listing.location || "Kenya",
+    seller: "Verified ", // Placeholder (not in data)
+    // rating: 4.5, // Placeholder (not in data)
+    tag: listing.animal_id?.species 
+  }));
+
+  // Show loading or empty state if no data
+  if (loading || listings.length === 0) {
+    return (
+      <Box ref={ref} sx={{ py: 8, bgcolor: 'background.paper', textAlign: 'center' }}>
+        <Typography variant="h6">Loading trending listings...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box ref={ref} sx={{ py: 8, bgcolor: 'background.paper' }}>

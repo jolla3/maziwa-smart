@@ -1,36 +1,17 @@
 import React, { useState, useContext, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, TrendingUp, Eye, Award } from "lucide-react";
+import { ChevronLeft, ChevronRight, TrendingUp, Award } from "lucide-react"; // Removed Eye
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../../../PrivateComponents/AuthContext";
-import { marketApi } from "../../api/market.api";
 import { imgUrl, getFirstImage } from "../../utils/image.utils";
 import { formatCurrency } from "../../utils/currency.utils";
 
 // Vertical card component
 const TrendingCard = ({ listing }) => {
   const navigate = useNavigate();
-  const { token, user } = useContext(AuthContext);
 
-  // Function to register view with deduplication
-  const registerView = async (listingId) => {
-    const viewedKey = user?._id ? `viewed_${user._id}_${listingId}` : `viewed_guest_${listingId}`;
-    if (localStorage.getItem(viewedKey)) {
-      console.log('View already registered for listing:', listingId);
-      return; // Skip if already viewed in this session
-    }
-
-    try {
-      await marketApi.incrementViews(listingId, token);
-      localStorage.setItem(viewedKey, 'true'); // Mark as viewed
-      console.log('View registered for listing:', listingId);
-    } catch (error) {
-      console.error('Failed to register view:', error);
-    }
-  };
-
-  const handleView = async () => {
-    await registerView(listing._id); // Register view only once per session
+  const handleView = () => {
+    // ✅ No view increment - using embedded views only
     navigate("/view-market", { state: { listing } });
   };
 
@@ -172,13 +153,7 @@ const TrendingCard = ({ listing }) => {
           </div>
         )}
 
-        {/* Views */}
-        <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "#0f172a" }}>
-          <Eye size={13} style={{ color: "#10b981" }} />
-          <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
-            {listing.views?.count || 0} {/* ✅ Use embedded views - no caching */}
-          </span>
-        </div>
+        {/* ✅ No views display or increment - embedded views only in data */}
       </div>
     </motion.div>
   );

@@ -7,20 +7,15 @@ export default function useTrending() {
   const { token, user } = useContext(AuthContext);
 
   // ✅ Use useApiCache for trending listings
-  const { data: trendingListings } = useApiCache(
+  const { data: trendingListings, forceRefresh } = useApiCache(
     `cache_${user?.id}_market_trending`, // Unique key per user
     async () => {
       const data = await marketApi.fetchTrending(token);
       if (data.success) {
-        // Remove duplicates AND filter out invalid listings
-        const validListings = data.listings.filter(item => 
-          item._id && 
-          item.title && 
-          item.price > 0
-        );
-        
+        // ✅ Removed frontend validation - trust backend to send only valid listings
+        // Keep duplicate removal for data consistency
         const uniqueListings = Array.from(
-          new Map(validListings.map(item => [item._id, item])).values()
+          new Map(data.listings.map(item => [item._id, item])).values()
         );
         
         return uniqueListings;
@@ -30,5 +25,5 @@ export default function useTrending() {
     [user?.id, token] // Stable dependencies
   );
 
-  return { trendingListings: trendingListings || [] }; // ✅ Safety check
+  return { trendingListings: trendingListings || [], forceRefresh }; // ✅ Added forceRefresh for manual refresh
 }

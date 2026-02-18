@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Eye, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { imgUrl, getFirstImage } from '../../utils/image.utils';
 import { formatCurrency } from '../../utils/currency.utils';
@@ -229,28 +229,7 @@ export default function TrendingCarousel({ listings = [] }) {
                   </span>
                 </div>
 
-                {/* Views */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <Eye
-                    size={16}
-                    style={{ color: '#10b981', flexShrink: 0 }}
-                  />
-                  <span
-                    style={{
-                      fontSize: '0.9rem',
-                      color: '#475569',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {currentListing.views?.count || 0} views
-                  </span>
-                </div>
+                {/* ✅ No views - embedded only in data */}
               </div>
             </div>
           </motion.div>
