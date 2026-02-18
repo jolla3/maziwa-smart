@@ -42,57 +42,62 @@ const MarketSection = ({ navigate }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
   const listings = [
-    {
-      image: "https://images.unsplash.com/photo-1549665730-6e6c2cb92e3e?w=400&h=300&fit=crop", // Boer‑type goat
-      title: "Healthy Boer Goat – Ready for Breeding",
-      description: "Mature female Boer goat, excellent for breeding and meat production. Suitable for small‑scale and commercial farmers.",
-      price: "KES 15,000",
-      location: "Kiambu County",
-      seller: "John Kamau",
-      rating: 4.8,
-      tag: "Verified",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1612779223236-4e409aebe50c?w=400&h=300&fit=crop", // Pig
-      title: "Large Pig – Ready for Fattening",
-      description: "Well‑fed pig ready for fattening, ideal for butcheries and small‑scale pork production.",
-      price: "KES 20,000",
-      location: "Nakuru County",
-      seller: "Mary Njeri",
-      rating: 5.0,
-      tag: "Featured",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400&h=300&fit=crop", // Bull
-      title: "Strong Ayrshire Bull – 3 Years",
-      description: "High‑quality Ayrshire bull for breeding and herd improvement. Healthy, vaccinated, and ready for service.",
-      price: "KES 130,000",
-      location: "Meru County",
-      seller: "Peter Ochieng",
-      rating: 4.9,
-      tag: "Hot Deal",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=300&fit=crop", // Cow
-      title: "Premium Friesian Cow – Milking",
-      description: "High‑yielding Friesian cow in full lactation. Ideal for dairy farmers looking to boost milk production.",
-      price: "KES 90,000",
-      location: "Uasin Gishu",
-      seller: "Grace Wambui",
-      rating: 4.7,
-      tag: "New",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=400&h=300&fit=crop", // Another cow
-      title: "Holstein Cow – High Yield",
-      description: "Holstein cow with proven high milk output. Suitable for commercial dairy operations and cooperatives.",
-      price: "KES 110,000",
-      location: "Kiambu County",
-      seller: "David Kiprop",
-      rating: 4.9,
-      tag: "Premium",
-    },
-  ];
+  {
+    image: "https://source.unsplash.com/400x300/?boer-goat,farm",
+    title: "Healthy Boer Goat – Ready for Breeding",
+    description:
+      "Mature female Boer goat, excellent for breeding and meat production. Suitable for small-scale and commercial farmers.",
+    price: "KES 15,000",
+    location: "Kiambu County",
+    seller: "John Kamau",
+    rating: 4.8,
+    tag: "Verified",
+  },
+  {
+    image: "https://source.unsplash.com/400x300/?large-pig,farm",
+    title: "Large Pig – Ready for Fattening",
+    description:
+      "Well-fed pig ready for fattening, ideal for butcheries and small-scale pork production.",
+    price: "KES 20,000",
+    location: "Nakuru County",
+    seller: "Mary Njeri",
+    rating: 5.0,
+    tag: "Featured",
+  },
+  {
+    image: "https://source.unsplash.com/400x300/?ayrshire-bull,cattle",
+    title: "Strong Ayrshire Bull – 3 Years",
+    description:
+      "High-quality Ayrshire bull for breeding and herd improvement. Healthy, vaccinated, and ready for service.",
+    price: "KES 130,000",
+    location: "Meru County",
+    seller: "Peter Ochieng",
+    rating: 4.9,
+    tag: "Hot Deal",
+  },
+  {
+    image: "https://source.unsplash.com/400x300/?friesian-cow,dairy",
+    title: "Premium Friesian Cow – Milking",
+    description:
+      "High-yielding Friesian cow in full lactation. Ideal for dairy farmers looking to boost milk production.",
+    price: "KES 90,000",
+    location: "Uasin Gishu County",
+    seller: "Grace Wambui",
+    rating: 4.7,
+    tag: "New",
+  },
+  {
+    image: "https://source.unsplash.com/400x300/?holstein-cow,dairy",
+    title: "Holstein Cow – High Yield",
+    description:
+      "Holstein cow with proven high milk output. Suitable for commercial dairy operations and cooperatives.",
+    price: "KES 110,000",
+    location: "Kiambu County",
+    seller: "David Kiprop",
+    rating: 4.9,
+    tag: "Premium",
+  },
+];
 
   return (
     <Box ref={ref} sx={{ py: 8, bgcolor: 'background.paper' }}>
