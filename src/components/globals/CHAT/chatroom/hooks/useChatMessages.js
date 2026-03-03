@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+// hooks/useChatMessages.js
+import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 
 const MESSAGE_CACHE_PREFIX = "chat_messages_";
@@ -11,8 +12,16 @@ export const useChatMessages = (receiverId, listingId) => {
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState(null);
 
+  const userIdRef = useRef(localStorage.getItem("userId"));
+
+  // Update userId ref when it changes
+  useEffect(() => {
+    userIdRef.current = localStorage.getItem("userId");
+  }, []);
+
   // Cache helpers with expiration
   const getCachedMessages = useCallback(() => {
+    if (!receiverId) return null;
     try {
       const cached = localStorage.getItem(`${MESSAGE_CACHE_PREFIX}${receiverId}`);
       if (!cached) return null;
@@ -30,6 +39,7 @@ export const useChatMessages = (receiverId, listingId) => {
   }, [receiverId]);
 
   const setCachedMessages = useCallback((msgs) => {
+    if (!receiverId) return;
     try {
       localStorage.setItem(`${MESSAGE_CACHE_PREFIX}${receiverId}`, JSON.stringify({
         messages: msgs,
@@ -44,7 +54,7 @@ export const useChatMessages = (receiverId, listingId) => {
   useEffect(() => {
     if (!receiverId) return;
 
-    // Load cached messages first
+    // Load cached messages first for instant display
     const cached = getCachedMessages();
     if (cached && cached.length > 0) {
       setMessages(cached);
@@ -53,7 +63,6 @@ export const useChatMessages = (receiverId, listingId) => {
 
     const fetchChat = async () => {
       try {
-        // FIXED: Use "/chat" since axios.baseURL already includes "/api"
         const res = await axios.get(`/chat/${receiverId}`);
         if (res.data.success) {
           const msgs = res.data.messages || [];
@@ -62,9 +71,9 @@ export const useChatMessages = (receiverId, listingId) => {
           
           if (res.data.counterpart) {
             setCounterpart(res.data.counterpart);
-            // Removed: isOnline and lastSeen as backend doesn't provide them yet
-            // setIsOnline(res.data.counterpart.is_online || false);
-            // setLastSeen(res.data.counterpart.last_seen || null);
+            // ✅ FIXED: Get online status from backend
+            setIsOnline(res.data.counterpart.isOnline || false);
+            setLastSeen(res.data.counterpart.lastSeen || null);
           }
         }
       } catch (err) {
@@ -73,27 +82,31 @@ export const useChatMessages = (receiverId, listingId) => {
         setLoading(false);
       }
     };
+    
     fetchChat();
   }, [receiverId, getCachedMessages, setCachedMessages]);
 
-  // Send message - FIXED: Immediately show message locally, with validation
+  // Send message - immediately show locally
   const sendMessage = useCallback(async (text) => {
-    if (!text.trim() || text.length > 2000) return; // Added: Length validation to match backend
+    if (!text.trim() || text.length > 2000) return;
     
     const tempId = `temp_${Date.now()}`;
-    const userId = localStorage.getItem("userId");
+    const currentUserId = userIdRef.current;
     
     const temp = {
-      _id: tempId, // Standardized: Use _id as primary
+      _id: tempId,
       id: tempId,
       from: "me",
-      senderId: userId,
+      senderId: currentUserId,
       text,
+      message: text,
       createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
       isSending: true,
+      isRead: false,
     };
     
-    // IMMEDIATELY add to messages array so user sees it
+    // IMMEDIATELY add to UI
     setMessages((prev) => {
       const updated = [...prev, temp];
       setCachedMessages(updated);
@@ -101,29 +114,30 @@ export const useChatMessages = (receiverId, listingId) => {
     });
 
     try {
-      // FIXED: Use "/chat" since axios.baseURL already includes "/api"
       const res = await axios.post("/chat", {
         receiverId,
         message: text,
         listingId
       });
       
-      // Replace temp message with real one from server
-      setMessages((prev) => {
-        const updated = prev.map((m) =>
-          m._id === tempId // Standardized: Check _id primarily
-            ? { ...res.data.message, _id: res.data.message._id || res.data.message.id, from: "me", senderId: userId }
-            : m
-        );
-        setCachedMessages(updated);
-        return updated;
-      });
+      if (res.data.success) {
+        // Replace temp with real message from server
+        setMessages((prev) => {
+          const updated = prev.map((m) =>
+            m._id === tempId
+              ? { ...res.data.message, _id: res.data.message._id, from: "me", senderId: currentUserId }
+              : m
+          );
+          setCachedMessages(updated);
+          return updated;
+        });
+      }
     } catch (err) {
       console.error("Send error:", err);
-      // Mark message as failed but keep it visible
+      // Mark as failed but keep visible
       setMessages((prev) => {
         const updated = prev.map((m) =>
-          m._id === tempId // Standardized: Check _id primarily
+          m._id === tempId
             ? { ...m, isSending: false, failed: true }
             : m
         );
@@ -133,7 +147,7 @@ export const useChatMessages = (receiverId, listingId) => {
     }
   }, [receiverId, listingId, setCachedMessages]);
 
-  // Add new incoming message
+  // Add incoming message from socket
   const addIncomingMessage = useCallback((newMsg) => {
     setMessages((prev) => {
       // Avoid duplicates
@@ -146,6 +160,12 @@ export const useChatMessages = (receiverId, listingId) => {
     });
   }, [setCachedMessages]);
 
+  // Update online status externally (from useUserStatus)
+  const updateOnlineStatus = useCallback((online, lastSeenTime) => {
+    setIsOnline(online);
+    if (lastSeenTime) setLastSeen(lastSeenTime);
+  }, []);
+
   return {
     messages,
     loading,
@@ -156,6 +176,7 @@ export const useChatMessages = (receiverId, listingId) => {
     setLastSeen,
     setCounterpart,
     sendMessage,
-    addIncomingMessage
+    addIncomingMessage,
+    updateOnlineStatus
   };
 };

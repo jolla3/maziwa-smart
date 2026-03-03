@@ -84,7 +84,7 @@ export default function ChatList() {
     if (showRefreshing) setRefreshing(true);
     setError(null); // Clear error
     try {
-      const res = await axios.get(`${API_BASE}/chat/recent`, {
+      const res = await axios.get(`${API_BASE}/chat`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success && res.data.recent) {

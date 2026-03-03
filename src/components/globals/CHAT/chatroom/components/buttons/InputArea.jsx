@@ -1,16 +1,22 @@
+// InputArea.js
 import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Send, Smile, Paperclip, X } from "lucide-react";
 import { EmojiPickerWrapper } from "./EmojiPickerWrapper";
 
-export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
-  const [message, setMessage] = useState("");
+export const InputArea = ({ onSend, onTyping, onTypingStop, onImageSelect, theme }) => {
+  const [message, setMessage] = useState("")
   const [showEmoji, setShowEmoji] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleSend = () => {
     if (!message.trim() && !selectedImage) return;
+    
+    // ✅ Stop typing indicator when sending
+    if (onTypingStop) {
+      onTypingStop();
+    }
     
     onSend(message.trim(), selectedImage);
     setMessage("");
@@ -26,6 +32,13 @@ export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
         onImageSelect?.(reader.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
   };
 
@@ -65,6 +78,7 @@ export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
         )}
 
         <div className="d-flex align-items-end gap-2">
+          {/* Emoji Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -72,9 +86,10 @@ export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
             onClick={() => setShowEmoji((v) => !v)}
             style={{ width: 42, height: 42, flexShrink: 0 }}
           >
-            <Smile size={20} color={theme.accent} />
+            <Smile size={20} color={theme?.accent || "#6366f1"} />
           </motion.button>
 
+          {/* Attach Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -82,7 +97,7 @@ export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
             onClick={() => fileInputRef.current?.click()}
             style={{ width: 42, height: 42, flexShrink: 0 }}
           >
-            <Paperclip size={20} color={theme.accent} />
+            <Paperclip size={20} color={theme?.accent || "#6366f1"} />
             <input
               ref={fileInputRef}
               type="file"
@@ -92,11 +107,13 @@ export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
             />
           </motion.button>
 
+          {/* Text Input */}
           <textarea
             rows={1}
             value={message}
             onChange={(e) => {
               setMessage(e.target.value);
+              // ✅ Trigger typing indicator on change
               onTyping?.();
             }}
             placeholder="Type a message..."
@@ -109,14 +126,10 @@ export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
               maxHeight: 100,
               fontSize: "15px",
             }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
+            onKeyDown={handleKeyDown}
           />
 
+          {/* Send Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -126,9 +139,13 @@ export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
             style={{
               width: 42,
               height: 42,
-              background: (message.trim() || selectedImage) ? theme.bubbleMine : theme.textMuted,
+              background: (message.trim() || selectedImage) 
+                ? (theme?.bubbleMine || "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)") 
+                : "#94a3b8",
               border: "none",
-              boxShadow: (message.trim() || selectedImage) ? theme.shadowLg : "none",
+              boxShadow: (message.trim() || selectedImage) 
+                ? "0 4px 12px rgba(99,102,241,0.4)" 
+                : "none",
               flexShrink: 0,
             }}
           >
@@ -137,15 +154,20 @@ export const InputArea = ({ onSend, onTyping, onImageSelect, theme }) => {
         </div>
       </div>
 
-      <EmojiPickerWrapper
-        show={showEmoji}
-        onClose={() => setShowEmoji(false)}
-        onEmojiClick={(emojiData) => {
-          setMessage((prev) => prev + emojiData.emoji);
-          setShowEmoji(false);
-        }}
-        theme={theme}
-      />
+      {/* Emoji Picker */}
+      {showEmoji && (
+        <EmojiPickerWrapper
+          show={showEmoji}
+          onClose={() => setShowEmoji(false)}
+          onEmojiClick={(emojiData) => {
+            setMessage((prev) => prev + emojiData.emoji);
+            // Trigger typing when emoji is inserted
+            onTyping?.();
+            setShowEmoji(false);
+          }}
+          theme={theme}
+        />
+      )}
     </>
   );
 };

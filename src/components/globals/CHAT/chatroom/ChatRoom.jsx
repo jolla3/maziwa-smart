@@ -1,3 +1,4 @@
+// ChatRoom.js
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -19,14 +20,16 @@ import { useTyping } from "./hooks/useTyping";
 import { useUserStatus } from "./hooks/useUserStatus";
 import { useCallHandler } from "./hooks/useCallHandler";
 
-// API_BASE keeps /api for HTTP requests (axios)
-// Socket URL is handled in useSocket (removes /api)
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
+// API base - empty string fallback handled in axios setup
+const getApiBase = () => {
+  const base = process.env.REACT_APP_API_BASE || "";
+  return base;
+};
 
-export default function ChatRoom({ 
-  receiverId: propReceiverId, 
+export default function ChatRoom({
+  receiverId: propReceiverId,
   receiver: propReceiver,
-  onBack: propOnBack 
+  onBack: propOnBack
 } = {}) {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -38,14 +41,15 @@ export default function ChatRoom({
 
   const [showProfile, setShowProfile] = useState(false);
 
-  // Debug logging
+  // Debug logging - only in development
   useEffect(() => {
-    console.log("🔍 ChatRoom Debug:");
-    console.log("- HTTP API Base:", API_BASE);
-    console.log("- Socket URL:", process.env.REACT_APP_API_BASE?.replace(/\/api$/, ''));
-    console.log("- receiverId:", receiverId);
-    console.log("- token exists:", !!token);
-    console.log("- listingId:", listingId);
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔍 ChatRoom Debug:");
+      console.log("- HTTP API Base:", getApiBase());
+      console.log("- receiverId:", receiverId);
+      console.log("- token exists:", !!token);
+      console.log("- listingId:", listingId);
+    }
   }, [receiverId, token, listingId]);
 
   // Theme configuration
@@ -64,10 +68,11 @@ export default function ChatRoom({
     shadowLg: "0 10px 25px rgba(99,102,241,0.2)",
   };
 
-  // Setup axios (uses /api endpoint)
+  // Setup axios
   useEffect(() => {
-    if (token) {
-      axios.defaults.baseURL = API_BASE;
+    const baseUrl = getApiBase();
+    if (token && baseUrl) {
+      axios.defaults.baseURL = baseUrl;
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
   }, [token]);
@@ -85,13 +90,24 @@ export default function ChatRoom({
     addIncomingMessage
   } = useChatMessages(receiverId, listingId);
 
-  const { socketRef, socketConnected, connectionError, isTyping } = useSocket(
+  // Socket - pass addIncomingMessage callback
+  const { 
+    socketRef, 
+    socketConnected, 
+    connectionError, 
+    isTyping 
+  } = useSocket(
     receiverId, 
     addIncomingMessage
   );
+
+  // ✅ FIX: Get both emitTyping and emitTypingStop
+  const { emitTyping, emitTypingStop } = useTyping(socketRef, receiverId);
   
-  const { emitTyping } = useTyping(socketRef, receiverId);
+  // User status tracking
   useUserStatus(socketRef, receiverId, setIsOnline, setLastSeen);
+  
+  // Call handler
   const { handleVoiceCall, handleWhatsAppChat } = useCallHandler(counterpart);
 
   // Handle back navigation
@@ -105,18 +121,25 @@ export default function ChatRoom({
 
   // Handle message send
   const handleSendMessage = (text, image) => {
+    // ✅ Stop typing indicator when sending
+    if (emitTypingStop) {
+      emitTypingStop();
+    }
+
     if (!socketConnected) {
       console.warn("⚠️ Socket not connected - message sent via HTTP only");
     }
-    
+
     if (image) {
-      // TODO: Implement image upload
       console.log("Image upload not yet implemented:", image);
     }
     if (text) {
       sendMessage(text);
     }
   };
+
+  // Merge counterpart data
+  const displayCounterpart = propReceiver || counterpart;
 
   return (
     <div
@@ -128,7 +151,7 @@ export default function ChatRoom({
     >
       {/* Header */}
       <Header
-        counterpart={counterpart}
+        counterpart={displayCounterpart}
         receiver={propReceiver}
         isOnline={isOnline}
         lastSeen={lastSeen}
@@ -153,10 +176,11 @@ export default function ChatRoom({
         />
       </div>
 
-      {/* Input Area */}
+      {/* Input Area - ✅ NOW PASSES emitTypingStop */}
       <InputArea
         onSend={handleSendMessage}
         onTyping={emitTyping}
+        onTypingStop={emitTypingStop}
         theme={theme}
       />
 
@@ -164,7 +188,7 @@ export default function ChatRoom({
       <UserProfileModal
         show={showProfile}
         onClose={() => setShowProfile(false)}
-        counterpart={counterpart}
+        counterpart={displayCounterpart}
         receiver={propReceiver}
         isOnline={isOnline}
         lastSeen={lastSeen}
